@@ -1,13 +1,10 @@
-@tailwind base;
-@tailwind components;
-@tailwind utilities;
+@import "tailwindcss";
 
 @layer base {
-  * {
-    @apply border-border;
-  }
   body {
-    @apply bg-cyber-black text-white font-mono;
+    background-color: #030014;
+    color: white;
+    font-family: 'Courier New', monospace;
     margin: 0;
     overflow-x: hidden;
   }
