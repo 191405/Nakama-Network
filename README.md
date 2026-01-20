@@ -1,4 +1,4 @@
-# NK Network - The Hidden Layer of Anime
+# Nakama Network - The Hidden Layer of Anime
 
 A next-generation anime streaming and community platform with AI-powered features and gamification.
 
@@ -63,7 +63,7 @@ A next-generation anime streaming and community platform with AI-powered feature
 1. **Clone the repository**
 ```bash
 git clone <your-repo-url>
-cd nk-network
+cd nakama-network-halfmoon
 ```
 
 2. **Install dependencies**
@@ -147,7 +147,7 @@ firebase deploy
 ## 📁 Project Structure
 
 ```
-nk-network/
+nakama-network-halfmoon/
 ├── src/
 │   ├── components/       # Reusable components
 │   │   ├── EntryAnimation.jsx
@@ -250,6 +250,6 @@ For issues or questions, please open an issue on GitHub.
 
 ---
 
-**Built with ⚡ by NK Network Team**
+**Built with ⚡ by Nakama Network Team**
 
 *"Unlock Your Hidden Chakra Potential"*

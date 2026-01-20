@@ -1,4 +1,4 @@
-# 🎌 Welcome to NK Network!
+# 🎌 Welcome to Nakama Network!
 
 ## The Hidden Layer of Anime
 

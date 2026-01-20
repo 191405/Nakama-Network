@@ -1,4 +1,4 @@
-# NK Network - File Guide
+# Nakama Network - File Guide
 
 Complete explanation of every file in the project.
 

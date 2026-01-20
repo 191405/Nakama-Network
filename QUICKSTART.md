@@ -1,4 +1,4 @@
-# 🚀 NK Network - Quick Start
+# 🚀 Nakama Network - Quick Start
 
 **Get running in 5 minutes!**
 
@@ -10,7 +10,7 @@ npm install
 ## Step 2: Setup Firebase
 
 1. Go to https://console.firebase.google.com/
-2. Create new project: "nk-network"
+2. Create new project: "nakama-network-halfmoon"
 3. Enable Authentication → Google + Anonymous
 4. Enable Firestore Database → Test mode
 5. Enable Storage

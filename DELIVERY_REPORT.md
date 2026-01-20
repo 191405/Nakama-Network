@@ -463,7 +463,7 @@ All configured with proper error handling and fallbacks.
 
 ### Folder Structure
 ```
-/home/user/nk-network/
+/home/user/nakama-network/
 ├── All source code (44 files)
 ├── Complete documentation (7 files)
 ├── Configured for deployment
@@ -474,7 +474,7 @@ All configured with proper error handling and fallbacks.
 
 ### How to Access
 ```bash
-cd /home/user/nk-network
+cd /home/user/nakama-network
 npm install
 # Configure .env with your keys
 npm run dev

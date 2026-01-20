@@ -1,4 +1,4 @@
-# NK Network - Project Summary
+# Nakama Network - Project Summary
 
 ## 📦 What You Have
 
@@ -104,7 +104,7 @@ A complete, production-ready anime streaming and community platform with advance
 ### Key Files & Structure
 
 ```
-nk-network/
+nakama-network-halfmoon/
 ├── src/
 │   ├── components/
 │   │   ├── EntryAnimation.jsx    (Epic intro animation)

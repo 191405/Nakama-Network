@@ -1,13 +1,13 @@
-# NK Network - Complete Setup Guide
+# Nakama Network - Complete Setup Guide
 
 ## 🎯 Quick Setup (5 Minutes)
 
-Follow these steps to get NK Network running on your local machine:
+Follow these steps to get Nakama Network running on your local machine:
 
 ### Step 1: Install Dependencies
 
 ```bash
-cd nk-network
+cd nakama-network-halfmoon
 npm install
 ```
 
@@ -16,7 +16,7 @@ npm install
 1. **Create Firebase Project**
    - Go to https://console.firebase.google.com/
    - Click "Add Project"
-   - Enter project name: `nk-network`
+  - Enter project name: `nakama-network-halfmoon`
    - Disable Google Analytics (optional)
    - Click "Create Project"
 

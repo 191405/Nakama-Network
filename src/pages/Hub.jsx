@@ -1,9 +1,19 @@
 import React, { useState, useEffect } from 'react';
 import { motion } from 'framer-motion';
-import { Trophy, Zap, Users, TrendingUp, Star, Award, Download, Sparkles } from 'lucide-react';
+import { Trophy, Zap, Users, TrendingUp, Star, Award, Download, Sparkles, Flame, Target, Sword } from 'lucide-react';
 import { useAuth } from '../contexts/AuthContext';
 import { getLeaderboard, getAnnouncements } from '../utils/firebase';
 import { generateDailyProphecy } from '../utils/gemini';
+import Pagination from '../components/Pagination';
+import TabBar from '../components/TabBar';
+import Breadcrumb from '../components/Breadcrumb';
+import ProgressBar, { CircularProgress } from '../components/ProgressBar';
+import Tag, { TagGroup } from '../components/Tag';
+import FluidLoader, { CircularFluidLoader } from '../components/FluidLoader';
+import GamifiedCard from '../components/GamifiedCard';
+import StatCard from '../components/StatCard';
+import ImageSlider from '../components/ImageSlider';
+import Slider from '../components/Slider';
 
 const Hub = () => {
   const { userProfile, refreshUserProfile } = useAuth();
@@ -12,6 +22,12 @@ const Hub = () => {
   const [prophecy, setProphecy] = useState('');
   const [loadingProphecy, setLoadingProphecy] = useState(false);
   const [showProphecy, setShowProphecy] = useState(false);
+  const [activeTab, setActiveTab] = useState('overview');
+  const [leaderboardPage, setLeaderboardPage] = useState(1);
+  const [announcementPage, setAnnouncementPage] = useState(1);
+  const [difficultySlider, setDifficultySlider] = useState(5);
+
+  const itemsPerPage = 5;
 
   useEffect(() => {
     loadData();
@@ -36,16 +52,16 @@ const Hub = () => {
 
   const getRankColor = (rank) => {
     const rankColors = {
-      'Immortal': 'from-purple-500 via-pink-500 to-red-500',
-      'God Level User': 'from-yellow-400 via-orange-500 to-red-500',
-      'Global Ranker': 'from-blue-400 via-cyan-500 to-teal-500',
+      'Immortal': 'from-amber-400 via-yellow-500 to-orange-500',
+      'God Level User': 'from-yellow-400 via-amber-500 to-orange-500',
+      'Global Ranker': 'from-amber-300 via-yellow-400 to-amber-500',
       'Sage Mode': 'from-green-400 via-emerald-500 to-teal-500',
       'Berserker': 'from-red-500 via-orange-500 to-yellow-500',
-      'Diamond Badge User': 'from-cyan-300 via-blue-400 to-indigo-500',
+      'Diamond Badge User': 'from-amber-200 via-yellow-300 to-amber-400',
       'Golden Badge User': 'from-yellow-300 via-yellow-500 to-amber-500',
       'Silver Badge User': 'from-gray-300 via-gray-400 to-gray-500',
       'Bronze Badge User': 'from-orange-300 via-amber-500 to-orange-600',
-      'Ranked': 'from-neon-blue to-neon-purple',
+      'Ranked': 'from-amber-400 to-yellow-500',
       'Unranked': 'from-gray-400 to-gray-600',
       'User': 'from-gray-500 to-gray-700',
       'Mere User': 'from-gray-600 to-gray-800',
@@ -82,222 +98,448 @@ const Hub = () => {
   }
 
   return (
-    <div className="min-h-screen pt-20 pb-24 md:pb-8 px-4">
-      <div className="max-w-7xl mx-auto space-y-6">
-        {/* Welcome Header */}
-        <motion.div
-          initial={{ opacity: 0, y: -20 }}
-          animate={{ opacity: 1, y: 0 }}
-          className="text-center mb-8"
-        >
-          <h1 className="text-5xl md:text-6xl font-bold mb-4">
-            <span className="neon-text">Welcome to The Hub</span>
+    <div className="min-h-screen pt-24 pb-24 md:pb-8 px-4 md:px-8 relative z-30">
+      <div className="max-w-7xl mx-auto space-y-8">
+        {}
+        <Breadcrumb items={[
+          { id: 'hub', label: 'Command Center', active: true }
+        ]} />
+
+        {}
+        <div className="text-center mb-8 opacity-100">
+          <h1
+            className="text-4xl md:text-6xl font-black mb-4"
+            style={{
+              textShadow: '0 4px 8px rgba(0,0,0,0.8)'
+            }}
+          >
+            <span style={{ color: '#eab308' }}>Command</span>
+            {' '}
+            <span style={{ color: '#e2e8f0' }}>Center</span>
           </h1>
-          <p className="text-gray-400 font-mono text-lg">
-            Your Command Center, {userProfile?.displayName || 'Shinobi'}
+          <p className="text-slate-500 text-lg" style={{ textShadow: '0 2px 4px rgba(0,0,0,0.6)' }}>
+            Welcome back, {userProfile?.displayName || 'Shinobi'}. Your hub awaits.
           </p>
-        </motion.div>
+        </div>
 
-        {/* Main Stats Grid */}
-        <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
-          {/* User Stats Card */}
-          <motion.div
-            initial={{ opacity: 0, scale: 0.9 }}
-            animate={{ opacity: 1, scale: 1 }}
-            transition={{ delay: 0.1 }}
-            className="glass-panel rounded-2xl p-6 hover-lift border border-neon-blue/30"
-          >
-            <div className="flex items-center justify-between mb-4">
-              <h3 className="text-xl font-bold text-neon-blue">Your Stats</h3>
-              <Zap className="text-neon-blue" size={24} />
+        {}
+        <TabBar
+          tabs={[
+            { id: 'overview', label: '⚡ Overview' },
+            { id: 'stats', label: '📊 Detailed Stats' },
+            { id: 'achievements', label: '🏆 Achievements' },
+            { id: 'settings', label: '⚙️ Preferences' },
+          ]}
+          activeTab={activeTab}
+          onTabChange={setActiveTab}
+          variant="default"
+        />
+
+        {}
+        {activeTab === 'overview' && (
+          <>
+            {}
+            <div className="grid grid-cols-1 md:grid-cols-4 gap-4">
+              <StatCard
+                icon={Zap}
+                label="Current Chakra"
+                value={userProfile?.chakra?.toLocaleString() || 0}
+                change={12}
+                color="amber"
+              />
+              <StatCard
+                icon={Trophy}
+                label="Total Wins"
+                value={userProfile?.totalWins || 0}
+                change={5}
+                color="green"
+              />
+              <StatCard
+                icon={Flame}
+                label="Win Streak"
+                value={userProfile?.streak || 0}
+                change={userProfile?.streak > 0 ? 100 : 0}
+                suffix="🔥"
+                color="red"
+              />
+              <StatCard
+                icon={Target}
+                label="Battles This Month"
+                value="147"
+                change={8}
+                color="yellow"
+              />
             </div>
 
-            {/* Rank Badge */}
-            <div className={`mb-6 p-4 rounded-xl bg-gradient-to-r ${getRankColor(userProfile?.rank || 'Mere User')} text-center`}>
-              <div className="flex items-center justify-center space-x-2 mb-2">
-                {React.createElement(getRankIcon(userProfile?.rank || 'Mere User'), { size: 24 })}
-                <span className="text-2xl font-bold">{userProfile?.rank || 'Mere User'}</span>
-              </div>
-            </div>
-
-            {/* Chakra Progress */}
-            <div className="space-y-4">
-              <div>
-                <div className="flex justify-between text-sm mb-2">
-                  <span className="text-gray-400">Chakra</span>
-                  <span className="font-bold text-neon-purple">
-                    {userProfile?.chakra?.toLocaleString() || 0} / {getNextRankChakra(userProfile?.rank || 'Mere User').toLocaleString()}
-                  </span>
-                </div>
-                <div className="h-3 bg-void-gray rounded-full overflow-hidden border border-neon-purple/30">
-                  <motion.div
-                    initial={{ width: 0 }}
-                    animate={{ width: `${Math.min(chakraPercentage, 100)}%` }}
-                    transition={{ duration: 1, ease: "easeOut" }}
-                    className="h-full bg-gradient-to-r from-neon-blue via-neon-purple to-neon-pink"
-                  />
-                </div>
-              </div>
-
-              {/* Additional Stats */}
-              <div className="grid grid-cols-2 gap-4 pt-4 border-t border-neon-blue/20">
-                <div>
-                  <div className="text-xs text-gray-400">Total Wins</div>
-                  <div className="text-2xl font-bold text-green-400">{userProfile?.totalWins || 0}</div>
-                </div>
-                <div>
-                  <div className="text-xs text-gray-400">Streak</div>
-                  <div className="text-2xl font-bold text-orange-400">{userProfile?.streak || 0}🔥</div>
-                </div>
-              </div>
-
-              {/* Clan Info */}
-              {userProfile?.clan && (
-                <div className="pt-4 border-t border-neon-purple/20">
-                  <div className="text-xs text-gray-400 mb-1">Clan</div>
-                  <div className="font-bold text-neon-pink">{userProfile.clan}</div>
-                  <div className="text-sm text-gray-500 italic mt-1">"{userProfile.clanMotto}"</div>
-                </div>
-              )}
-            </div>
-          </motion.div>
-
-          {/* Daily Prophecy Card */}
-          <motion.div
-            initial={{ opacity: 0, scale: 0.9 }}
-            animate={{ opacity: 1, scale: 1 }}
-            transition={{ delay: 0.2 }}
-            className="glass-panel rounded-2xl p-6 hover-lift border border-neon-purple/30"
-          >
-            <div className="flex items-center justify-between mb-4">
-              <h3 className="text-xl font-bold text-neon-purple">Daily Prophecy</h3>
-              <Sparkles className="text-neon-purple" size={24} />
-            </div>
-
-            <div className="mb-6">
-              <p className="text-gray-400 text-sm mb-4">
-                Receive your cryptic fortune from the ancient oracle...
-              </p>
-
-              {!showProphecy ? (
-                <motion.button
-                  whileHover={{ scale: 1.05 }}
-                  whileTap={{ scale: 0.95 }}
-                  onClick={handleDailyProphecy}
-                  className="w-full py-4 bg-gradient-to-r from-neon-purple to-neon-pink rounded-xl font-bold cyber-button"
+            {}
+            <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
+              <motion.div
+                initial={{ opacity: 0, scale: 0.9 }}
+                animate={{ opacity: 1, scale: 1 }}
+                transition={{ delay: 0.1 }}
+                className="lg:col-span-2"
+              >
+                <GamifiedCard
+                  title="Shinobi Profile"
+                  subtitle={userProfile?.rank || 'Mere User'}
+                  icon={Star}
+                  level={Math.floor((userProfile?.chakra || 0) / 50000) + 1}
+                  rarity="legendary"
+                  className="h-full"
                 >
-                  Reveal Your Fate
-                </motion.button>
-              ) : (
-                <div className="min-h-[100px] flex items-center justify-center">
-                  {loadingProphecy ? (
-                    <div className="loading-spinner"></div>
-                  ) : (
-                    <motion.div
-                      initial={{ opacity: 0 }}
-                      animate={{ opacity: 1 }}
-                      className="p-4 bg-void-gray/50 rounded-xl border border-neon-purple/30"
-                    >
-                      <p className="text-sm italic text-gray-300 leading-relaxed">
-                        "{prophecy}"
-                      </p>
-                    </motion.div>
-                  )}
-                </div>
-              )}
+                  <div className="space-y-6">
+                    {}
+                    <div className={`p-4 rounded-xl bg-gradient-to-r ${getRankColor(userProfile?.rank || 'Mere User')} text-center`}>
+                      <div className="flex items-center justify-center space-x-2 mb-2">
+                        {React.createElement(getRankIcon(userProfile?.rank || 'Mere User'), { size: 28 })}
+                        <span className="text-2xl font-bold text-white drop-shadow-lg">{userProfile?.rank || 'Mere User'}</span>
+                      </div>
+                    </div>
+
+                    {}
+                    <div>
+                      <ProgressBar
+                        value={userProfile?.chakra || 0}
+                        max={getNextRankChakra(userProfile?.rank || 'Mere User')}
+                        label="Chakra Progress"
+                        showLabel={true}
+                        showPercentage={true}
+                        variant="anime"
+                      />
+                    </div>
+
+                    {}
+                    <div className="grid grid-cols-3 gap-4 pt-4 border-t border-amber-500/20">
+                      <div className="text-center">
+                        <p className="text-slate-400 text-xs mb-2">Wins</p>
+                        <p className="text-2xl font-bold text-green-400">{userProfile?.totalWins || 0}</p>
+                      </div>
+                      <div className="text-center">
+                        <p className="text-slate-400 text-xs mb-2">Streak</p>
+                        <p className="text-2xl font-bold text-orange-400">{userProfile?.streak || 0}</p>
+                      </div>
+                      <div className="text-center">
+                        <p className="text-slate-400 text-xs mb-2">Rank</p>
+                        <p className="text-2xl font-bold text-amber-400">#42</p>
+                      </div>
+                    </div>
+
+                    {}
+                    {userProfile?.clan && (
+                      <div className="pt-4 border-t border-amber-500/20">
+                        <div className="text-xs text-slate-400 mb-2">Guild Affiliation</div>
+                        <div className="flex items-center gap-3">
+                          <div className="w-12 h-12 rounded-lg bg-gradient-to-br from-amber-500 to-yellow-600 flex items-center justify-center">
+                            <Users size={24} className="text-black" />
+                          </div>
+                          <div>
+                            <div className="font-bold text-white">{userProfile.clan}</div>
+                            <div className="text-sm text-slate-400 italic">"{userProfile.clanMotto}"</div>
+                          </div>
+                        </div>
+                      </div>
+                    )}
+                  </div>
+                </GamifiedCard>
+              </motion.div>
+
+              {}
+              <motion.div
+                initial={{ opacity: 0, scale: 0.9 }}
+                animate={{ opacity: 1, scale: 1 }}
+                transition={{ delay: 0.2 }}
+              >
+                <GamifiedCard
+                  title="Oracle's Prophecy"
+                  subtitle="Divine Guidance"
+                  icon={Sparkles}
+                  rarity="mythic"
+                  className="h-full"
+                >
+                  <div className="space-y-4">
+                    {!showProphecy ? (
+                      <motion.button
+                        whileHover={{ scale: 1.05 }}
+                        whileTap={{ scale: 0.95 }}
+                        onClick={handleDailyProphecy}
+                        className="w-full py-3 bg-gradient-to-r from-amber-500 to-yellow-500 text-black font-bold rounded-lg hover:from-amber-400 hover:to-yellow-400 transition-all shadow-lg shadow-amber-500/20"
+                      >
+                        Reveal Your Fate
+                      </motion.button>
+                    ) : (
+                      <div className="min-h-[120px] flex items-center justify-center">
+                        {loadingProphecy ? (
+                          <FluidLoader size="md" variant="anime" label="Consulting Oracle..." />
+                        ) : (
+                          <motion.div
+                            initial={{ opacity: 0 }}
+                            animate={{ opacity: 1 }}
+                            className="p-4 bg-black/30 rounded-lg border border-amber-500/30"
+                          >
+                            <p className="text-sm italic text-slate-200 leading-relaxed">
+                              "{prophecy}"
+                            </p>
+                          </motion.div>
+                        )}
+                      </div>
+                    )}
+
+                    <div className="pt-4 border-t border-amber-500/20">
+                      <TagGroup
+                        tags={[
+                          { label: 'Daily', icon: Flame },
+                          { label: 'Wisdom', icon: Star }
+                        ]}
+                        variant="anime"
+                      />
+                    </div>
+                  </div>
+                </GamifiedCard>
+              </motion.div>
             </div>
 
-            {/* Quick Actions */}
-            <div className="pt-4 border-t border-neon-purple/20 space-y-2">
-              <button className="w-full py-2 bg-neon-purple/20 hover:bg-neon-purple/30 rounded-lg text-sm transition-colors flex items-center justify-center space-x-2">
-                <Download size={16} />
-                <span>Download Mobile App</span>
-              </button>
-              <p className="text-xs text-center text-gray-500">Coming Soon™</p>
-            </div>
-          </motion.div>
+            {}
+            <motion.div
+              initial={{ opacity: 0, y: 20 }}
+              animate={{ opacity: 1, y: 0 }}
+            >
+              <h2 className="text-2xl font-bold mb-4 text-white flex items-center gap-3">
+                <Sparkles className="text-amber-400" />
+                Featured Events
+              </h2>
+              <ImageSlider
+                images={[
+                  'https://via.placeholder.com/1200x300/f59e0b/000000?text=Grand+Tournament',
+                  'https://via.placeholder.com/1200x300/d97706/000000?text=Seasonal+Event',
+                  'https://via.placeholder.com/1200x300/b45309/fbbf24?text=Challenge+Mode',
+                ]}
+                autoPlay={true}
+                height="h-64"
+              />
+            </motion.div>
+          </>
+        )}
 
-          {/* Mini Leaderboard */}
+        {}
+        {activeTab === 'stats' && (
           <motion.div
-            initial={{ opacity: 0, scale: 0.9 }}
-            animate={{ opacity: 1, scale: 1 }}
-            transition={{ delay: 0.3 }}
-            className="glass-panel rounded-2xl p-6 hover-lift border border-neon-pink/30"
+            initial={{ opacity: 0, y: 20 }}
+            animate={{ opacity: 1, y: 0 }}
+            className="grid grid-cols-1 lg:grid-cols-2 gap-6"
           >
-            <div className="flex items-center justify-between mb-4">
-              <h3 className="text-xl font-bold text-neon-pink">Top Shinobis</h3>
-              <Trophy className="text-neon-pink" size={24} />
-            </div>
+            <GamifiedCard title="Chakra Breakdown" icon={Zap} rarity="rare">
+              <div className="space-y-4">
+                <div>
+                  <ProgressBar value={65} max={100} label="Combat Power" variant="default" />
+                </div>
+                <div>
+                  <ProgressBar value={82} max={100} label="Defense" variant="success" />
+                </div>
+                <div>
+                  <ProgressBar value={45} max={100} label="Speed" variant="warning" />
+                </div>
+                <div>
+                  <ProgressBar value={90} max={100} label="Strategy" variant="anime" />
+                </div>
+              </div>
+            </GamifiedCard>
 
+            <GamifiedCard title="Activity Stats" icon={TrendingUp} rarity="uncommon">
+              <div className="space-y-4">
+                <div className="flex justify-between items-center p-3 bg-slate-800/50 rounded-lg border border-slate-700">
+                  <span className="text-slate-300">Battles Won</span>
+                  <span className="text-xl font-bold text-green-400">856</span>
+                </div>
+                <div className="flex justify-between items-center p-3 bg-slate-800/50 rounded-lg border border-slate-700">
+                  <span className="text-slate-300">Battles Lost</span>
+                  <span className="text-xl font-bold text-red-400">142</span>
+                </div>
+                <div className="flex justify-between items-center p-3 bg-slate-800/50 rounded-lg border border-slate-700">
+                  <span className="text-slate-300">Win Rate</span>
+                  <span className="text-xl font-bold text-amber-400">85.8%</span>
+                </div>
+              </div>
+            </GamifiedCard>
+
+            <GamifiedCard title="Monthly Challenge" icon={Target} rarity="epic">
+              <div className="space-y-4">
+                <ProgressBar value={72} max={100} label="Progress" variant="anime" />
+                <div className="grid grid-cols-2 gap-2">
+                  <Tag label="10 Wins" variant="success" />
+                  <Tag label="72/100" variant="anime" />
+                </div>
+                <p className="text-sm text-slate-400 pt-2">
+                  Complete 100 battles to unlock legendary rewards
+                </p>
+              </div>
+            </GamifiedCard>
+
+            <GamifiedCard title="Difficulty Preference" icon={Sword} rarity="common">
+              <div className="space-y-4">
+                <Slider
+                  value={difficultySlider}
+                  min={1}
+                  max={10}
+                  onChange={setDifficultySlider}
+                  label="Choose Your Challenge"
+                  showValue={true}
+                  variant="anime"
+                />
+                <p className="text-xs text-slate-400 pt-2">
+                  Level {difficultySlider} - {['Beginner', 'Easy', 'Normal', 'Hard', 'Insane', 'Nightmare', 'Legendary'][Math.floor(difficultySlider / 1.4)] || 'Impossible'}
+                </p>
+              </div>
+            </GamifiedCard>
+          </motion.div>
+        )}
+
+        {}
+        {activeTab === 'achievements' && (
+          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
+            {[
+              { title: 'First Blood', desc: 'Win your first battle', rarity: 'uncommon', locked: false },
+              { title: 'On Fire', desc: 'Reach 10-win streak', rarity: 'rare', locked: false },
+              { title: 'Legendary', desc: 'Reach God Level User rank', rarity: 'legendary', locked: true },
+              { title: 'Tournament Champion', desc: 'Win seasonal tournament', rarity: 'epic', locked: true },
+              { title: 'Clan Master', desc: 'Lead your clan to victory', rarity: 'epic', locked: true },
+              { title: 'Divine Being', desc: 'Reach Immortal rank', rarity: 'mythic', locked: true },
+            ].map((achievement, idx) => (
+              <motion.div
+                key={idx}
+                whileHover={{ scale: 1.05, y: -5 }}
+                className={`p-4 rounded-lg border-2 transition-all ${achievement.locked
+                  ? 'bg-slate-900/50 border-slate-700 opacity-60'
+                  : 'bg-gradient-to-br from-amber-500/10 to-yellow-500/10 border-amber-500/50'
+                  }`}
+              >
+                <div className="text-3xl mb-2">
+                  {achievement.locked ? '🔒' : '🏆'}
+                </div>
+                <h3 className="font-bold text-white">{achievement.title}</h3>
+                <p className="text-sm text-slate-400">{achievement.desc}</p>
+                <Tag label={achievement.rarity} variant={achievement.rarity} className="mt-3" />
+              </motion.div>
+            ))}
+          </div>
+        )}
+
+        {}
+        {activeTab === 'settings' && (
+          <GamifiedCard title="Preferences & Settings" icon={Sword} rarity="common" className="max-w-2xl">
+            <div className="space-y-6">
+              <div>
+                <label className="block text-sm font-semibold mb-3 text-slate-200">Notification Settings</label>
+                <div className="space-y-2">
+                  <div className="flex items-center">
+                    <input type="checkbox" id="battles" defaultChecked className="w-4 h-4 rounded accent-amber-500" />
+                    <label htmlFor="battles" className="ml-3 text-slate-300">Notify me of battle results</label>
+                  </div>
+                  <div className="flex items-center">
+                    <input type="checkbox" id="events" defaultChecked className="w-4 h-4 rounded accent-amber-500" />
+                    <label htmlFor="events" className="ml-3 text-slate-300">Notify me of events</label>
+                  </div>
+                </div>
+              </div>
+
+              <div className="pt-4 border-t border-amber-500/20">
+                <label className="block text-sm font-semibold mb-3 text-slate-200">Game Mode</label>
+                <TagGroup
+                  tags={[
+                    { label: 'Casual Mode' },
+                    { label: 'Ranked Mode' },
+                    { label: 'Tournament' },
+                  ]}
+                  variant="primary"
+                />
+              </div>
+            </div>
+          </GamifiedCard>
+        )}
+
+        {}
+        <motion.div
+          initial={{ opacity: 0, y: 20 }}
+          animate={{ opacity: 1, y: 0 }}
+          transition={{ delay: 0.5 }}
+        >
+          <h2 className="text-2xl font-bold mb-6 text-white flex items-center gap-3">
+            <Trophy className="text-amber-400" />
+            Top Shinobis
+          </h2>
+
+          <div className="bg-gradient-to-br from-slate-800/50 to-slate-900/50 rounded-lg p-6 border border-amber-500/20">
             <div className="space-y-3">
-              {leaderboard.slice(0, 5).map((user, index) => (
+              {leaderboard.slice((leaderboardPage - 1) * itemsPerPage, leaderboardPage * itemsPerPage).map((user, index) => (
                 <motion.div
                   key={user.id}
                   initial={{ opacity: 0, x: -20 }}
                   animate={{ opacity: 1, x: 0 }}
                   transition={{ delay: 0.1 * index }}
-                  className="flex items-center space-x-3 p-2 rounded-lg hover:bg-void-gray/50 transition-colors"
+                  className="flex items-center space-x-4 p-4 rounded-lg bg-slate-800/50 hover:bg-slate-700/50 transition-all border border-slate-700/50 hover:border-amber-500/30"
                 >
                   <div className={`
-                    w-8 h-8 rounded-full flex items-center justify-center font-bold text-sm
-                    ${index === 0 ? 'bg-yellow-500' : index === 1 ? 'bg-gray-400' : index === 2 ? 'bg-orange-600' : 'bg-void-gray border border-neon-blue/30'}
+                    w-10 h-10 rounded-full flex items-center justify-center font-bold text-white
+                    ${index === 0 ? 'bg-gradient-to-br from-yellow-400 to-amber-500'
+                      : index === 1 ? 'bg-gradient-to-br from-gray-300 to-gray-400'
+                        : index === 2 ? 'bg-gradient-to-br from-orange-400 to-amber-600'
+                          : 'bg-gradient-to-br from-amber-600 to-yellow-600'}
                   `}>
-                    {index + 1}
+                    {(leaderboardPage - 1) * itemsPerPage + index + 1}
                   </div>
                   <div className="flex-1 min-w-0">
-                    <div className="text-sm font-bold truncate">{user.displayName || 'Anonymous'}</div>
-                    <div className={`text-xs bg-gradient-to-r ${getRankColor(user.rank)} bg-clip-text text-transparent font-semibold`}>
+                    <div className="font-bold text-white">{user.displayName || 'Anonymous'}</div>
+                    <div className={`text-xs bg-clip-text text-transparent bg-gradient-to-r ${getRankColor(user.rank)}`}>
                       {user.rank}
                     </div>
                   </div>
-                  <div className="text-right">
-                    <div className="text-sm font-bold text-neon-purple">
-                      {user.chakra?.toLocaleString() || 0}
-                    </div>
-                  </div>
+                  <Tag label={`${user.chakra?.toLocaleString() || 0} CP`} variant="anime" />
                 </motion.div>
               ))}
             </div>
 
-            <motion.button
-              whileHover={{ scale: 1.02 }}
-              whileTap={{ scale: 0.98 }}
-              className="w-full mt-4 py-2 bg-neon-pink/20 hover:bg-neon-pink/30 rounded-lg text-sm transition-colors"
-              onClick={() => window.location.href = '/arena'}
-            >
-              View Full Leaderboard
-            </motion.button>
-          </motion.div>
-        </div>
+            <Pagination
+              currentPage={leaderboardPage}
+              totalPages={Math.ceil(leaderboard.length / itemsPerPage)}
+              onPageChange={setLeaderboardPage}
+            />
+          </div>
+        </motion.div>
 
-        {/* Announcements Section */}
+        {}
         {announcements.length > 0 && (
           <motion.div
             initial={{ opacity: 0, y: 20 }}
             animate={{ opacity: 1, y: 0 }}
-            transition={{ delay: 0.4 }}
-            className="glass-panel rounded-2xl p-6 border border-neon-blue/30"
+            transition={{ delay: 0.6 }}
           >
-            <div className="flex items-center space-x-3 mb-4">
-              <TrendingUp className="text-neon-blue" size={24} />
-              <h3 className="text-xl font-bold text-neon-blue">Public Announcements</h3>
-            </div>
+            <h2 className="text-2xl font-bold mb-6 text-white flex items-center gap-3">
+              <TrendingUp className="text-amber-400" />
+              Latest Updates
+            </h2>
 
-            <div className="space-y-3">
-              {announcements.slice(0, 3).map((announcement, index) => (
+            <div className="space-y-4">
+              {announcements.slice((announcementPage - 1) * 5, announcementPage * 5).map((announcement, index) => (
                 <motion.div
                   key={announcement.id}
                   initial={{ opacity: 0, x: -20 }}
                   animate={{ opacity: 1, x: 0 }}
                   transition={{ delay: 0.1 * index }}
-                  className="p-4 bg-void-gray/50 rounded-lg border border-neon-blue/20 hover:border-neon-blue/50 transition-colors"
+                  className="p-5 bg-gradient-to-r from-slate-800/50 via-slate-800/50 to-slate-900/50 rounded-lg border-l-4 border-amber-500 hover:border-yellow-400 transition-all"
                 >
-                  <div className="flex items-start space-x-3">
-                    <div className="w-2 h-2 bg-neon-blue rounded-full mt-2 animate-pulse"></div>
+                  <div className="flex items-start space-x-4">
+                    <div className="w-2 h-2 bg-amber-500 rounded-full mt-2 animate-pulse"></div>
                     <div className="flex-1">
-                      <h4 className="font-bold text-white mb-1">{announcement.title}</h4>
-                      <p className="text-sm text-gray-400">{announcement.message}</p>
-                      <span className="text-xs text-gray-600 mt-2 block">
+                      <h3 className="font-bold text-white mb-2">{announcement.title}</h3>
+                      <p className="text-sm text-slate-400 mb-2">{announcement.message}</p>
+                      <TagGroup
+                        tags={[
+                          { label: 'Important' },
+                          { label: 'Update' }
+                        ]}
+                        variant="primary"
+                        className="mt-3"
+                      />
+                      <span className="text-xs text-slate-600 mt-3 block">
                         {announcement.timestamp?.toDate().toLocaleDateString() || 'Recently'}
                       </span>
                     </div>
@@ -305,6 +547,14 @@ const Hub = () => {
                 </motion.div>
               ))}
             </div>
+
+            {announcements.length > 5 && (
+              <Pagination
+                currentPage={announcementPage}
+                totalPages={Math.ceil(announcements.length / 5)}
+                onPageChange={setAnnouncementPage}
+              />
+            )}
           </motion.div>
         )}
       </div>

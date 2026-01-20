@@ -1,0 +1,41 @@
+# Nakama Network Backend Dependencies
+# FastAPI Backend for Mobile App
+
+# Core Framework
+fastapi
+uvicorn[standard]
+pydantic
+pydantic-settings
+
+# HTTP Client (async)
+httpx
+aiohttp
+
+# Redis Cache
+redis
+aioredis
+
+# Google AI
+google-generativeai>=0.7.2
+
+# Utilities
+python-dotenv
+python-multipart
+
+# CORS
+starlette
+
+# Rate Limiting
+slowapi
+# Database
+sqlalchemy
+asyncpg
+
+# Auth & Security
+python-jose[cryptography]
+passlib[bcrypt]
+email-validator
+python-decouple
+requests
+PyJWT>=2.8.0
+bcrypt>=4.1.0

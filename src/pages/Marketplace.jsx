@@ -40,7 +40,7 @@ const Marketplace = () => {
 
   if (!userProfile?.isPremium) {
     return (
-      <div className="min-h-screen pt-20 pb-24 md:pb-8 px-4 flex items-center justify-center">
+      <div className="min-h-screen pt-20 pb-24 md:pb-8 px-4 flex items-center justify-center relative z-20">
         <motion.div initial={{ opacity: 0, scale: 0.9 }} animate={{ opacity: 1, scale: 1 }}
           className="glass-panel rounded-2xl p-12 text-center border border-yellow-500/30 max-w-md">
           <Crown className="mx-auto mb-6 text-yellow-400" size={64} />
@@ -55,14 +55,14 @@ const Marketplace = () => {
   }
 
   return (
-    <div className="min-h-screen pt-20 pb-24 md:pb-8 px-4">
+    <div className="min-h-screen pt-20 pb-24 md:pb-8 px-4 relative z-20">
       <div className="max-w-7xl mx-auto">
-        <motion.div initial={{ opacity: 0, y: -20 }} animate={{ opacity: 1, y: 0 }} className="text-center mb-8">
+        <div className="text-center mb-8 opacity-100">
           <h1 className="text-5xl md:text-6xl font-bold mb-4">
             <span className="neon-text">Marketplace</span>
           </h1>
           <p className="text-gray-400 font-mono">Trade Anime Merchandise & Collectibles</p>
-        </motion.div>
+        </div>
 
         <div className="flex justify-end mb-6">
           <motion.button whileHover={{ scale: 1.02 }} whileTap={{ scale: 0.98 }}
@@ -79,22 +79,22 @@ const Marketplace = () => {
             <form onSubmit={handleCreateListing} className="space-y-4">
               <input type="text" placeholder="Title" required
                 value={formData.title}
-                onChange={(e) => setFormData({...formData, title: e.target.value})}
-                className="w-full px-4 py-3 bg-void-gray border border-neon-blue/30 rounded-xl focus:border-neon-blue outline-none"/>
+                onChange={(e) => setFormData({ ...formData, title: e.target.value })}
+                className="w-full px-4 py-3 bg-void-gray border border-neon-blue/30 rounded-xl focus:border-neon-blue outline-none" />
               <textarea placeholder="Description" required rows="3"
                 value={formData.description}
-                onChange={(e) => setFormData({...formData, description: e.target.value})}
-                className="w-full px-4 py-3 bg-void-gray border border-neon-blue/30 rounded-xl focus:border-neon-blue outline-none"/>
+                onChange={(e) => setFormData({ ...formData, description: e.target.value })}
+                className="w-full px-4 py-3 bg-void-gray border border-neon-blue/30 rounded-xl focus:border-neon-blue outline-none" />
               <input type="number" placeholder="Price (USD)" required
                 value={formData.price}
-                onChange={(e) => setFormData({...formData, price: e.target.value})}
-                className="w-full px-4 py-3 bg-void-gray border border-neon-blue/30 rounded-xl focus:border-neon-blue outline-none"/>
+                onChange={(e) => setFormData({ ...formData, price: e.target.value })}
+                className="w-full px-4 py-3 bg-void-gray border border-neon-blue/30 rounded-xl focus:border-neon-blue outline-none" />
               <input type="url" placeholder="Image URL"
                 value={formData.imageUrl}
-                onChange={(e) => setFormData({...formData, imageUrl: e.target.value})}
-                className="w-full px-4 py-3 bg-void-gray border border-neon-blue/30 rounded-xl focus:border-neon-blue outline-none"/>
+                onChange={(e) => setFormData({ ...formData, imageUrl: e.target.value })}
+                className="w-full px-4 py-3 bg-void-gray border border-neon-blue/30 rounded-xl focus:border-neon-blue outline-none" />
               <select value={formData.category}
-                onChange={(e) => setFormData({...formData, category: e.target.value})}
+                onChange={(e) => setFormData({ ...formData, category: e.target.value })}
                 className="w-full px-4 py-3 bg-void-gray border border-neon-blue/30 rounded-xl focus:border-neon-blue outline-none">
                 <option value="merchandise">Merchandise</option>
                 <option value="figures">Figures</option>
@@ -117,7 +117,7 @@ const Marketplace = () => {
               className="glass-panel rounded-2xl overflow-hidden hover-lift border border-neon-blue/30">
               <div className="aspect-video bg-void-gray flex items-center justify-center">
                 {listing.imageUrl ? (
-                  <img src={listing.imageUrl} alt={listing.title} className="w-full h-full object-cover"/>
+                  <img src={listing.imageUrl} alt={listing.title} className="w-full h-full object-cover" />
                 ) : (
                   <Package className="text-gray-600" size={64} />
                 )}

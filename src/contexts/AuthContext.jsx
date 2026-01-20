@@ -1,6 +1,9 @@
+
 import React, { createContext, useContext, useState, useEffect } from 'react';
-import { auth, createUserProfile, getUserProfile, updateUserProfile } from '../utils/firebase';
+import { auth, createUserProfile, getUserProfile, updateUserProfile, subscribeToUserProfile } from '../utils/firebase';
 import { onAuthStateChanged } from 'firebase/auth';
+import { getLocalDevUser, isLocalDevMode, clearLocalDevAuth } from '../utils/localDevAuth';
+import { sendWelcomeEmail } from '../utils/emailService';
 
 const AuthContext = createContext();
 
@@ -16,54 +19,181 @@ export const AuthProvider = ({ children }) => {
   const [currentUser, setCurrentUser] = useState(null);
   const [userProfile, setUserProfile] = useState(null);
   const [loading, setLoading] = useState(true);
+  const [isGuest, setIsGuest] = useState(false);
+  const [isAuthenticated, setIsAuthenticated] = useState(false);
 
   useEffect(() => {
-    const unsubscribe = onAuthStateChanged(auth, async (user) => {
-      setCurrentUser(user);
-      
-      if (user) {
-        // Get or create user profile
-        let profile = await getUserProfile(user.uid);
-        
-        if (!profile) {
-          // Create new profile for first-time users
-          profile = await createUserProfile(user.uid, {
-            email: user.email || `anon_${user.uid.substring(0, 8)}@nk.network`,
-            displayName: user.displayName || `Shinobi_${user.uid.substring(0, 6)}`,
-          });
-        } else {
-          // Update last active timestamp
-          await updateUserProfile(user.uid, {});
-        }
-        
-        setUserProfile(profile);
-      } else {
-        setUserProfile(null);
-      }
-      
+
+    localStorage.removeItem('nakama_guest_mode');
+
+    if (isLocalDevMode()) {
+
+      console.log('Restoring local dev auth session');
+      const devUser = getLocalDevUser();
+      setCurrentUser(devUser);
+      setIsGuest(false);
+      setIsAuthenticated(true);
+      setUserProfile({
+        id: devUser.uid,
+        email: devUser.email,
+        displayName: devUser.displayName,
+        chakra: 0,
+        rank: 'Mere User',
+        clan: null,
+        clanMotto: null,
+        isPremium: false,
+        totalWins: 0,
+        totalLosses: 0,
+        streak: 0,
+        isLocalDev: true,
+        canUseFeatures: true,
+      });
       setLoading(false);
+      return;
+    }
+
+    if (!auth) {
+      
+      console.log('No active session, user needs to log in');
+      setCurrentUser(null);
+      setUserProfile(null);
+      setIsAuthenticated(false);
+      setLoading(false);
+      return;
+    }
+
+    let profileUnsub = null;
+    let isMounted = true;
+
+    const unsubscribe = onAuthStateChanged(auth, async (user) => {
+      if (!isMounted) return;
+
+      if (profileUnsub) {
+        profileUnsub();
+        profileUnsub = null;
+      }
+
+      try {
+        if (user) {
+          
+          setCurrentUser(user);
+          setIsGuest(false);
+          setIsAuthenticated(true);
+
+          profileUnsub = subscribeToUserProfile(user.uid, async (profileData) => {
+            if (!isMounted) return;
+
+            if (profileData) {
+              
+              setUserProfile({ ...profileData, canUseFeatures: true });
+
+            } else {
+              
+              console.log('Creating new user profile...');
+              await createUserProfile(user.uid, {
+                email: user.email || `anon_${user.uid.substring(0, 8)}@nk.network`,
+                displayName: user.displayName || `Shinobi_${user.uid.substring(0, 6)}`,
+              });
+
+              sendWelcomeEmail(user).catch(err => console.error('Failed to send welcome email:', err));
+              
+            }
+          });
+
+        } else {
+          
+          setCurrentUser(null);
+          setUserProfile(null);
+          setIsAuthenticated(false);
+        }
+
+        setLoading(false);
+      } catch (err) {
+        console.error('Auth error:', err);
+        setCurrentUser(null);
+        setUserProfile(null);
+        setIsAuthenticated(false);
+        setLoading(false);
+      }
     });
 
-    return unsubscribe;
+    return () => {
+      isMounted = false;
+      if (typeof unsubscribe === 'function') unsubscribe();
+      if (typeof profileUnsub === 'function') profileUnsub();
+    };
   }, []);
 
-  const refreshUserProfile = async () => {
-    if (currentUser) {
-      const profile = await getUserProfile(currentUser.uid);
-      setUserProfile(profile);
+  const loginAsGuest = () => {
+    localStorage.setItem('nakama_guest_mode', 'true');
+    setIsGuest(true);
+    setIsAuthenticated(false);
+    setCurrentUser({ uid: 'guest', displayName: 'Guest', isGuest: true });
+    setUserProfile({
+      id: 'guest',
+      displayName: 'Guest Explorer',
+      email: null,
+      chakra: 0,
+      rank: 'Guest',
+      isGuest: true,
+      canUseFeatures: false,
+    });
+  };
+
+  const logout = async () => {
+    
+    localStorage.removeItem('nakama_guest_mode');
+    localStorage.removeItem('localDevUser');
+    clearLocalDevAuth();
+
+    if (auth) {
+      try {
+        await auth.signOut();
+      } catch (e) { console.error(e); }
     }
+
+    setCurrentUser(null);
+    setUserProfile(null);
+    setIsGuest(false);
+    setIsAuthenticated(false);
+    
+  };
+
+  const refreshUserProfile = async () => {
+    if (currentUser && !isGuest && (auth || isLocalDevMode())) {
+      
+      if (auth) {
+        const profile = await getUserProfile(currentUser.uid);
+        setUserProfile({ ...profile, canUseFeatures: true });
+      }
+    }
+  };
+
+  const canUseFeature = () => {
+    if (isGuest) return false;
+    if (!isAuthenticated) return false;
+    
+    return true;
   };
 
   const value = {
     currentUser,
     userProfile,
+    user: currentUser, 
     loading,
-    refreshUserProfile
+    isGuest,
+    isAuthenticated,
+    loginAsGuest,
+    logout,
+    logout,
+    refreshUserProfile,
+    canUseFeature,
+    updateProfile: (data) => updateUserProfile(currentUser?.uid, data),
   };
 
   return (
     <AuthContext.Provider value={value}>
-      {!loading && children}
+      {children}
     </AuthContext.Provider>
   );
 };
