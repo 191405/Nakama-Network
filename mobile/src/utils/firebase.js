@@ -13,7 +13,6 @@ import {
 import { getFirestore, doc, getDoc, setDoc, updateDoc } from "firebase/firestore";
 import { getStorage, ref, uploadBytesResumable, getDownloadURL } from "firebase/storage";
 import AsyncStorage from "@react-native-async-storage/async-storage";
-import { sanitizeUserProfile } from "./validation";
 
 const firebaseConfig = {
     apiKey: process.env.EXPO_PUBLIC_FIREBASE_API_KEY,
@@ -37,7 +36,7 @@ try {
         persistence: getReactNativePersistence(AsyncStorage)
     });
 } catch (e) {
-    // Auth might be already initialized or not supported in this env
+    
     auth = getAuth(app);
 }
 
@@ -49,7 +48,7 @@ export const loginWithEmail = (email, password) => {
 
 export const signUpWithEmail = async (email, password, displayName) => {
     const userCredential = await createUserWithEmailAndPassword(auth, email, password);
-    const profile = sanitizeUserProfile({
+    await setDoc(doc(db, 'users', userCredential.user.uid), {
         displayName: displayName || `Shinobi_${userCredential.user.uid.substring(0, 6)}`,
         email: email,
         createdAt: new Date(),
@@ -58,7 +57,6 @@ export const signUpWithEmail = async (email, password, displayName) => {
         clan: null,
         isPremium: false
     });
-    await setDoc(doc(db, 'users', userCredential.user.uid), profile);
     return userCredential;
 };
 
@@ -92,9 +90,9 @@ export const updateUserProfile = async (uid, data) => {
 
 const storage = getStorage(app);
 
-export const uploadFileToStorage = async (file, path, onProgress) => {
+export const uploadVideoToStorage = async (file, path, onProgress) => {
     try {
-        // Fetch the file from URI to create a blob
+        
         const response = await fetch(file.uri);
         const blob = await response.blob();
 
@@ -123,9 +121,8 @@ export const uploadFileToStorage = async (file, path, onProgress) => {
     }
 };
 
-export const uploadVideoToStorage = uploadFileToStorage; // Alias for backward compatibility
 export const uploadImageToStorage = async (uri, path, onProgress) => {
-    return uploadFileToStorage({ uri }, path, onProgress);
+    return uploadVideoToStorage({ uri }, path, onProgress);
 };
 
 export { auth, db, storage, ref, uploadBytesResumable, getDownloadURL };

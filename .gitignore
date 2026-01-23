@@ -12,14 +12,6 @@ dist
 dist-ssr
 *.local
 
-# Python
-__pycache__/
-*.py[cod]
-*$py.class
-*.so
-.Python
-*.pyc
-
 # Editor directories and files
 .vscode/*
 !.vscode/extensions.json
@@ -31,14 +23,10 @@ __pycache__/
 *.sln
 *.sw?
 
-# Environment variables - NEVER commit these!
+# Environment variables
 .env
-.env.*
-!.env.example
-*.local
-backend/.env
-mobile/.env
-.env.fromweb
+.env.local
+.env.production
 
 # Firebase
 .firebase/

@@ -42,10 +42,10 @@ export default function ChatScreen() {
     const isUnmounting = useRef(false);
     const appState = useRef(AppState.currentState);
 
-    const userName = typeof userProfile?.displayName === 'string' ? userProfile.displayName : 'Guest_Ninja';
+    const userName = userProfile?.displayName || 'Guest_Ninja';
 
     const cleanup = useCallback(() => {
-
+        
         if (heartbeatInterval.current) {
             clearInterval(heartbeatInterval.current);
             heartbeatInterval.current = null;
@@ -75,7 +75,7 @@ export default function ChatScreen() {
     }, []);
 
     const startHeartbeat = useCallback(() => {
-
+        
         if (heartbeatInterval.current) {
             clearInterval(heartbeatInterval.current);
         }
@@ -131,11 +131,11 @@ export default function ChatScreen() {
 
                     switch (message.type) {
                         case 'pong':
-
+                            
                             break;
 
                         case 'connected':
-
+                            
                             if (message.room_stats) {
                                 setOnlineCount(message.room_stats.clients || 0);
                             }
@@ -155,7 +155,7 @@ export default function ChatScreen() {
                             break;
 
                         case 'system':
-
+                            
                             setMessages(prev => [...prev, message]);
                             if (message.room_stats) {
                                 setOnlineCount(message.room_stats.clients || 0);
@@ -163,12 +163,12 @@ export default function ChatScreen() {
                             break;
 
                         case 'typing':
-
+                            
                             break;
 
                         case 'message':
                         default:
-
+                            
                             setMessages(prev => [...prev, message]);
                             break;
                     }
@@ -230,14 +230,14 @@ export default function ChatScreen() {
     useEffect(() => {
         const subscription = AppState.addEventListener('change', nextAppState => {
             if (appState.current.match(/inactive|background/) && nextAppState === 'active') {
-
+                
                 console.log('App active - checking WebSocket');
                 if (!ws.current || ws.current.readyState !== WebSocket.OPEN) {
                     reconnectAttempts.current = 0;
                     connectWebSocket();
                 }
             } else if (nextAppState.match(/inactive|background/)) {
-
+                
                 if (heartbeatInterval.current) {
                     clearInterval(heartbeatInterval.current);
                     heartbeatInterval.current = null;
@@ -321,7 +321,7 @@ export default function ChatScreen() {
 
         return (
             <View style={{ marginBottom: 16, flexDirection: isMe ? 'row-reverse' : 'row', alignItems: 'flex-end', paddingHorizontal: 4 }}>
-                { }
+                {}
                 <View style={{
                     width: 32, height: 32, borderRadius: 16,
                     backgroundColor: isMe ? theme.primary : theme.bgSecondary,
@@ -338,7 +338,7 @@ export default function ChatScreen() {
                     )}
                 </View>
 
-                { }
+                {}
                 <View style={{ maxWidth: '75%' }}>
                     {!isMe && (
                         <TouchableOpacity onPress={() => setProfileModal({ visible: true, userId: item.user_id || safeUserName, userName: safeUserName })}>
@@ -393,7 +393,7 @@ export default function ChatScreen() {
         <View style={{ flex: 1, backgroundColor: theme.bg }}>
             <StatusBar style={isDark ? "light" : "dark"} />
 
-            { }
+            {}
             <View style={{ paddingTop: 50, paddingBottom: 16, paddingHorizontal: 20, flexDirection: 'row', alignItems: 'center', backgroundColor: theme.bgSecondary, borderBottomWidth: 1, borderBottomColor: theme.border }}>
                 <TouchableOpacity onPress={() => navigation.goBack()} style={{ padding: 8, marginRight: 8 }}>
                     <ArrowLeftIcon size={24} color={theme.text} />
@@ -413,10 +413,10 @@ export default function ChatScreen() {
                 </View>
             </View>
 
-            { }
+            {}
             {renderConnectionStatus()}
 
-            { }
+            {}
             <FlatList
                 ref={flatListRef}
                 data={messages}
@@ -426,7 +426,7 @@ export default function ChatScreen() {
                 onContentSizeChange={() => flatListRef.current?.scrollToEnd({ animated: true })}
             />
 
-            { }
+            {}
             <KeyboardAvoidingView
                 behavior={Platform.OS === 'ios' ? 'padding' : 'height'}
                 keyboardVerticalOffset={Platform.OS === 'ios' ? 0 : 20}
@@ -460,7 +460,7 @@ export default function ChatScreen() {
                 </View>
             </KeyboardAvoidingView>
 
-            { }
+            {}
             <UserProfileModal
                 visible={profileModal.visible}
                 onClose={() => setProfileModal({ visible: false, userId: null, userName: null })}

@@ -73,8 +73,7 @@ export default function SocialScreen() {
 
     const loadChats = async () => {
         try {
-            const displayNameStr = typeof userProfile?.displayName === 'string' ? userProfile.displayName : 'Guest';
-            const data = await api.getRecentChats(displayNameStr);
+            const data = await api.getRecentChats(userProfile?.displayName || '');
             setChats(data || []);
         } catch (e) {
             console.error("Failed to load chats", e);
@@ -133,13 +132,13 @@ export default function SocialScreen() {
             <View style={{ flex: 1, backgroundColor: theme.bg }}>
                 <StatusBar style={isDark ? "light" : "dark"} />
 
-                { }
+                {}
                 <View style={{ paddingTop: 56, paddingHorizontal: 24, paddingBottom: 16 }}>
                     <Text style={{ color: theme.text, fontSize: 28, fontWeight: '800' }}>Social</Text>
                     <Text style={{ color: theme.textMuted, fontSize: 14, marginTop: 4 }}>Connect with your nakama</Text>
                 </View>
 
-                { }
+                {}
                 <View style={{ flexDirection: 'row', marginHorizontal: 24, marginBottom: 16, backgroundColor: theme.bgCard, borderRadius: 16, padding: 4, borderWidth: 1, borderColor: theme.border }}>
                     <TouchableOpacity
                         onPress={() => setActiveTab('chats')}
@@ -157,7 +156,7 @@ export default function SocialScreen() {
                     </TouchableOpacity>
                 </View>
 
-                { }
+                {}
                 <View style={{ marginHorizontal: 24, marginBottom: 16 }}>
                     <View style={{ flexDirection: 'row', alignItems: 'center', backgroundColor: theme.bgCard, borderRadius: 14, paddingHorizontal: 14, borderWidth: 1, borderColor: theme.border }}>
                         <Search color={theme.textMuted} size={18} />
@@ -169,7 +168,7 @@ export default function SocialScreen() {
                     </View>
                 </View>
 
-                { }
+                {}
                 <ScrollView contentContainerStyle={{ paddingBottom: 100 }}>
                     {activeTab === 'chats' ? (
                         chats.length > 0 ? (

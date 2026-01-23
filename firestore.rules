@@ -53,20 +53,14 @@ service cloud.firestore {
     // ============ USER RULES ============
     
     match /users/{userId} {
-      // TEMPORARY: Allow all reads for debugging
-      // TODO: Revert to `if request.auth != null` after fixing
-      allow read: if true;
+      // Anyone authenticated can read user profiles
+      allow read: if isAuthenticated();
       
-      // TEMPORARY: Simplified create rule for debugging
-      allow create: if true;
-      
-      // Users can update their own profile with validation
-      allow update: if request.auth != null 
-                    && request.auth.uid == userId 
-                    && validDisplayName();
+      // Users can only write their own profile
+      allow create: if isOwner(userId) && validDisplayName();
+      allow update: if isOwner(userId) && validDisplayName();
       
       // Only admins can delete users
-      allow delete: if isAdmin();
       allow delete: if isAdmin();
       
       // Subcollections
@@ -80,7 +74,7 @@ service cloud.firestore {
       
       match /notifications/{notificationId} {
         allow read: if isOwner(userId);
-        allow write: if request.auth != null; // System can create notifications
+        allow write: if isAuthenticated(); // System can create notifications
       }
     }
     

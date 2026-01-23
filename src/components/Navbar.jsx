@@ -64,25 +64,16 @@ const NavDropdown = ({ item, activeId, setActiveId }) => (
     onMouseEnter={() => setActiveId(item.id)}
     onMouseLeave={() => setActiveId(null)}
   >
-    <motion.button
-      whileHover={{ scale: 1.05 }}
-      whileTap={{ scale: 0.95 }}
+    <button
       className={`
-                flex items-center gap-1.5 px-4 py-2.5 rounded-xl text-sm font-semibold transition-all duration-300 relative overflow-hidden
-                ${activeId === item.id ? 'text-yellow-400 bg-gradient-to-r from-yellow-500/10 to-amber-500/10 shadow-lg shadow-yellow-500/20' : 'text-slate-300 hover:text-white hover:bg-white/5'}
+                flex items-center gap-1 px-4 py-2 rounded-full text-sm font-medium transition-all duration-300
+                ${activeId === item.id ? 'text-yellow-400 bg-white/5' : 'text-slate-400 hover:text-white'}
             `}
     >
-      {activeId === item.id && (
-        <motion.div
-          layoutId="navHighlight"
-          className="absolute inset-0 bg-gradient-to-r from-yellow-500/10 to-amber-500/10 rounded-xl"
-          transition={{ type: "spring", bounce: 0.2, duration: 0.6 }}
-        />
-      )}
-      <item.icon size={18} className="relative z-10" />
-      <span className="relative z-10">{item.label}</span>
-      <ChevronDown size={14} className={`transition-transform duration-300 relative z-10 ${activeId === item.id ? 'rotate-180' : ''}`} />
-    </motion.button>
+      <item.icon size={16} />
+      {item.label}
+      <ChevronDown size={14} className={`transition-transform duration-300 ${activeId === item.id ? 'rotate-180' : ''}`} />
+    </button>
 
     <AnimatePresence>
       {activeId === item.id && (
@@ -93,33 +84,26 @@ const NavDropdown = ({ item, activeId, setActiveId }) => (
           transition={{ duration: 0.2, ease: "easeOut" }}
           className="absolute top-full left-0 w-80 pt-4"
         >
-          <div className="bg-[#0a0a0f]/98 backdrop-blur-2xl border border-yellow-500/30 rounded-2xl p-3 shadow-[0_20px_60px_-15px_rgba(234,179,8,0.4)] overflow-hidden">
-            <div className="absolute inset-0 bg-gradient-to-br from-yellow-500/5 via-transparent to-amber-500/5 pointer-events-none" />
-            <div className="grid gap-1.5 relative z-10">
+          <div className="bg-[#0a0a0f]/95 backdrop-blur-xl border border-yellow-500/20 rounded-2xl p-2 shadow-[0_10px_40px_-10px_rgba(0,0,0,0.8)] overflow-hidden">
+            <div className="grid gap-1">
               {item.items.map((subItem) => (
-                <motion.div
+                <Link
                   key={subItem.path}
-                  whileHover={{ x: 4 }}
-                  transition={{ type: "spring", stiffness: 300 }}
+                  to={subItem.path}
+                  className="flex items-start gap-3 p-3 rounded-xl hover:bg-white/10 group/item transition-colors"
                 >
-                  <Link
-                    to={subItem.path}
-                    className="flex items-start gap-3 p-3 rounded-xl hover:bg-gradient-to-r hover:from-yellow-500/10 hover:to-amber-500/5 group/item transition-all border border-transparent hover:border-yellow-500/20"
-                  >
-                    <div className="p-2.5 rounded-xl bg-white/5 group-hover/item:bg-gradient-to-br group-hover/item:from-yellow-500/20 group-hover/item:to-amber-500/20 group-hover/item:text-yellow-400 text-slate-400 transition-all group-hover/item:shadow-lg group-hover/item:shadow-yellow-500/20">
-                      <subItem.icon size={18} />
+                  <div className="p-2 rounded-lg bg-white/5 group-hover/item:bg-yellow-500/20 group-hover/item:text-yellow-400 text-slate-400 transition-colors">
+                    <subItem.icon size={18} />
+                  </div>
+                  <div>
+                    <div className="text-white text-sm font-medium group-hover/item:text-yellow-400 transition-colors">
+                      {subItem.label}
                     </div>
-                    <div className="flex-1">
-                      <div className="text-white text-sm font-semibold group-hover/item:text-yellow-400 transition-colors flex items-center gap-2">
-                        {subItem.label}
-                        <ChevronRight size={14} className="opacity-0 group-hover/item:opacity-100 transition-opacity" />
-                      </div>
-                      <div className="text-slate-500 text-xs mt-0.5">
-                        {subItem.desc}
-                      </div>
+                    <div className="text-slate-500 text-xs">
+                      {subItem.desc}
                     </div>
-                  </Link>
-                </motion.div>
+                  </div>
+                </Link>
               ))}
             </div>
           </div>
@@ -133,10 +117,7 @@ const UserMenu = ({ user, activeUsers, onLogout }) => {
   const [isOpen, setIsOpen] = useState(false);
   return (
     <div className="relative" onMouseEnter={() => setIsOpen(true)} onMouseLeave={() => setIsOpen(false)}>
-      <motion.div 
-        whileHover={{ scale: 1.02 }}
-        className="flex items-center gap-4 cursor-pointer py-2"
-      >
+      <div className="flex items-center gap-4 cursor-pointer py-2">
         {}
         <div className="hidden lg:flex flex-col items-end mr-2">
           <div className="flex items-center gap-1.5 text-xs font-bold text-green-400">
@@ -151,8 +132,8 @@ const UserMenu = ({ user, activeUsers, onLogout }) => {
         <div className="h-8 w-[1px] bg-white/10 mx-2 hidden lg:block" />
 
         {}
-        <div className={`p-[2px] rounded-full bg-gradient-to-br ${user?.isPremium ? 'from-yellow-400 via-amber-500 to-yellow-600 animate-pulse' : 'from-slate-700 to-slate-600'} shadow-lg ${user?.isPremium ? 'shadow-yellow-500/50' : ''}`}>
-          <div className="h-9 w-9 rounded-full bg-black overflow-hidden relative ring-2 ring-black">
+        <div className={`p-[2px] rounded-full bg-gradient-to-br ${user?.isPremium ? 'from-yellow-400 to-amber-600' : 'from-slate-700 to-slate-600'}`}>
+          <div className="h-9 w-9 rounded-full bg-black overflow-hidden relative">
             {user?.photoURL ? (
               <img src={user.photoURL} alt="Profile" className="h-full w-full object-cover" />
             ) : (
@@ -162,7 +143,7 @@ const UserMenu = ({ user, activeUsers, onLogout }) => {
             )}
           </div>
         </div>
-      </motion.div>
+      </div>
 
       <AnimatePresence>
         {isOpen && (
@@ -172,11 +153,10 @@ const UserMenu = ({ user, activeUsers, onLogout }) => {
             exit={{ opacity: 0, y: 10, scale: 0.95, x: 20 }}
             className="absolute top-full right-0 w-64 pt-2"
           >
-            <div className="bg-[#0a0a0f]/98 backdrop-blur-2xl border border-yellow-500/30 rounded-2xl p-4 shadow-[0_20px_60px_-15px_rgba(234,179,8,0.4)]">
-              <div className="absolute inset-0 bg-gradient-to-br from-yellow-500/5 via-transparent to-amber-500/5 pointer-events-none rounded-2xl" />
+            <div className="bg-[#0a0a0f]/95 backdrop-blur-xl border border-yellow-500/20 rounded-2xl p-4 shadow-[0_10px_50px_-10px_rgba(0,0,0,0.9)]">
               {}
-              <div className="mb-4 pb-4 border-b border-white/10 relative z-10">
-                <h3 className="text-white font-bold truncate text-lg">{user?.displayName || 'User'}</h3>
+              <div className="mb-4 pb-4 border-b border-white/10">
+                <h3 className="text-white font-bold truncate">{user?.displayName || 'User'}</h3>
                 <div className="flex items-center gap-2 mt-1">
                   <span className="text-xs px-2 py-0.5 rounded bg-yellow-500/20 text-yellow-400 font-medium">
                     {user?.isPremium ? 'Premium' : 'Member'}
@@ -189,31 +169,27 @@ const UserMenu = ({ user, activeUsers, onLogout }) => {
               </div>
 
               {}
-              <div className="space-y-1 relative z-10">
-                <Link to="/profile" className="flex items-center gap-3 px-3 py-2.5 rounded-xl text-slate-400 hover:text-white hover:bg-gradient-to-r hover:from-yellow-500/10 hover:to-amber-500/5 transition-all group">
-                  <Users size={16} className="group-hover:text-yellow-400 transition-colors" /> 
-                  <span className="font-medium">Profile</span>
+              <div className="space-y-1">
+                <Link to="/profile" className="flex items-center gap-3 px-3 py-2 rounded-lg text-slate-400 hover:text-white hover:bg-white/5 transition-colors">
+                  <Users size={16} /> Profile
                 </Link>
-                <Link to="/command-center" className="flex items-center gap-3 px-3 py-2.5 rounded-xl text-slate-400 hover:text-white hover:bg-gradient-to-r hover:from-yellow-500/10 hover:to-amber-500/5 transition-all group">
-                  <Compass size={16} className="group-hover:text-yellow-400 transition-colors" /> 
-                  <span className="font-medium">Dashboard</span>
+                <Link to="/command-center" className="flex items-center gap-3 px-3 py-2 rounded-lg text-slate-400 hover:text-white hover:bg-white/5 transition-colors">
+                  <Compass size={16} /> Dashboard
                 </Link>
                 {user?.role === 'admin' && (
-                  <Link to="/admin" className="flex items-center gap-3 px-3 py-2.5 rounded-xl text-red-400 hover:text-red-300 hover:bg-red-500/10 transition-all group">
-                    <Shield size={16} className="group-hover:scale-110 transition-transform" /> 
-                    <span className="font-medium">Admin Panel</span>
+                  <Link to="/admin" className="flex items-center gap-3 px-3 py-2 rounded-lg text-red-400 hover:text-red-300 hover:bg-red-500/10 transition-colors">
+                    <Shield size={16} /> Admin Panel
                   </Link>
                 )}
               </div>
 
               {}
-              <div className="mt-4 pt-3 border-t border-white/10 relative z-10">
+              <div className="mt-4 pt-3 border-t border-white/10">
                 <button
                   onClick={onLogout}
-                  className="w-full flex items-center gap-3 px-3 py-2.5 rounded-xl text-slate-400 hover:text-red-400 hover:bg-red-500/10 transition-all text-left group"
+                  className="w-full flex items-center gap-3 px-3 py-2 rounded-lg text-slate-400 hover:text-red-400 hover:bg-red-500/10 transition-colors text-left"
                 >
-                  <LogOut size={16} className="group-hover:translate-x-1 transition-transform" /> 
-                  <span className="font-medium">Sign Out</span>
+                  <LogOut size={16} /> Sign Out
                 </button>
               </div>
             </div>
@@ -272,13 +248,8 @@ const Navbar = () => {
             {}
             <div className="flex items-center gap-8">
               <Link to="/" className="flex-shrink-0 relative group">
-                <div className="absolute -inset-2 bg-gradient-to-r from-yellow-500/20 to-amber-500/20 blur-xl rounded-full opacity-0 group-hover:opacity-100 transition-opacity duration-500" />
-                <motion.div
-                  whileHover={{ scale: 1.05, rotate: [0, -5, 5, 0] }}
-                  transition={{ duration: 0.5 }}
-                >
-                  <NakamaLogo className="h-8 w-auto relative z-10" />
-                </motion.div>
+                <div className="absolute -inset-1 bg-yellow-500/20 blur-md rounded-full opacity-0 group-hover:opacity-100 transition-opacity" />
+                <NakamaLogo className="h-8 w-auto relative z-10" />
               </Link>
 
               {}
@@ -296,27 +267,21 @@ const Navbar = () => {
 
             {}
             <div className="flex items-center gap-4">
-              <motion.button 
-                whileHover={{ scale: 1.1, rotate: 90 }}
-                whileTap={{ scale: 0.9 }}
-                className="hidden sm:flex p-2.5 rounded-xl text-slate-400 hover:text-yellow-400 hover:bg-gradient-to-br hover:from-yellow-500/10 hover:to-amber-500/5 transition-all shadow-lg hover:shadow-yellow-500/20"
-              >
+              <button className="hidden sm:flex p-2 rounded-full text-slate-400 hover:text-white hover:bg-white/10 transition-colors">
                 <Search size={20} />
-              </motion.button>
+              </button>
 
               <div className="h-6 w-[1px] bg-white/10 hidden sm:block" />
 
               <UserMenu user={userProfile} activeUsers={activeUsers} onLogout={handleLogout} />
 
               {}
-              <motion.button
-                whileHover={{ scale: 1.05 }}
-                whileTap={{ scale: 0.95 }}
-                className="lg:hidden p-2.5 rounded-xl text-slate-300 hover:text-white hover:bg-gradient-to-br hover:from-yellow-500/10 hover:to-amber-500/5 transition-all"
+              <button
+                className="lg:hidden p-2 rounded-lg text-slate-300 hover:text-white hover:bg-white/10"
                 onClick={() => setMobileMenuOpen(true)}
               >
                 <Menu size={24} />
-              </motion.button>
+              </button>
             </div>
           </div>
         </div>

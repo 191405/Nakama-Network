@@ -1,13 +1,10 @@
-"""
-Nakama Network - Email Service
-Handles all email communications with premium HTML templates
-"""
 
 import smtplib
 from email.mime.text import MIMEText
 from email.mime.multipart import MIMEMultipart
 from typing import Optional
 import logging
+import os
 from datetime import datetime
 
 logger = logging.getLogger(__name__)
@@ -21,9 +18,7 @@ SMTP_PASSWORD = settings.smtp_password
 APP_NAME = "Nakama Network"
 APP_URL = "https://nk-network-project.web.app"
 
-
 def get_email_base_template(content: str, preheader: str = "") -> str:
-    """Generate base HTML email template with content"""
     return f"""
     <!DOCTYPE html>
     <html lang="en">
@@ -31,6 +26,15 @@ def get_email_base_template(content: str, preheader: str = "") -> str:
         <meta charset="UTF-8">
         <meta name="viewport" content="width=device-width, initial-scale=1.0">
         <title>Nakama Network</title>
+        <!--[if mso]>
+        <noscript>
+            <xml>
+                <o:OfficeDocumentSettings>
+                    <o:PixelsPerInch>96</o:PixelsPerInch>
+                </o:OfficeDocumentSettings>
+            </xml>
+        </noscript>
+        <![endif]-->
     </head>
     <body style="margin: 0; padding: 0; background-color: #050505; font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;">
         <!-- Preheader text (hidden) -->
@@ -84,40 +88,9 @@ def get_email_base_template(content: str, preheader: str = "") -> str:
         </table>
     </body>
     </html>
-    """
-
-
-def send_email(to_email: str, subject: str, html_content: str) -> bool:
-    """Send an email via SMTP. Returns True on success, False on failure."""
-    if not SMTP_EMAIL or not SMTP_PASSWORD:
-        logger.warning("SMTP credentials not configured, skipping email send")
-        return False
-    
-    try:
-        msg = MIMEMultipart('alternative')
-        msg['From'] = f"{APP_NAME} <{SMTP_EMAIL}>"
-        msg['To'] = to_email
-        msg['Subject'] = subject
-        
-        html_part = MIMEText(html_content, 'html')
-        msg.attach(html_part)
-        
-        with smtplib.SMTP(SMTP_HOST, SMTP_PORT) as server:
-            server.starttls()
-            server.login(SMTP_EMAIL, SMTP_PASSWORD)
-            server.send_message(msg)
-        
-        logger.info(f"Email sent successfully to {to_email}")
-        return True
-        
-    except Exception as e:
-        logger.error(f"Failed to send email to {to_email}: {e}")
-        return False
-
-
-def send_welcome_email(email: str, display_name: str) -> bool:
-    """Send welcome email to new users with dramatic anime-style greeting"""
-    content = f"""
+    Send an email via SMTP
+    Returns True on success, False on failure
+    Send welcome email to new users with dramatic anime-style greeting
         <h2 style="color: #eab308; margin-top: 0; font-size: 24px;">
             Welcome, {display_name}! 🔥
         </h2>
@@ -136,20 +109,30 @@ def send_welcome_email(email: str, display_name: str) -> bool:
             <p style="margin: 0 0 15px; font-weight: bold; color: #fff; font-size: 16px;">
                 🎮 Your Powers Await:
             </p>
-            <ul style="margin: 0; padding-left: 20px; color: #cbd5e1; font-size: 14px;">
-                <li style="padding: 8px 0;">⚔️ <strong>Battle Arena</strong> - Debate epic matchups</li>
-                <li style="padding: 8px 0;">🧠 <strong>Millionaire Trivia</strong> - Test your knowledge</li>
-                <li style="padding: 8px 0;">🔮 <strong>The Oracle</strong> - AI anime recommendations</li>
-                <li style="padding: 8px 0;">🏰 <strong>Clans</strong> - Build your team</li>
-                <li style="padding: 8px 0;">📈 <strong>Ranking System</strong> - Rise through 13 tiers</li>
-            </ul>
+            <table role="presentation" cellpadding="0" cellspacing="0" style="width: 100%;">
+                <tr>
+                    <td style="padding: 8px 0; color: #cbd5e1; font-size: 14px;">⚔️ <strong>Battle Arena</strong> - Debate epic matchups</td>
+                </tr>
+                <tr>
+                    <td style="padding: 8px 0; color: #cbd5e1; font-size: 14px;">🧠 <strong>Millionaire Trivia</strong> - Test your knowledge</td>
+                </tr>
+                <tr>
+                    <td style="padding: 8px 0; color: #cbd5e1; font-size: 14px;">🔮 <strong>The Oracle</strong> - AI anime recommendations</td>
+                </tr>
+                <tr>
+                    <td style="padding: 8px 0; color: #cbd5e1; font-size: 14px;">🏰 <strong>Clans</strong> - Build your team</td>
+                </tr>
+                <tr>
+                    <td style="padding: 8px 0; color: #cbd5e1; font-size: 14px;">📈 <strong>Ranking System</strong> - Rise through 13 tiers</td>
+                </tr>
+            </table>
         </div>
         
         <!-- CTA Button -->
         <div style="text-align: center; margin: 35px 0;">
             <a href="{APP_URL}" 
                style="background: linear-gradient(135deg, #eab308, #ca8a04);
-                      color: #000;
+                      color:
                       padding: 16px 40px; 
                       text-decoration: none; 
                       border-radius: 50px; 
@@ -165,15 +148,7 @@ def send_welcome_email(email: str, display_name: str) -> bool:
         <p style="font-size: 14px; color: #94a3b8; text-align: center; font-style: italic;">
             "The bond between Nakama is unbreakable."
         </p>
-    """
-    
-    html = get_email_base_template(content, f"Welcome to Nakama Network, {display_name}!")
-    return send_email(email, f"⚔️ Welcome to Nakama Network, {display_name}!", html)
-
-
-def send_verification_email(email: str, display_name: str, verification_url: str) -> bool:
-    """Send email verification link"""
-    content = f"""
+    Send email verification link
         <h2 style="color: #eab308; margin-top: 0; font-size: 24px;">
             Almost There, {display_name}! ⚡
         </h2>
@@ -188,7 +163,7 @@ def send_verification_email(email: str, display_name: str, verification_url: str
             <p style="margin: 0 0 20px; color: #94a3b8; font-size: 14px;">Click the button below to verify:</p>
             <a href="{verification_url}" 
                style="background: linear-gradient(135deg, #eab308, #ca8a04);
-                      color: #000;
+                      color:
                       padding: 14px 35px; 
                       text-decoration: none; 
                       border-radius: 50px; 
@@ -202,15 +177,7 @@ def send_verification_email(email: str, display_name: str, verification_url: str
         <p style="font-size: 13px; color: #64748b; text-align: center;">
             This link expires in 24 hours. If you didn't create an account, ignore this email.
         </p>
-    """
-    
-    html = get_email_base_template(content, "Verify your Nakama Network email")
-    return send_email(email, "⚡ Verify Your Nakama Network Email", html)
-
-
-def send_password_reset_email(email: str, display_name: str, reset_url: str) -> bool:
-    """Send password reset link"""
-    content = f"""
+    Send password reset link
         <h2 style="color: #eab308; margin-top: 0; font-size: 24px;">
             Password Reset Request 🔒
         </h2>
@@ -224,7 +191,7 @@ def send_password_reset_email(email: str, display_name: str, reset_url: str) -> 
         <div style="text-align: center; margin: 35px 0;">
             <a href="{reset_url}" 
                style="background: linear-gradient(135deg, #eab308, #ca8a04);
-                      color: #000;
+                      color:
                       padding: 16px 40px; 
                       text-decoration: none; 
                       border-radius: 50px; 
@@ -241,15 +208,7 @@ def send_password_reset_email(email: str, display_name: str, reset_url: str) -> 
                 If you didn't request this, someone may be trying to access your account.
             </p>
         </div>
-    """
-    
-    html = get_email_base_template(content, "Password reset request for Nakama Network")
-    return send_email(email, "🔒 Nakama Network Password Reset", html)
-
-
-def send_feedback_received_email(email: str, display_name: str, preview: str) -> bool:
-    """Confirm receipt of user feedback"""
-    content = f"""
+    Confirm receipt of user feedback
         <h2 style="color: #eab308; margin-top: 0; font-size: 24px;">
             Thanks for Your Feedback! 🙏
         </h2>
@@ -279,15 +238,7 @@ def send_feedback_received_email(email: str, display_name: str, preview: str) ->
                 ⭐ Keep being awesome, {display_name}!
             </p>
         </div>
-    """
-    
-    html = get_email_base_template(content, "Thanks for your feedback!")
-    return send_email(email, "🙏 Thanks for Your Feedback!", html)
-
-
-def send_rank_promotion_email(email: str, display_name: str, new_rank: str, rank_color: str) -> bool:
-    """Celebrate user rank promotion with epic notification"""
-    content = f"""
+    Celebrate user rank promotion with epic notification
         <div style="text-align: center;">
             <h2 style="color: {rank_color}; margin-top: 0; font-size: 28px; text-transform: uppercase; letter-spacing: 2px;">
                 🎊 RANK UP! 🎊
@@ -316,7 +267,7 @@ def send_rank_promotion_email(email: str, display_name: str, new_rank: str, rank
             
             <a href="{APP_URL}/profile" 
                style="background: linear-gradient(135deg, #eab308, #ca8a04);
-                      color: #000;
+                      color:
                       padding: 14px 35px; 
                       text-decoration: none; 
                       border-radius: 50px; 
@@ -326,15 +277,7 @@ def send_rank_promotion_email(email: str, display_name: str, new_rank: str, rank
                 View Your Profile
             </a>
         </div>
-    """
-    
-    html = get_email_base_template(content, f"Congratulations! You've reached {new_rank}!")
-    return send_email(email, f"🎊 Rank Up: {new_rank}!", html)
-
-
-def send_daily_prophecy_email(email: str, display_name: str, prophecy_text: str, anime_title: str) -> bool:
-    """Send daily prophecy notification (for users who opt-in)"""
-    content = f"""
+    Send daily prophecy notification (for users who opt-in)
         <div style="text-align: center;">
             <h2 style="color: #a855f7; margin-top: 0; font-size: 24px;">
                 🔮 Daily Prophecy
@@ -363,7 +306,3 @@ def send_daily_prophecy_email(email: str, display_name: str, prophecy_text: str,
                 Get another prophecy →
             </a>
         </div>
-    """
-    
-    html = get_email_base_template(content, "Your daily anime prophecy awaits!")
-    return send_email(email, "🔮 Your Daily Prophecy", html)

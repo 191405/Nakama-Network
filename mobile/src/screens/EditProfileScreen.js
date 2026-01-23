@@ -1,5 +1,5 @@
 import React, { useState } from 'react';
-import { View, Text, TextInput, TouchableOpacity, ScrollView, Alert, KeyboardAvoidingView, Platform, ActivityIndicator, Image } from 'react-native';
+import { View, Text, TextInput, TouchableOpacity, ScrollView, Alert, KeyboardAvoidingView, Platform, ActivityIndicator } from 'react-native';
 import { StatusBar } from 'expo-status-bar';
 import { X, Save, User, FileText } from 'lucide-react-native';
 import { useAuth } from '../contexts/AuthContext';
@@ -13,9 +13,7 @@ export default function EditProfileScreen({ navigation }) {
     const { userProfile, updateProfile } = useAuth();
     const { theme, isDark } = useTheme();
 
-    const [displayName, setDisplayName] = useState(
-        typeof userProfile?.displayName === 'string' ? userProfile.displayName : ''
-    );
+    const [displayName, setDisplayName] = useState(userProfile?.displayName || '');
     const [photoURL, setPhotoURL] = useState(userProfile?.photoURL || '');
     const [bio, setBio] = useState(userProfile?.bio || '');
     const [loading, setLoading] = useState(false);
@@ -42,19 +40,11 @@ export default function EditProfileScreen({ navigation }) {
         setLoading(true);
         try {
             let finalPhotoURL = photoURL;
-
+            
             if (photoURL && (photoURL.startsWith('file:') || photoURL.startsWith('content:'))) {
-                // Check if user is authenticated (not a guest)
-                if (!userProfile?.uid || userProfile.uid === 'guest' || userProfile.isGuest) {
-                    Alert.alert('Account Required', 'Please create an account to upload a profile picture.');
-                    setLoading(false);
-                    return;
-                }
-
-                // Upload to avatars folder with user's UID
                 finalPhotoURL = await uploadImageToStorage(
                     photoURL,
-                    `avatars/${userProfile.uid}/profile_${Date.now()}.jpg`
+                    `users/${userProfile?.uid || 'guest'}/profile_${Date.now()}.jpg`
                 );
             }
 
@@ -68,11 +58,7 @@ export default function EditProfileScreen({ navigation }) {
             ]);
         } catch (error) {
             console.error(error);
-            // Enhanced error message
-            const msg = error.code === 'storage/unauthorized'
-                ? 'Permission denied. Please try logging in again.'
-                : 'Failed to update profile. Please try again.';
-            Alert.alert('Error', msg);
+            Alert.alert('Error', 'Failed to update profile. Please try again.');
         } finally {
             setLoading(false);
         }
@@ -82,7 +68,7 @@ export default function EditProfileScreen({ navigation }) {
         <View style={{ flex: 1, backgroundColor: theme.bg }}>
             <StatusBar style={isDark ? "light" : "dark"} />
 
-            {/* Header */}
+            {}
             <View style={{ paddingTop: 50, paddingHorizontal: 20, paddingBottom: 16, borderBottomWidth: 1, borderBottomColor: theme.border, flexDirection: 'row', alignItems: 'center', justifyContent: 'space-between' }}>
                 <View style={{ flexDirection: 'row', alignItems: 'center' }}>
                     <TouchableOpacity onPress={() => navigation.goBack()} style={{ padding: 4, marginRight: 12 }}>

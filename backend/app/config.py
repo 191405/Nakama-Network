@@ -37,26 +37,6 @@ class Settings(BaseSettings):
     cache_ttl_details: int = 86400
     cache_ttl_characters: int = 86400
 
-    # Backblaze B2 / S3-Compatible Storage
-    # Set these in .env file
-    b2_endpoint_url: str = ""  # e.g., https://s3.us-west-000.backblazeb2.com
-    b2_access_key: str = ""    # Application Key ID
-    b2_secret_key: str = ""    # Application Key Secret  
-    b2_bucket_name: str = "nk-network-videos"
-    
-    # Bunny CDN (connected to B2)
-    # After linking B2 to Bunny, use your Bunny Pull Zone URL
-    cdn_base_url: str = ""     # e.g., https://nk-network.b-cdn.net
-
-    # IONOS SFTP Storage (FREE alternative to cloud storage)
-    # Set these in .env file
-    sftp_host: str = ""        # e.g., access960253636.webspace-data.io
-    sftp_port: int = 22
-    sftp_username: str = ""    # SFTP username
-    sftp_password: str = ""    # SFTP password
-    sftp_base_path: str = "/videos"  # Remote directory for videos
-    sftp_public_url: str = ""  # e.g., https://platkelvconcept.net
-
     smtp_host: str = "smtp.gmail.com"
     smtp_port: int = 587
     smtp_user: str = "nakamanetworkonline@gmail.com"

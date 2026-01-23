@@ -1,8 +1,6 @@
 import React, { createContext, useContext, useState, useEffect } from 'react';
 import { auth, db, loginWithEmail, signUpWithEmail, logoutUser, getUserProfile, createUserProfile, updateUserProfile, signInWithGoogle, resetPassword } from '../utils/firebase';
 import { onAuthStateChanged } from 'firebase/auth';
-import { sanitizeUserProfile } from '../utils/validation';
-import { safeExecute, ErrorType } from '../utils/errorHandler';
 import api from '../services/api';
 
 const AuthContext = createContext();
@@ -13,126 +11,42 @@ export const useAuth = () => {
     return context;
 };
 
-// --- HELPERS ---
-
-/**
- * Safely force checks the auth token from the global Auth instance.
- * Prevents "user.getIdToken is not a function" crashes.
- */
-const forceTokenRefresh = async () => {
-    if (auth.currentUser) {
-        console.log(`[Auth] Forcing token refresh for user: ${auth.currentUser.uid}`);
-        return auth.currentUser.getIdToken(true);
-    }
-    throw new Error("No authenticated user to refresh token for.");
-};
-
-/**
- * Orchestrates the profile creation logic.
- */
-const ensureUserProfile = async (uid, authUser) => {
-    // Default profile template
-    const profile = sanitizeUserProfile({
-        displayName: authUser?.displayName || `Shinobi_${uid.substring(0, 6)}`,
-        email: authUser?.email,
-        createdAt: new Date(),
-        rank: 'Wanderer',
-        chakra: 0,
-        photoURL: authUser?.photoURL,
-    });
-
-    try {
-        await createUserProfile(uid, profile);
-        console.log("[Auth] Created new user profile.");
-        return profile;
-    } catch (writeError) {
-        // If write fails with permission, try one more force refresh
-        if (writeError.code === 'permission-denied') {
-            await forceTokenRefresh();
-            await createUserProfile(uid, profile);
-            return profile;
-        }
-        throw writeError;
-    }
-};
-
 export const AuthProvider = ({ children }) => {
     const [currentUser, setCurrentUser] = useState(null);
     const [userProfile, setUserProfile] = useState(null);
     const [loading, setLoading] = useState(true);
     const [isGuest, setIsGuest] = useState(false);
 
-    /**
-     * Main Data Fetching Logic (Refactored)
-     * Handles: Read -> Retry (Force Refresh) -> Create (if missing) -> Merge API Data
-     */
-    const fetchUserData = async (uidOrUser) => {
-        // Handle input: If object passed, get uid. If string, use as is.
-        const uid = typeof uidOrUser === 'object' && uidOrUser !== null ? uidOrUser.uid : uidOrUser;
-        const authUser = auth.currentUser; // Always rely on singleton for Auth details
-
-        if (!uid) {
-            console.error("[Auth] fetchUserData called without UID");
-            return null;
-        }
-
+    const fetchUserData = async (uid) => {
         try {
-            // 1. Try to get Firestore Profile
-            let profile = null;
-            let retries = 3;
-
-            while (retries > 0) {
-                try {
-                    profile = await getUserProfile(uid);
-                    break; // Success
-                } catch (readError) {
-                    console.warn(`[Auth] Read failed (${retries} left):`, readError.code || readError.message);
-
-                    const isPermissionError = readError.code === 'permission-denied' ||
-                        (readError.message && readError.message.includes('insufficient permissions'));
-
-                    if (isPermissionError && retries > 1) {
-                        // FIXED: Use helper that uses auth.currentUser, avoiding argument crash
-                        try {
-                            await forceTokenRefresh();
-                        } catch (e) { console.error("Token refresh failed", e); }
-
-                        await new Promise(r => setTimeout(r, 1000));
-                        retries--;
-                    } else {
-                        throw readError;
-                    }
-                }
-            }
-
-            // 2. Create if missing
+            
+            let profile = await getUserProfile(uid);
             if (!profile) {
-                console.log("[Auth] Profile missing, creating...");
-                profile = await ensureUserProfile(uid, authUser);
+                
+                profile = {
+                    displayName: currentUser?.displayName || `Shinobi_${uid.substring(0, 6)}`,
+                    email: currentUser?.email,
+                    createdAt: new Date(),
+                    rank: 'Wanderer',
+                    chakra: 0,
+                };
+                await createUserProfile(uid, profile);
             }
 
-            // 3. Merge with API (Ninja Stats)
-            try {
-                const progress = await api.getUserProgress(uid);
-                if (progress) {
-                    profile = { ...profile, ...progress.stats, ninjaLevel: progress.level, netRank: progress.rank, streak: progress.streak };
-                }
-            } catch (apiError) {
-                console.warn("[Auth] API fetch failed, using local profile only.", apiError);
+            const progress = await api.getUserProgress(uid);
+            if (progress) {
+                
+                profile = {
+                    ...profile,
+                    ...progress.stats, 
+                    ninjaLevel: progress.level, 
+                    netRank: progress.rank,     
+                    streak: progress.streak     
+                };
             }
-
             return profile;
-
         } catch (err) {
-            // 4. Systematic Error Logging
-            const errorContext = 'fetchUserData';
-            if (err.code === 'permission-denied') {
-                console.error(`[${ErrorType.PERMISSION}] ${errorContext}: Insufficient permissions.`);
-            } else if (err.code === 'unavailable') {
-                console.error(`[${ErrorType.NETWORK}] ${errorContext}: Network unavailable.`);
-            } else {
-                console.error(`[${ErrorType.UNKNOWN}] ${errorContext}:`, err);
-            }
+            console.error("Error fetching user data:", err);
             return null;
         }
     };
@@ -148,7 +62,7 @@ export const AuthProvider = ({ children }) => {
             if (user) {
                 setCurrentUser(user);
                 setIsGuest(false);
-                const profile = await fetchUserData(user); // user object is fine here, logic handles it
+                const profile = await fetchUserData(user.uid);
                 setUserProfile(profile);
             } else {
                 setCurrentUser(null);
@@ -156,18 +70,28 @@ export const AuthProvider = ({ children }) => {
             }
             setLoading(false);
         });
+
         return unsubscribe;
     }, []);
 
-    // --- Public Methods (Unchanged) ---
-    const login = (email, password) => loginWithEmail(email, password);
+    const login = async (email, password) => {
+        return loginWithEmail(email, password);
+    };
+
     const signup = async (email, password, displayName) => {
         const result = await signUpWithEmail(email, password, displayName);
-        api.sendWelcomeEmail(email, displayName).catch(console.log);
+        
+        api.sendWelcomeEmail(email, displayName).catch(err => console.log('Welcome email trigger failed:', err));
         return result;
     };
-    const googleSignIn = (idToken) => signInWithGoogle(idToken);
-    const forgotPassword = (email) => resetPassword(email);
+
+    const googleSignIn = async (idToken) => {
+        return signInWithGoogle(idToken);
+    };
+
+    const forgotPassword = async (email) => {
+        return resetPassword(email);
+    };
 
     const loginAsGuest = () => {
         setIsGuest(true);
@@ -195,9 +119,15 @@ export const AuthProvider = ({ children }) => {
 
     const updateProfile = async (data) => {
         if (!currentUser || isGuest) return;
-        await updateUserProfile(currentUser.uid, data);
-        await refreshProfile();
-        return true;
+        try {
+            await updateUserProfile(currentUser.uid, data);
+            
+            await refreshProfile();
+            return true;
+        } catch (e) {
+            console.error("Failed to update profile:", e);
+            throw e;
+        }
     };
 
     const value = {

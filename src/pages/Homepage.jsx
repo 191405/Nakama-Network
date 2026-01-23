@@ -12,7 +12,6 @@ import { useAuth } from '../contexts/AuthContext';
 import { jikanAPI } from '../utils/animeDataAPIs';
 import { subscribeToActiveBattles, getSystemStats } from '../utils/firebase';
 import { NakamaLogo } from '../components/NakamaLogo';
-import { GlowButton } from '../components/InteractiveButton';
 
 const AnimatedCounter = ({ value, duration = 2000 }) => {
     const [count, setCount] = useState(0);
@@ -98,31 +97,34 @@ const HeroSection = ({ userName }) => {
                 </motion.div>
 
                 {}
-                <div className="flex flex-wrap justify-center gap-4 mt-8">
+                <div className="flex flex-wrap justify-center gap-4 mt-4">
                     <Link to="/arena">
-                        <GlowButton>
+                        <motion.button
+                            whileHover={{ scale: 1.05, boxShadow: '0 8px 30px rgba(234,179,8,0.4)' }}
+                            whileTap={{ scale: 0.95 }}
+                            className="px-8 py-4 rounded-2xl font-bold text-black flex items-center gap-3 text-lg"
+                            style={{
+                                background: 'linear-gradient(135deg, #eab308, #f59e0b, #ca8a04)',
+                                boxShadow: '0 4px 20px rgba(234,179,8,0.3)'
+                            }}
+                        >
                             <Sword size={22} />
                             Enter Arena
                             <ArrowRight size={18} />
-                        </GlowButton>
+                        </motion.button>
                     </Link>
                     <Link to="/discover">
                         <motion.button
-                            whileHover={{ scale: 1.05, boxShadow: '0 8px 30px rgba(234,179,8,0.3)' }}
+                            whileHover={{ scale: 1.05, backgroundColor: 'rgba(234, 179, 8, 0.15)' }}
                             whileTap={{ scale: 0.95 }}
-                            className="px-8 py-4 rounded-2xl font-bold text-yellow-400 flex items-center gap-3 text-lg transition-all relative overflow-hidden group"
+                            className="px-8 py-4 rounded-2xl font-bold text-yellow-400 flex items-center gap-3 text-lg transition-colors"
                             style={{
                                 background: 'rgba(234, 179, 8, 0.08)',
                                 border: '2px solid rgba(234, 179, 8, 0.4)'
                             }}
                         >
-                            <Sparkles size={22} className="group-hover:rotate-180 transition-transform duration-500" />
-                            <span>Explore</span>
-                            <motion.div
-                                className="absolute inset-0 bg-gradient-to-r from-yellow-500/0 via-yellow-500/20 to-yellow-500/0"
-                                animate={{ x: ['-100%', '100%'] }}
-                                transition={{ duration: 2, repeat: Infinity, ease: "linear" }}
-                            />
+                            <Sparkles size={22} />
+                            Explore
                         </motion.button>
                     </Link>
                 </div>
@@ -175,135 +177,85 @@ const LiveActivityFeed = ({ activities }) => (
 
 const TrendingCard = ({ anime, rank }) => {
     const imageUrl = anime?.images?.jpg?.large_image_url || anime?.images?.jpg?.image_url;
-    const [isHovered, setIsHovered] = useState(false);
 
     return (
         <Link to={`/anime/${anime?.mal_id}`}>
             <motion.div
-                whileHover={{ scale: 1.05, y: -8 }}
-                onHoverStart={() => setIsHovered(true)}
-                onHoverEnd={() => setIsHovered(false)}
-                className="relative rounded-2xl overflow-hidden group cursor-pointer h-full shadow-xl hover:shadow-2xl hover:shadow-yellow-500/20 transition-shadow duration-300"
+                whileHover={{ scale: 1.05, y: -5 }}
+                className="relative rounded-xl overflow-hidden group cursor-pointer h-full"
+                style={{ boxShadow: '0 4px 20px rgba(0,0,0,0.4)' }}
             >
-                <div className="aspect-[3/4] relative overflow-hidden">
-                    <motion.img
+                <div className="aspect-[3/4]">
+                    <img
                         src={imageUrl}
                         alt={anime?.title}
-                        className="w-full h-full object-cover"
-                        animate={{ scale: isHovered ? 1.15 : 1 }}
-                        transition={{ duration: 0.6, ease: "easeOut" }}
+                        className="w-full h-full object-cover transition-transform duration-500 group-hover:scale-110"
                         onError={(e) => { e.target.src = 'https://via.placeholder.com/200x280/1a1a2e/eab308?text=Anime'; }}
                     />
-                    <motion.div 
-                        className="absolute inset-0 bg-gradient-to-t from-black via-black/50 to-transparent"
-                        animate={{ opacity: isHovered ? 0.9 : 0.7 }}
-                    />
                 </div>
 
                 {}
-                <motion.div
-                    className="absolute top-3 left-3 w-10 h-10 rounded-xl flex items-center justify-center font-black text-base backdrop-blur-sm"
+                <div className="absolute inset-0 bg-gradient-to-t from-black via-black/30 to-transparent" />
+
+                {}
+                <div
+                    className="absolute top-2 left-2 w-8 h-8 rounded-lg flex items-center justify-center font-black text-sm"
                     style={{
                         background: rank <= 3 ? 'linear-gradient(135deg, #eab308, #ca8a04)' : 'rgba(0,0,0,0.8)',
-                        color: rank <= 3 ? '#000' : '#eab308',
-                        boxShadow: rank <= 3 ? '0 4px 15px rgba(234,179,8,0.5)' : 'none'
+                        color: rank <= 3 ? '#000' : '#eab308'
                     }}
-                    whileHover={{ scale: 1.1, rotate: 5 }}
                 >
                     #{rank}
-                </motion.div>
+                </div>
 
                 {}
-                <motion.div 
-                    className="absolute bottom-0 left-0 right-0 p-4"
-                    animate={{ y: isHovered ? 0 : 10 }}
-                    transition={{ duration: 0.3 }}
-                >
-                    <h4 className="font-bold text-white text-sm line-clamp-2 mb-2 drop-shadow-lg">{anime?.title}</h4>
-                    <div className="flex items-center gap-3 text-xs">
-                        <div className="flex items-center gap-1.5 text-yellow-400 bg-black/50 px-2 py-1 rounded-lg backdrop-blur-sm">
-                            <Star size={14} fill="currentColor" />
-                            <span className="font-bold">{anime?.score || 'N/A'}</span>
+                <div className="absolute bottom-0 left-0 right-0 p-3">
+                    <h4 className="font-bold text-white text-sm line-clamp-2 mb-1">{anime?.title}</h4>
+                    <div className="flex items-center gap-2 text-xs">
+                        <div className="flex items-center gap-1 text-yellow-400">
+                            <Star size={12} fill="currentColor" />
+                            <span>{anime?.score || 'N/A'}</span>
                         </div>
-                        <div className="flex items-center gap-1 text-slate-300 bg-black/50 px-2 py-1 rounded-lg backdrop-blur-sm">
-                            <Play size={12} />
-                            <span>{anime?.episodes || '?'} eps</span>
-                        </div>
+                        <span className="text-slate-500">•</span>
+                        <span className="text-slate-400">{anime?.episodes || '?'} eps</span>
                     </div>
-                </motion.div>
-
-                {}
-                <motion.div
-                    className="absolute inset-0 border-2 border-yellow-500/0 rounded-2xl pointer-events-none"
-                    animate={{ borderColor: isHovered ? 'rgba(234,179,8,0.5)' : 'rgba(234,179,8,0)' }}
-                    transition={{ duration: 0.3 }}
-                />
-            </motion.div>
-        </Link>
-    );
-};
-
-const QuickAccessCard = ({ icon: Icon, title, desc, path, color }) => {
-    const [isHovered, setIsHovered] = useState(false);
-    
-    return (
-        <Link to={path}>
-            <motion.div
-                whileHover={{ scale: 1.05, y: -5 }}
-                whileTap={{ scale: 0.98 }}
-                onHoverStart={() => setIsHovered(true)}
-                onHoverEnd={() => setIsHovered(false)}
-                className="p-6 rounded-2xl h-full relative overflow-hidden group cursor-pointer"
-                style={{
-                    background: 'rgba(15, 15, 20, 0.95)',
-                    border: '1px solid rgba(202, 138, 4, 0.15)',
-                    boxShadow: '0 4px 20px rgba(0,0,0,0.4)'
-                }}
-            >
-                {}
-                <motion.div
-                    className="absolute inset-0"
-                    animate={{ 
-                        background: isHovered 
-                            ? `radial-gradient(circle at center, ${color}25, transparent 70%)` 
-                            : `radial-gradient(circle at center, ${color}10, transparent 70%)`
-                    }}
-                    transition={{ duration: 0.5 }}
-                />
-
-                <div className="relative z-10">
-                    <motion.div
-                        className="w-14 h-14 rounded-2xl flex items-center justify-center mb-4 relative overflow-hidden"
-                        style={{ background: `${color}15`, border: `2px solid ${color}30` }}
-                        animate={{ 
-                            scale: isHovered ? 1.1 : 1,
-                            rotate: isHovered ? 5 : 0
-                        }}
-                        transition={{ type: "spring", stiffness: 300 }}
-                    >
-                        <motion.div
-                            animate={{ rotate: isHovered ? 360 : 0 }}
-                            transition={{ duration: 0.6 }}
-                        >
-                            <Icon size={28} style={{ color }} />
-                        </motion.div>
-                    </motion.div>
-                    <h3 className="font-bold text-white text-lg mb-2">{title}</h3>
-                    <p className="text-slate-400 text-sm">{desc}</p>
-                    
-                    <motion.div
-                        className="mt-4 flex items-center gap-2 text-sm font-medium"
-                        style={{ color }}
-                        animate={{ x: isHovered ? 5 : 0 }}
-                    >
-                        <span>Explore</span>
-                        <ChevronRight size={16} />
-                    </motion.div>
                 </div>
             </motion.div>
         </Link>
     );
 };
+
+const QuickAccessCard = ({ icon: Icon, title, desc, path, color }) => (
+    <Link to={path}>
+        <motion.div
+            whileHover={{ scale: 1.03, y: -3 }}
+            whileTap={{ scale: 0.98 }}
+            className="p-6 rounded-2xl h-full relative overflow-hidden group"
+            style={{
+                background: 'rgba(15, 15, 20, 0.95)',
+                border: '1px solid rgba(202, 138, 4, 0.15)',
+                boxShadow: '0 4px 20px rgba(0,0,0,0.4)'
+            }}
+        >
+            {}
+            <div
+                className="absolute inset-0 opacity-0 group-hover:opacity-100 transition-opacity duration-500"
+                style={{ background: `radial-gradient(circle at center, ${color}15, transparent 70%)` }}
+            />
+
+            <div className="relative z-10">
+                <div
+                    className="w-12 h-12 rounded-xl flex items-center justify-center mb-4"
+                    style={{ background: `${color}20`, border: `1px solid ${color}40` }}
+                >
+                    <Icon size={24} style={{ color }} />
+                </div>
+                <h3 className="font-bold text-white text-lg mb-1">{title}</h3>
+                <p className="text-slate-500 text-sm">{desc}</p>
+            </div>
+        </motion.div>
+    </Link>
+);
 
 const StatsBar = ({ stats }) => (
     <motion.section
@@ -409,47 +361,27 @@ const Homepage = () => {
 
                 {}
                 <section className="mb-12">
-                    <motion.div 
-                        initial={{ opacity: 0, y: 20 }}
-                        whileInView={{ opacity: 1, y: 0 }}
-                        viewport={{ once: true }}
-                        className="flex items-center justify-between mb-8"
-                    >
-                        <div className="flex items-center gap-4">
-                            <motion.div 
-                                className="w-12 h-12 rounded-2xl flex items-center justify-center relative overflow-hidden" 
-                                style={{ background: 'linear-gradient(135deg, #eab308, #ca8a04)' }}
-                                whileHover={{ scale: 1.1, rotate: 180 }}
-                                transition={{ duration: 0.5 }}
-                            >
-                                <TrendingUp size={24} className="text-black" />
-                            </motion.div>
+                    <div className="flex items-center justify-between mb-6">
+                        <div className="flex items-center gap-3">
+                            <div className="w-10 h-10 rounded-xl flex items-center justify-center" style={{ background: 'linear-gradient(135deg, #eab308, #ca8a04)' }}>
+                                <TrendingUp size={20} className="text-black" />
+                            </div>
                             <div>
-                                <h2 className="text-2xl font-black text-white">Trending Now</h2>
-                                <p className="text-slate-400 text-sm">Hottest anime this season</p>
+                                <h2 className="text-xl font-bold text-white">Trending Now</h2>
+                                <p className="text-slate-500 text-xs">Hottest anime this season</p>
                             </div>
                         </div>
-                        <Link to="/discover">
-                            <motion.div 
-                                whileHover={{ x: 5 }}
-                                className="text-yellow-400 hover:text-yellow-300 flex items-center gap-2 text-sm font-semibold px-4 py-2 rounded-xl hover:bg-yellow-500/10 transition-all"
-                            >
-                                See All <ChevronRight size={18} />
-                            </motion.div>
+                        <Link to="/discover" className="text-yellow-400 hover:text-yellow-300 flex items-center gap-1 text-sm font-medium">
+                            See All <ChevronRight size={16} />
                         </Link>
-                    </motion.div>
+                    </div>
 
                     {loading ? (
-                        <div className="flex flex-col items-center justify-center py-20">
-                            <motion.div 
-                                className="w-16 h-16 rounded-full border-4 border-yellow-500/30 border-t-yellow-500"
-                                animate={{ rotate: 360 }}
-                                transition={{ duration: 1, repeat: Infinity, ease: "linear" }}
-                            />
-                            <p className="text-slate-400 mt-4 text-sm">Loading trending anime...</p>
+                        <div className="flex justify-center py-16">
+                            <div className="w-10 h-10 rounded-full border-2 border-yellow-500/30 border-t-yellow-500 animate-spin" />
                         </div>
                     ) : (
-                        <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-6 gap-5">
+                        <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-6 gap-4">
                             {trendingAnime.slice(0, 12).map((anime, idx) => (
                                 <TrendingCard key={anime?.mal_id || idx} anime={anime} rank={idx + 1} />
                             ))}
@@ -459,16 +391,8 @@ const Homepage = () => {
 
                 {}
                 <section className="mb-12">
-                    <motion.h2 
-                        initial={{ opacity: 0, x: -20 }}
-                        whileInView={{ opacity: 1, x: 0 }}
-                        viewport={{ once: true }}
-                        className="text-2xl font-black text-white mb-6 flex items-center gap-3"
-                    >
-                        <Zap className="text-yellow-400" size={28} />
-                        Quick Access
-                    </motion.h2>
-                    <div className="grid grid-cols-2 lg:grid-cols-4 gap-5">
+                    <h2 className="text-xl font-bold text-white mb-6">Quick Access</h2>
+                    <div className="grid grid-cols-2 lg:grid-cols-4 gap-4">
                         <QuickAccessCard icon={Zap} title="Hub" desc="Command Center" path="/command-center" color="#eab308" />
                         <QuickAccessCard icon={Users} title="Community" desc="Wiki & Discussions" path="/community" color="#22c55e" />
                         <QuickAccessCard icon={Shield} title="Clans" desc="Join epic battles" path="/clan" color="#3b82f6" />
