@@ -1,8 +1,7 @@
 
 
-import { ref, uploadBytesResumable, getDownloadURL } from 'firebase/storage';
 import { collection, doc, setDoc, addDoc, getDocs, getDoc, query, where, orderBy, limit, serverTimestamp, updateDoc, deleteDoc } from 'firebase/firestore';
-import { db, storage } from './firebase';
+import { db } from './firebase';
 
 export const MAX_FILE_SIZE_MB = 350;
 export const MAX_FILE_SIZE_BYTES = MAX_FILE_SIZE_MB * 1024 * 1024;
@@ -38,39 +37,52 @@ export const validateVideoFile = (file) => {
     };
 };
 
+// UPDATED: Now uses backend API (IONOS SFTP) instead of Firebase Storage
 export const uploadEpisodeVideo = async (file, animeId, episodeNumber, quality, onProgress = () => { }) => {
     const validation = validateVideoFile(file);
     if (!validation.valid) {
         throw new Error(validation.errors.join(', '));
     }
 
-    const extension = file.name.split('.').pop() || 'mp4';
-    const storagePath = `anime/${animeId}/episodes/ep-${String(episodeNumber).padStart(3, '0')}/${quality}.${extension}`;
-    const storageRef = ref(storage, storagePath);
+    // Use backend API for video upload (routes to IONOS SFTP)
+    const API_BASE_URL = import.meta.env.VITE_API_URL || 'http://localhost:8000';
+
+    const formData = new FormData();
+    formData.append('file', file);
+    formData.append('anime_id', animeId);
+    formData.append('anime_title', `Anime ${animeId}`);
+    formData.append('episode_number', episodeNumber);
+    formData.append('quality', quality);
 
     return new Promise((resolve, reject) => {
-        const uploadTask = uploadBytesResumable(storageRef, file, {
-            contentType: file.type
+        const xhr = new XMLHttpRequest();
+
+        xhr.upload.addEventListener('progress', (event) => {
+            if (event.lengthComputable) {
+                const progress = Math.round((event.loaded / event.total) * 100);
+                onProgress(progress);
+            }
         });
 
-        uploadTask.on('state_changed',
-            (snapshot) => {
-                const progress = Math.round((snapshot.bytesTransferred / snapshot.totalBytes) * 100);
-                onProgress(progress);
-            },
-            (error) => {
-                console.error('Upload error:', error);
-                reject(error);
-            },
-            async () => {
+        xhr.addEventListener('load', () => {
+            if (xhr.status >= 200 && xhr.status < 300) {
                 try {
-                    const downloadURL = await getDownloadURL(uploadTask.snapshot.ref);
-                    resolve(downloadURL);
-                } catch (error) {
-                    reject(error);
+                    const response = JSON.parse(xhr.responseText);
+                    resolve(response.video_url);
+                } catch (e) {
+                    reject(new Error('Invalid response from server'));
                 }
+            } else {
+                reject(new Error(`Upload failed: ${xhr.statusText}`));
             }
-        );
+        });
+
+        xhr.addEventListener('error', () => {
+            reject(new Error('Network error during upload'));
+        });
+
+        xhr.open('POST', `${API_BASE_URL}/episodes/upload`);
+        xhr.send(formData);
     });
 };
 
@@ -106,7 +118,7 @@ export const addEpisode = async (animeId, episodeData, userId) => {
         number: episodeData.number,
         title: episodeData.title || `Episode ${episodeData.number}`,
         thumbnail: episodeData.thumbnail || '',
-        videos: episodeData.videos || {}, 
+        videos: episodeData.videos || {},
         duration: episodeData.duration || 0,
         uploadedBy: userId,
         createdAt: serverTimestamp()
@@ -167,7 +179,6 @@ export const getEpisode = async (animeId, episodeId) => {
 };
 
 export const searchAnime = async (searchTerm) => {
-
     const all = await getAllAnime(100);
     const lowerSearch = searchTerm.toLowerCase();
 

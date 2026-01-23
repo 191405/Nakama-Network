@@ -38,10 +38,10 @@ const WatchlistItem = ({ anime, onStatusChange, onRemove }) => {
                 <View style={{ flex: 1, marginLeft: 14 }}>
                     <Text style={{ color: '#fff', fontWeight: '700', fontSize: 16 }} numberOfLines={2}>{anime.title}</Text>
                     <View style={{ flexDirection: 'row', alignItems: 'center', marginTop: 4 }}>
-                        {anime.genre && <Text style={{ color: '#6366f1', fontSize: 12 }}>{anime.genre}</Text>}
-                        {anime.year && <Text style={{ color: '#64748b', fontSize: 12 }}> • {anime.year}</Text>}
+                        {Boolean(anime.genre) && <Text style={{ color: '#6366f1', fontSize: 12 }}>{anime.genre}</Text>}
+                        {anime.year > 0 && <Text style={{ color: '#64748b', fontSize: 12 }}> • {anime.year}</Text>}
                     </View>
-                    {anime.rating && (
+                    {anime.rating > 0 && (
                         <View style={{ flexDirection: 'row', alignItems: 'center', marginTop: 4 }}>
                             <Star color="#fbbf24" size={12} fill="#fbbf24" />
                             <Text style={{ color: '#fbbf24', fontSize: 12, marginLeft: 4 }}>{anime.rating}</Text>
@@ -53,7 +53,7 @@ const WatchlistItem = ({ anime, onStatusChange, onRemove }) => {
                 </TouchableOpacity>
             </View>
 
-            {}
+            { }
             <View style={{ flexDirection: 'row', marginTop: 14, justifyContent: 'space-between' }}>
                 {STATUS_OPTIONS.map((opt) => (
                     <TouchableOpacity
@@ -148,7 +148,7 @@ export default function WatchlistScreen({ navigation }) {
         <View style={{ flex: 1, backgroundColor: '#0f172a' }}>
             <StatusBar style="light" />
 
-            {}
+            { }
             <View style={{ paddingTop: 56, paddingHorizontal: 24, paddingBottom: 16 }}>
                 <View style={{ flexDirection: 'row', alignItems: 'center', justifyContent: 'space-between' }}>
                     <TouchableOpacity onPress={() => navigation.goBack()}>
@@ -165,7 +165,7 @@ export default function WatchlistScreen({ navigation }) {
                 </View>
             </View>
 
-            {}
+            { }
             <View style={{ flexDirection: 'row', paddingHorizontal: 24, marginBottom: 16 }}>
                 {STATUS_OPTIONS.map((opt) => (
                     <TouchableOpacity
@@ -188,7 +188,7 @@ export default function WatchlistScreen({ navigation }) {
                 ))}
             </View>
 
-            {}
+            { }
             <ScrollView contentContainerStyle={{ paddingHorizontal: 24, paddingBottom: 100 }}>
                 {filteredList.length === 0 ? (
                     <View style={{ alignItems: 'center', paddingVertical: 60 }}>

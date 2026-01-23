@@ -9,6 +9,8 @@ from fastapi.staticfiles import StaticFiles
 from app.config import settings
 from app.routers import anime, characters, ai, episodes, chat, interaction, reviews, clans, users, feedback, auth, trivia, achievements, manga, encoder, arcade
 from app.services.cache import cache_service
+from app.services.storage_service import init_storage_service
+from app.services.sftp_service import init_sftp_service
 from app.database import engine, Base
 from app.middleware import (
     RateLimitMiddleware, 
@@ -26,6 +28,39 @@ logger = logging.getLogger(__name__)
 async def lifespan(app: FastAPI):
     logger.info("🚀 Starting Nakama Network API...")
     await cache_service.connect()
+    
+    # Initialize cloud storage if configured (B2/S3)
+    if settings.b2_endpoint_url and settings.b2_access_key:
+        try:
+            init_storage_service(
+                endpoint_url=settings.b2_endpoint_url,
+                access_key=settings.b2_access_key,
+                secret_key=settings.b2_secret_key,
+                bucket_name=settings.b2_bucket_name,
+                cdn_base_url=settings.cdn_base_url or None
+            )
+            logger.info("☁️ Cloud storage service (B2) initialized")
+        except Exception as e:
+            logger.warning(f"⚠️ B2 storage not configured: {e}")
+    
+    # Initialize SFTP storage if configured (IONOS)
+    if settings.sftp_host and settings.sftp_username:
+        try:
+            init_sftp_service(
+                host=settings.sftp_host,
+                port=settings.sftp_port,
+                username=settings.sftp_username,
+                password=settings.sftp_password,
+                base_path=settings.sftp_base_path,
+                public_url_base=settings.sftp_public_url
+            )
+            logger.info("📁 SFTP storage service (IONOS) initialized")
+        except Exception as e:
+            logger.warning(f"⚠️ SFTP storage not configured: {e}")
+    
+    if not (settings.b2_endpoint_url or settings.sftp_host):
+        logger.info("📁 Using local storage (no cloud/SFTP configured)")
+    
     logger.info(f"📡 Running on {settings.host}:{settings.port}")
     logger.info(f"🔒 Production mode: {settings.is_production}")
     

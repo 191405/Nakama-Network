@@ -1,19 +1,68 @@
 
+// Backend URL - Use your PC's local IP so phone can connect
+// Make sure phone and PC are on the same WiFi network
+export const API_BASE_URL = 'http://192.168.1.113:8000';
 
-export const API_BASE_URL = 'https://bright-ways-work.loca.lt';
-
-const DEFAULT_TIMEOUT = 10000; 
+// Configuration
+const DEFAULT_TIMEOUT = 15000; // Increased to 15s
 const MAX_RETRIES = 3;
-const RETRY_DELAYS = [1000, 2000, 4000]; 
+const RETRY_DELAYS = [500, 1500, 3000]; // Faster initial retry
+const MAX_CONCURRENT_REQUESTS = 6; // Limit concurrent requests
+const RATE_LIMIT_WINDOW = 1000; // 1 second
+const RATE_LIMIT_MAX = 10; // Max 10 requests per second
 
 class ApiClient {
     constructor(baseUrl) {
         this.baseUrl = baseUrl;
         this.isOnline = true;
+        this.pendingRequests = 0;
+        this.requestQueue = [];
+        this.requestTimestamps = [];
+        this.processingQueue = false;
     }
 
     sleep(ms) {
         return new Promise(resolve => setTimeout(resolve, ms));
+    }
+
+    // Rate limiting check
+    canMakeRequest() {
+        const now = Date.now();
+        // Clean old timestamps
+        this.requestTimestamps = this.requestTimestamps.filter(t => now - t < RATE_LIMIT_WINDOW);
+        return this.requestTimestamps.length < RATE_LIMIT_MAX;
+    }
+
+    // Add request to queue
+    async queueRequest(endpoint, options, config) {
+        return new Promise((resolve, reject) => {
+            this.requestQueue.push({ endpoint, options, config, resolve, reject });
+            this.processQueue();
+        });
+    }
+
+    // Process queued requests with rate limiting
+    async processQueue() {
+        if (this.processingQueue) return;
+        this.processingQueue = true;
+
+        while (this.requestQueue.length > 0) {
+            // Wait for rate limit
+            while (!this.canMakeRequest() || this.pendingRequests >= MAX_CONCURRENT_REQUESTS) {
+                await this.sleep(100);
+            }
+
+            const { endpoint, options, config, resolve, reject } = this.requestQueue.shift();
+            this.pendingRequests++;
+            this.requestTimestamps.push(Date.now());
+
+            this.executeRequest(endpoint, options, config)
+                .then(resolve)
+                .catch(reject)
+                .finally(() => { this.pendingRequests--; });
+        }
+
+        this.processingQueue = false;
     }
 
     async fetchWithTimeout(url, options, timeout = DEFAULT_TIMEOUT) {
@@ -36,7 +85,7 @@ class ApiClient {
         }
     }
 
-    async request(endpoint, options = {}, config = {}) {
+    async executeRequest(endpoint, options = {}, config = {}) {
         const {
             timeout = DEFAULT_TIMEOUT,
             retries = MAX_RETRIES,
@@ -55,8 +104,9 @@ class ApiClient {
         headers['ngrok-skip-browser-warning'] = 'true';
 
         let lastError = null;
+        const maxAttempts = retries + 1; // retries + initial attempt
 
-        for (let attempt = 0; attempt <= retries; attempt++) {
+        for (let attempt = 1; attempt <= maxAttempts; attempt++) {
             try {
                 const response = await this.fetchWithTimeout(url, {
                     headers,
@@ -64,11 +114,12 @@ class ApiClient {
                 }, timeout);
 
                 if (!response.ok) {
-                    
+                    // 4xx errors are not retryable (client errors)
                     if (response.status >= 400 && response.status < 500) {
-                        throw new Error(`API Error: ${response.status}`);
+                        const errorText = await response.text().catch(() => '');
+                        throw new Error(`API Error ${response.status}: ${errorText || response.statusText}`);
                     }
-                    
+                    // 5xx errors are retryable
                     throw new Error(`Server Error: ${response.status}`);
                 }
 
@@ -80,12 +131,13 @@ class ApiClient {
 
                 const isRetryable = error.message.includes('Server Error') ||
                     error.message.includes('timed out') ||
-                    error.message.includes('Network request failed');
+                    error.message.includes('Network request failed') ||
+                    error.message.includes('fetch failed');
 
-                if (isRetryable && attempt < retries) {
-                    const delay = RETRY_DELAYS[attempt] || RETRY_DELAYS[RETRY_DELAYS.length - 1];
+                if (isRetryable && attempt < maxAttempts) {
+                    const delay = RETRY_DELAYS[attempt - 1] || RETRY_DELAYS[RETRY_DELAYS.length - 1];
                     if (!silent) {
-                        console.log(`Retry ${attempt + 1}/${retries} for ${endpoint} in ${delay}ms`);
+                        console.log(`[API] Retry ${attempt}/${retries} for ${endpoint} in ${delay}ms`);
                     }
                     await this.sleep(delay);
                     continue;
@@ -97,7 +149,7 @@ class ApiClient {
 
         this.isOnline = false;
         if (!silent) {
-            console.error(`API failed after ${retries} retries: ${endpoint}`, lastError?.message);
+            console.warn(`[API] Failed: ${endpoint} - ${lastError?.message}`);
         }
 
         if (fallback !== null) {
@@ -105,6 +157,11 @@ class ApiClient {
         }
 
         throw lastError;
+    }
+
+    // Use queue for all requests
+    async request(endpoint, options = {}, config = {}) {
+        return this.queueRequest(endpoint, options, config);
     }
 
     async safeRequest(endpoint, options = {}, fallback = null) {

@@ -7,6 +7,7 @@ import { api, ANIME_GENRES } from '../services/api';
 import { addToWatchlist } from '../utils/storage';
 import { SearchIcon, FireIcon, AnimeIcon, StarIcon } from '../components/Icons';
 import { useTheme } from '../contexts/ThemeContext';
+import { getAnimeTitle } from '../utils/safeData';
 
 const { width } = Dimensions.get('window');
 const CARD_WIDTH = width * 0.42;
@@ -36,25 +37,25 @@ const AnimeCard = ({ anime, index, onPress }) => {
                         />
                     ) : (
                         <View style={{ width: CARD_WIDTH, height: CARD_WIDTH * 1.4, backgroundColor: theme.border, justifyContent: 'center', alignItems: 'center' }}>
-                            <Text style={{ color: theme.textMuted, fontSize: 40 }}>{anime.title?.[0]}</Text>
+                            <Text style={{ color: theme.textMuted, fontSize: 40 }}>{getAnimeTitle(anime, 'A')[0]}</Text>
                         </View>
                     )}
                     <LinearGradient
                         colors={['transparent', 'rgba(0,0,0,0.9)']}
                         style={{ position: 'absolute', bottom: 0, left: 0, right: 0, padding: 12, paddingTop: 40 }}
                     >
-                        {anime.score && (
+                        {anime.score > 0 && (
                             <View style={{ flexDirection: 'row', alignItems: 'center', marginBottom: 6 }}>
                                 <StarIcon size={14} color={theme.gold} filled />
                                 <Text style={{ color: theme.gold, fontWeight: 'bold', marginLeft: 4, fontSize: 13 }}>{anime.score}</Text>
                             </View>
                         )}
-                        <Text style={{ color: '#fff', fontWeight: '700', fontSize: 14 }} numberOfLines={2}>{anime.title}</Text>
+                        <Text style={{ color: '#fff', fontWeight: '700', fontSize: 14 }} numberOfLines={2}>{getAnimeTitle(anime)}</Text>
                         <View style={{ flexDirection: 'row', alignItems: 'center', marginTop: 4 }}>
-                            {anime.episodes && (
+                            {anime.episodes > 0 && (
                                 <Text style={{ color: '#cbd5e1', fontSize: 12 }}>{anime.episodes} eps</Text>
                             )}
-                            {anime.year && (
+                            {anime.year > 0 && (
                                 <Text style={{ color: '#94a3b8', fontSize: 12 }}> • {anime.year}</Text>
                             )}
                         </View>
@@ -155,7 +156,7 @@ export default function MediaScreen() {
     };
 
     const handleGenreSelect = async (genre) => {
-        
+
         if (!genre.id || selectedGenre?.id === genre.id) {
             setSelectedGenre(null);
             setGenreAnime([]);
@@ -190,13 +191,13 @@ export default function MediaScreen() {
                 contentContainerStyle={{ paddingBottom: 100 }}
                 showsVerticalScrollIndicator={false}
             >
-                {}
+                { }
                 <View style={{ paddingTop: 56, paddingHorizontal: 24, paddingBottom: 20 }}>
                     <Text style={{ color: theme.text, fontSize: 28, fontWeight: '800' }}>Discover</Text>
                     <Text style={{ color: theme.textSecondary, fontSize: 14, marginTop: 4 }}>Explore anime from around the world</Text>
                 </View>
 
-                {}
+                { }
                 <TouchableOpacity onPress={() => navigation.navigate('Search')} style={{ paddingHorizontal: 24, marginBottom: 20 }}>
                     <LinearGradient
                         colors={isDark ? ['rgba(30, 41, 59, 0.9)', 'rgba(30, 41, 59, 0.7)'] : ['#f1f5f9', '#e2e8f0']}
@@ -207,7 +208,7 @@ export default function MediaScreen() {
                     </LinearGradient>
                 </TouchableOpacity>
 
-                {}
+                { }
                 <ScrollView
                     horizontal
                     showsHorizontalScrollIndicator={false}
@@ -230,7 +231,7 @@ export default function MediaScreen() {
                     </View>
                 ) : (
                     <>
-                        {}
+                        { }
                         {selectedGenre && (
                             <View style={{ marginBottom: 28 }}>
                                 <SectionHeader icon={FireIcon} iconColor={theme.primary} title={selectedGenre.name} />
@@ -250,7 +251,7 @@ export default function MediaScreen() {
                             </View>
                         )}
 
-                        {}
+                        { }
                         <View style={{ marginBottom: 28 }}>
                             <SectionHeader icon={FireIcon} iconColor="#f59e0b" title="Trending Now" />
                             <ScrollView
@@ -277,7 +278,7 @@ export default function MediaScreen() {
                             </ScrollView>
                         </View>
 
-                        {}
+                        { }
                         <View style={{ marginBottom: 28 }}>
                             <SectionHeader icon={AnimeIcon} iconColor="#3b82f6" title="Airing This Season" />
                             <ScrollView
@@ -291,7 +292,7 @@ export default function MediaScreen() {
                             </ScrollView>
                         </View>
 
-                        {}
+                        { }
                         <View style={{ marginBottom: 28 }}>
                             <SectionHeader icon={StarIcon} iconColor="#fbbf24" title="Popular All Time" />
                             <ScrollView

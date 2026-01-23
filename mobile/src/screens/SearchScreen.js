@@ -52,13 +52,13 @@ const SearchResultCard = ({ anime, onAdd, isInWatchlist, onPress }) => {
                     {anime.genres?.slice(0, 2).map((genre, i) => (
                         <Text key={i} style={{ color: theme.primary, fontSize: 12, marginRight: 8 }}>{genre}</Text>
                     ))}
-                    {anime.year && (
+                    {anime.year > 0 && (
                         <Text style={{ color: theme.textSecondary, fontSize: 12 }}>{anime.year}</Text>
                     )}
                 </View>
                 <View style={{ flexDirection: 'row', alignItems: 'center', marginTop: 6, justifyContent: 'space-between' }}>
                     <View style={{ flexDirection: 'row', alignItems: 'center' }}>
-                        {(anime.score > 0 || (typeof anime.score === 'string' && anime.score)) && (
+                        {anime.score > 0 && (
                             <View style={{ flexDirection: 'row', alignItems: 'center', marginRight: 12 }}>
                                 <Star color={theme.gold} size={14} fill={theme.gold} />
                                 <Text style={{ color: theme.gold, fontSize: 13, marginLeft: 4, fontWeight: '600' }}>{anime.score}</Text>
@@ -68,23 +68,22 @@ const SearchResultCard = ({ anime, onAdd, isInWatchlist, onPress }) => {
                             <Text style={{ color: theme.textSecondary, fontSize: 12 }}>{anime.episodes} eps</Text>
                         )}
                     </View>
-
-                    <TouchableOpacity
-                        onPress={() => !isInWatchlist && onAdd(anime)}
-                        disabled={isInWatchlist}
-                        style={{
-                            paddingHorizontal: 12,
-                            paddingVertical: 6,
-                            backgroundColor: isInWatchlist ? (isDark ? 'rgba(34, 197, 94, 0.2)' : '#dcfce7') : (isDark ? 'rgba(99, 102, 241, 0.2)' : '#e0e7ff'),
-                            borderRadius: 12,
-                            borderWidth: 1,
-                            borderColor: isInWatchlist ? (isDark ? 'rgba(34, 197, 94, 0.3)' : '#86efac') : (isDark ? 'rgba(99, 102, 241, 0.3)' : '#a5b4fc')
-                        }}
-                    >
-                        {isInWatchlist ? <Check color={theme.success} size={16} /> : <Plus color={theme.primary} size={16} />}
-                    </TouchableOpacity>
                 </View>
             </View>
+            <TouchableOpacity
+                onPress={() => !isInWatchlist && onAdd(anime)}
+                disabled={isInWatchlist}
+                style={{
+                    paddingHorizontal: 12,
+                    paddingVertical: 6,
+                    backgroundColor: isInWatchlist ? (isDark ? 'rgba(34, 197, 94, 0.2)' : '#dcfce7') : (isDark ? 'rgba(99, 102, 241, 0.2)' : '#e0e7ff'),
+                    borderRadius: 12,
+                    borderWidth: 1,
+                    borderColor: isInWatchlist ? (isDark ? 'rgba(34, 197, 94, 0.3)' : '#86efac') : (isDark ? 'rgba(99, 102, 241, 0.3)' : '#a5b4fc')
+                }}
+            >
+                {isInWatchlist ? <Check color={theme.success} size={16} /> : <Plus color={theme.primary} size={16} />}
+            </TouchableOpacity>
         </TouchableOpacity>
     );
 };
@@ -101,7 +100,7 @@ export default function SearchScreen({ navigation }) {
     const [hasMore, setHasMore] = useState(true);
     const [isRefreshing, setIsRefreshing] = useState(false);
 
-    const [mode, setMode] = useState('random'); 
+    const [mode, setMode] = useState('random');
 
     useEffect(() => {
         loadWatchlist();
@@ -120,14 +119,14 @@ export default function SearchScreen({ navigation }) {
         setMode('random');
 
         try {
-            
+
             const randomPage = refresh ? Math.floor(Math.random() * 20) + 1 : page;
             if (refresh) {
                 setResults([]);
                 setPage(randomPage);
             }
 
-            const response = await api.searchAnime('', randomPage, 20); 
+            const response = await api.searchAnime('', randomPage, 20);
 
             if (response?.anime?.length > 0) {
                 setResults(prev => refresh ? response.anime : [...prev, ...response.anime]);
@@ -149,7 +148,7 @@ export default function SearchScreen({ navigation }) {
 
         if (query.trim().length < 2) {
             if (query.trim().length === 0 && mode === 'search') {
-                loadFreshContent(true); 
+                loadFreshContent(true);
             }
             return;
         }
@@ -236,7 +235,7 @@ export default function SearchScreen({ navigation }) {
         <View style={{ marginBottom: 16 }}>
             {mode === 'random' && !query && (
                 <>
-                    {}
+                    { }
                     <View style={{ marginBottom: 24 }}>
                         <View style={{ flexDirection: 'row', alignItems: 'center', marginBottom: 12 }}>
                             <TrendingUp color={theme.gold} size={18} />
@@ -255,7 +254,7 @@ export default function SearchScreen({ navigation }) {
                         </ScrollView>
                     </View>
 
-                    {}
+                    { }
                     <View style={{ marginBottom: 24 }}>
                         <Text style={{ color: theme.text, fontSize: 16, fontWeight: '600', marginBottom: 12 }}>Browse by Genre</Text>
                         <ScrollView horizontal showsHorizontalScrollIndicator={false}>
@@ -283,7 +282,7 @@ export default function SearchScreen({ navigation }) {
         <View style={{ flex: 1, backgroundColor: theme.bg }}>
             <StatusBar style={isDark ? "light" : "dark"} />
 
-            {}
+            { }
             <View style={{ paddingTop: 56, paddingHorizontal: 24, paddingBottom: 16 }}>
                 <View style={{ flexDirection: 'row', alignItems: 'center', justifyContent: 'space-between' }}>
                     <Text style={{ color: theme.text, fontSize: 24, fontWeight: '800' }}>Discover</Text>
@@ -293,7 +292,7 @@ export default function SearchScreen({ navigation }) {
                 </View>
             </View>
 
-            {}
+            { }
             <View style={{ paddingHorizontal: 24, marginBottom: 16 }}>
                 <View style={{ flexDirection: 'row', alignItems: 'center', backgroundColor: theme.bgCard, borderRadius: 16, paddingHorizontal: 16, borderWidth: 1, borderColor: theme.border }}>
                     <Search color={theme.textMuted} size={20} />
