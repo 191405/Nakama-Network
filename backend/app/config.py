@@ -39,9 +39,9 @@ class Settings(BaseSettings):
 
     smtp_host: str = "smtp.gmail.com"
     smtp_port: int = 587
-    smtp_user: str = "nakamanetworkonline@gmail.com"
-    smtp_password: str = "tjamrvzasbuedbnj"
-    smtp_email: str = "nakamanetworkonline@gmail.com"
+    smtp_user: str = ""
+    smtp_password: str = ""
+    smtp_email: str = ""
     
     @property
     def cors_origins_list(self) -> List[str]:
