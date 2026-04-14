@@ -11,10 +11,6 @@ logger = logging.getLogger(__name__)
 
 from app.config import settings
 
-SMTP_HOST = settings.smtp_host
-SMTP_PORT = settings.smtp_port
-SMTP_EMAIL = settings.smtp_email
-SMTP_PASSWORD = settings.smtp_password
 APP_NAME = "Nakama Network"
 APP_URL = "https://nk-network-project.web.app"
 
@@ -39,7 +35,7 @@ def get_email_base_template(content: str, preheader: str = "") -> str:
     <body style="margin: 0; padding: 0; background-color: #050505; font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;">
         <!-- Preheader text (hidden) -->
         <div style="display: none; max-height: 0px; overflow: hidden;">
-            {preheader}
+            {{preheader}}
         </div>
         
         <!-- Main container -->
@@ -64,7 +60,7 @@ def get_email_base_template(content: str, preheader: str = "") -> str:
                         <!-- Content -->
                         <tr>
                             <td style="padding: 40px;">
-                                {content}
+                                {{content}}
                             </td>
                         </tr>
                         
@@ -88,9 +84,43 @@ def get_email_base_template(content: str, preheader: str = "") -> str:
         </table>
     </body>
     </html>
-    Send an email via SMTP
-    Returns True on success, False on failure
-    Send welcome email to new users with dramatic anime-style greeting
+    """.format(preheader=preheader, content=content)
+
+class EmailService:
+    def __init__(self):
+        # Load from Environment Variables
+        self.smtp_host = os.getenv("SMTP_HOST", "smtp.gmail.com")
+        self.smtp_port = int(os.getenv("SMTP_PORT", "587"))
+        self.smtp_user = os.getenv("SMTP_USER", "")
+        self.smtp_password = os.getenv("SMTP_PASSWORD", "")
+        self.smtp_email = os.getenv("SMTP_EMAIL", "")
+
+    def send_email(self, to_email: str, subject: str, html_content: str) -> bool:
+        """Send an email via SMTP"""
+        try:
+            msg = MIMEMultipart()
+            msg['From'] = f"{APP_NAME} <{self.smtp_email}>"
+            msg['To'] = to_email
+            msg['Subject'] = subject
+
+            # Attach HTML content
+            msg.attach(MIMEText(html_content, 'html'))
+
+            # Connect to SMTP server
+            with smtplib.SMTP(self.smtp_host, self.smtp_port) as server:
+                server.starttls()
+                server.login(self.smtp_user, self.smtp_password)
+                server.send_message(msg)
+            
+            logger.info(f"Email sent successfully to {to_email}")
+            return True
+        except Exception as e:
+            logger.error(f"Failed to send email to {to_email}: {e}")
+            return False
+
+    def send_welcome_email(self, email: str, display_name: str) -> bool:
+        """Send welcome email to new users with dramatic anime-style greeting"""
+        content = f"""
         <h2 style="color: #eab308; margin-top: 0; font-size: 24px;">
             Welcome, {display_name}! 🔥
         </h2>
@@ -132,7 +162,7 @@ def get_email_base_template(content: str, preheader: str = "") -> str:
         <div style="text-align: center; margin: 35px 0;">
             <a href="{APP_URL}" 
                style="background: linear-gradient(135deg, #eab308, #ca8a04);
-                      color:
+                      color: white;
                       padding: 16px 40px; 
                       text-decoration: none; 
                       border-radius: 50px; 
@@ -148,7 +178,14 @@ def get_email_base_template(content: str, preheader: str = "") -> str:
         <p style="font-size: 14px; color: #94a3b8; text-align: center; font-style: italic;">
             "The bond between Nakama is unbreakable."
         </p>
-    Send email verification link
+        """
+        
+        full_html = get_email_base_template(content, preheader="Your journey begins now.")
+        return self.send_email(email, "Welcome to Nakama Network! ⚔️", full_html)
+
+    def send_verification_email(self, email: str, display_name: str, verification_url: str) -> bool:
+        """Send email verification link"""
+        content = f"""
         <h2 style="color: #eab308; margin-top: 0; font-size: 24px;">
             Almost There, {display_name}! ⚡
         </h2>
@@ -163,7 +200,7 @@ def get_email_base_template(content: str, preheader: str = "") -> str:
             <p style="margin: 0 0 20px; color: #94a3b8; font-size: 14px;">Click the button below to verify:</p>
             <a href="{verification_url}" 
                style="background: linear-gradient(135deg, #eab308, #ca8a04);
-                      color:
+                      color: white;
                       padding: 14px 35px; 
                       text-decoration: none; 
                       border-radius: 50px; 
@@ -177,7 +214,14 @@ def get_email_base_template(content: str, preheader: str = "") -> str:
         <p style="font-size: 13px; color: #64748b; text-align: center;">
             This link expires in 24 hours. If you didn't create an account, ignore this email.
         </p>
-    Send password reset link
+        """
+        
+        full_html = get_email_base_template(content, preheader="Verify your email to continue.")
+        return self.send_email(email, "Verify Your Email ⚡", full_html)
+
+    def send_password_reset_email(self, email: str, display_name: str, reset_url: str) -> bool:
+        """Send password reset link"""
+        content = f"""
         <h2 style="color: #eab308; margin-top: 0; font-size: 24px;">
             Password Reset Request 🔒
         </h2>
@@ -191,7 +235,7 @@ def get_email_base_template(content: str, preheader: str = "") -> str:
         <div style="text-align: center; margin: 35px 0;">
             <a href="{reset_url}" 
                style="background: linear-gradient(135deg, #eab308, #ca8a04);
-                      color:
+                      color: white;
                       padding: 16px 40px; 
                       text-decoration: none; 
                       border-radius: 50px; 
@@ -208,101 +252,60 @@ def get_email_base_template(content: str, preheader: str = "") -> str:
                 If you didn't request this, someone may be trying to access your account.
             </p>
         </div>
-    Confirm receipt of user feedback
-        <h2 style="color: #eab308; margin-top: 0; font-size: 24px;">
-            Thanks for Your Feedback! 🙏
-        </h2>
+        """
         
-        <p style="font-size: 16px; line-height: 1.7; color: #e2e8f0;">
-            Hey {display_name}, we've received your message and truly appreciate you taking the time 
-            to help us improve Nakama Network.
+        full_html = get_email_base_template(content, preheader="Reset your password.")
+        return self.send_email(email, "Reset Your Password 🔒", full_html)
+
+email_service = EmailService()
+
+
+# ─── Convenience helpers (imported by routers) ────────────────────────────────
+
+def send_feedback_received_email(user_email: str, feedback_text: str, display_name: str = "Nakama Member") -> bool:
+    """Send a confirmation email when feedback is submitted."""
+    content = f"""
+    <h2 style="color: #eab308; margin-top: 0; font-size: 24px;">
+        Feedback Received! 📬
+    </h2>
+    <p style="font-size: 16px; line-height: 1.7; color: #e2e8f0;">
+        Thank you, {display_name}! Your feedback has been received and our team will review it shortly.
+    </p>
+    <div style="background-color: rgba(255,255,255,0.03); padding: 20px; border-radius: 12px; margin: 25px 0; border-left: 4px solid #eab308;">
+        <p style="margin: 0; color: #94a3b8; font-size: 13px; font-style: italic;">
+            "{feedback_text[:300]}{'...' if len(feedback_text) > 300 else ''}"
         </p>
-        
-        <!-- Feedback preview -->
-        <div style="background-color: rgba(255,255,255,0.03); padding: 25px; border-radius: 12px; margin: 25px 0; border-left: 4px solid #a855f7;">
-            <p style="margin: 0 0 10px; color: #a855f7; font-size: 12px; text-transform: uppercase; letter-spacing: 1px;">
-                Your Message:
-            </p>
-            <p style="margin: 0; color: #cbd5e1; font-size: 14px; font-style: italic;">
-                "{preview}"
-            </p>
-        </div>
-        
-        <p style="font-size: 15px; line-height: 1.7; color: #94a3b8;">
-            Our team reviews every piece of feedback. If we need more details, 
-            we'll reach out directly. Your voice shapes the future of Nakama Network!
+    </div>
+    <p style="font-size: 14px; color: #94a3b8;">
+        We appreciate you helping us improve Nakama Network.
+    </p>
+    """
+    full_html = get_email_base_template(content, preheader="We got your feedback!")
+    return email_service.send_email(user_email, "We Got Your Feedback! 📬", full_html)
+
+
+def send_rank_promotion_email(user_email: str, display_name: str, new_rank: str) -> bool:
+    """Send a congratulations email when a user ranks up."""
+    content = f"""
+    <h2 style="color: #eab308; margin-top: 0; font-size: 24px;">
+        Rank Up! 🎉
+    </h2>
+    <p style="font-size: 16px; line-height: 1.7; color: #e2e8f0;">
+        Congratulations, {display_name}! You've achieved a new rank:
+    </p>
+    <div style="text-align: center; padding: 30px; margin: 25px 0; background: linear-gradient(135deg, rgba(234,179,8,0.15), rgba(202,138,4,0.05)); border-radius: 12px; border: 1px solid rgba(234,179,8,0.3);">
+        <p style="margin: 0; font-size: 28px; font-weight: bold; color: #eab308;">
+            {new_rank}
         </p>
-        
-        <div style="text-align: center; margin-top: 30px;">
-            <p style="color: #eab308; font-size: 14px; margin: 0;">
-                ⭐ Keep being awesome, {display_name}!
-            </p>
-        </div>
-    Celebrate user rank promotion with epic notification
-        <div style="text-align: center;">
-            <h2 style="color: {rank_color}; margin-top: 0; font-size: 28px; text-transform: uppercase; letter-spacing: 2px;">
-                🎊 RANK UP! 🎊
-            </h2>
-            
-            <p style="font-size: 18px; line-height: 1.7; color: #e2e8f0; margin-bottom: 30px;">
-                {display_name}, your dedication has been recognized!
-            </p>
-            
-            <!-- Rank badge -->
-            <div style="background: linear-gradient(135deg, rgba(0,0,0,0.5), rgba(0,0,0,0.3)); 
-                        padding: 40px; 
-                        border-radius: 16px; 
-                        margin: 30px auto;
-                        max-width: 300px;
-                        border: 2px solid {rank_color};">
-                <p style="margin: 0 0 10px; color: #94a3b8; font-size: 14px;">NEW RANK</p>
-                <h1 style="margin: 0; color: {rank_color}; font-size: 32px; font-weight: 900;">
-                    {new_rank}
-                </h1>
-            </div>
-            
-            <p style="font-size: 15px; color: #cbd5e1; margin-bottom: 25px;">
-                Keep pushing forward. The path to <strong style="color: #ff00ff;">Net God</strong> awaits!
-            </p>
-            
-            <a href="{APP_URL}/profile" 
-               style="background: linear-gradient(135deg, #eab308, #ca8a04);
-                      color:
-                      padding: 14px 35px; 
-                      text-decoration: none; 
-                      border-radius: 50px; 
-                      font-weight: bold; 
-                      font-size: 14px;
-                      display: inline-block;">
-                View Your Profile
-            </a>
-        </div>
-    Send daily prophecy notification (for users who opt-in)
-        <div style="text-align: center;">
-            <h2 style="color: #a855f7; margin-top: 0; font-size: 24px;">
-                🔮 Daily Prophecy
-            </h2>
-            
-            <p style="font-size: 14px; color: #94a3b8; margin-bottom: 25px;">
-                The Oracle has spoken, {display_name}...
-            </p>
-            
-            <!-- Prophecy card -->
-            <div style="background: linear-gradient(135deg, rgba(168,85,247,0.1), rgba(139,92,246,0.05)); 
-                        padding: 30px; 
-                        border-radius: 16px; 
-                        margin: 25px 0;
-                        border: 1px solid rgba(168,85,247,0.3);">
-                <p style="font-size: 18px; color: #e2e8f0; line-height: 1.8; margin: 0; font-style: italic;">
-                    "{prophecy_text}"
-                </p>
-                <p style="margin: 20px 0 0; color: #a855f7; font-size: 14px;">
-                    — Inspired by <strong>{anime_title}</strong>
-                </p>
-            </div>
-            
-            <a href="{APP_URL}/oracle" 
-               style="color: #a855f7; text-decoration: none; font-size: 14px;">
-                Get another prophecy →
-            </a>
-        </div>
+    </div>
+    <p style="font-size: 14px; color: #94a3b8; text-align: center;">
+        Keep going — the path to Net God awaits.
+    </p>
+    """
+    full_html = get_email_base_template(content, preheader=f"You reached {new_rank}!")
+    return email_service.send_email(user_email, f"🎉 New Rank: {new_rank}!", full_html)
+
+
+def send_welcome_email(email: str, display_name: str) -> bool:
+    """Standalone wrapper so routers can import directly."""
+    return email_service.send_welcome_email(email, display_name)

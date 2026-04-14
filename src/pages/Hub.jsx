@@ -1,19 +1,15 @@
 import React, { useState, useEffect } from 'react';
 import { motion } from 'framer-motion';
-import { Trophy, Zap, Users, TrendingUp, Star, Award, Download, Sparkles, Flame, Target, Sword } from 'lucide-react';
+import { Trophy, Zap, Users, TrendingUp, Star, Award, Sparkles, BookOpen, Heart, Newspaper, Film, MessageCircle } from 'lucide-react';
 import { useAuth } from '../contexts/AuthContext';
 import { getLeaderboard, getAnnouncements } from '../utils/firebase';
-import { generateDailyProphecy } from '../utils/gemini';
 import Pagination from '../components/Pagination';
 import TabBar from '../components/TabBar';
 import Breadcrumb from '../components/Breadcrumb';
-import ProgressBar, { CircularProgress } from '../components/ProgressBar';
+import ProgressBar from '../components/ProgressBar';
 import Tag, { TagGroup } from '../components/Tag';
-import FluidLoader, { CircularFluidLoader } from '../components/FluidLoader';
 import GamifiedCard from '../components/GamifiedCard';
 import StatCard from '../components/StatCard';
-import ImageSlider from '../components/ImageSlider';
-import Slider from '../components/Slider';
 
 const Hub = () => {
   const { userProfile, refreshUserProfile } = useAuth();
@@ -98,31 +94,28 @@ const Hub = () => {
   }
 
   return (
-    <div className="min-h-screen pt-24 pb-24 md:pb-8 px-4 md:px-8 relative z-30">
+    <div className="min-h-screen pt-24 pb-24 md:pb-8 px-4 md:px-8 relative z-30 bg-[#050505]">
       <div className="max-w-7xl mx-auto space-y-8">
-        {}
+        { }
         <Breadcrumb items={[
           { id: 'hub', label: 'Command Center', active: true }
         ]} />
 
-        {}
-        <div className="text-center mb-8 opacity-100">
+        <div className="text-center mb-8">
           <h1
-            className="text-4xl md:text-6xl font-black mb-4"
-            style={{
-              textShadow: '0 4px 8px rgba(0,0,0,0.8)'
-            }}
+            className="text-4xl md:text-6xl font-black mb-3"
+            style={{ fontFamily: 'var(--font-display)', letterSpacing: '-0.03em' }}
           >
-            <span style={{ color: '#eab308' }}>Command</span>
+            <span style={{ color: '#fb7185' }}>My</span>
             {' '}
-            <span style={{ color: '#e2e8f0' }}>Center</span>
+            <span style={{ color: 'var(--color-pearl)' }}>Dashboard</span>
           </h1>
-          <p className="text-slate-500 text-lg" style={{ textShadow: '0 2px 4px rgba(0,0,0,0.6)' }}>
-            Welcome back, {userProfile?.displayName || 'Shinobi'}. Your hub awaits.
+          <p className="text-slate-500 text-base">
+            Welcome back, <span style={{ color: '#fda4af' }}>{userProfile?.displayName || 'Nakama'}</span>. Your world awaits.
           </p>
         </div>
 
-        {}
+        { }
         <TabBar
           tabs={[
             { id: 'overview', label: '⚡ Overview' },
@@ -135,43 +128,41 @@ const Hub = () => {
           variant="default"
         />
 
-        {}
+        { }
         {activeTab === 'overview' && (
           <>
-            {}
             <div className="grid grid-cols-1 md:grid-cols-4 gap-4">
               <StatCard
                 icon={Zap}
-                label="Current Chakra"
+                label="Community Points"
                 value={userProfile?.chakra?.toLocaleString() || 0}
                 change={12}
                 color="amber"
               />
               <StatCard
-                icon={Trophy}
-                label="Total Wins"
+                icon={Heart}
+                label="Favourites"
                 value={userProfile?.totalWins || 0}
                 change={5}
                 color="green"
               />
               <StatCard
-                icon={Flame}
-                label="Win Streak"
+                icon={MessageCircle}
+                label="Discussions"
                 value={userProfile?.streak || 0}
-                change={userProfile?.streak > 0 ? 100 : 0}
-                suffix="🔥"
+                change={0}
                 color="red"
               />
               <StatCard
-                icon={Target}
-                label="Battles This Month"
-                value="147"
-                change={8}
+                icon={Film}
+                label="Watched Episodes"
+                value="—"
+                change={0}
                 color="yellow"
               />
             </div>
 
-            {}
+            { }
             <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
               <motion.div
                 initial={{ opacity: 0, scale: 0.9 }}
@@ -188,7 +179,7 @@ const Hub = () => {
                   className="h-full"
                 >
                   <div className="space-y-6">
-                    {}
+                    { }
                     <div className={`p-4 rounded-xl bg-gradient-to-r ${getRankColor(userProfile?.rank || 'Mere User')} text-center`}>
                       <div className="flex items-center justify-center space-x-2 mb-2">
                         {React.createElement(getRankIcon(userProfile?.rank || 'Mere User'), { size: 28 })}
@@ -196,7 +187,7 @@ const Hub = () => {
                       </div>
                     </div>
 
-                    {}
+                    { }
                     <div>
                       <ProgressBar
                         value={userProfile?.chakra || 0}
@@ -208,7 +199,7 @@ const Hub = () => {
                       />
                     </div>
 
-                    {}
+                    { }
                     <div className="grid grid-cols-3 gap-4 pt-4 border-t border-amber-500/20">
                       <div className="text-center">
                         <p className="text-slate-400 text-xs mb-2">Wins</p>
@@ -224,7 +215,7 @@ const Hub = () => {
                       </div>
                     </div>
 
-                    {}
+                    { }
                     {userProfile?.clan && (
                       <div className="pt-4 border-t border-amber-500/20">
                         <div className="text-xs text-slate-400 mb-2">Guild Affiliation</div>
@@ -243,52 +234,30 @@ const Hub = () => {
                 </GamifiedCard>
               </motion.div>
 
-              {}
               <motion.div
                 initial={{ opacity: 0, scale: 0.9 }}
                 animate={{ opacity: 1, scale: 1 }}
                 transition={{ delay: 0.2 }}
               >
                 <GamifiedCard
-                  title="Oracle's Prophecy"
-                  subtitle="Divine Guidance"
+                  title="Discover Today"
+                  subtitle="Curated for you"
                   icon={Sparkles}
                   rarity="mythic"
                   className="h-full"
                 >
                   <div className="space-y-4">
-                    {!showProphecy ? (
-                      <motion.button
-                        whileHover={{ scale: 1.05 }}
-                        whileTap={{ scale: 0.95 }}
-                        onClick={handleDailyProphecy}
-                        className="w-full py-3 bg-gradient-to-r from-amber-500 to-yellow-500 text-black font-bold rounded-lg hover:from-amber-400 hover:to-yellow-400 transition-all shadow-lg shadow-amber-500/20"
-                      >
-                        Reveal Your Fate
-                      </motion.button>
-                    ) : (
-                      <div className="min-h-[120px] flex items-center justify-center">
-                        {loadingProphecy ? (
-                          <FluidLoader size="md" variant="anime" label="Consulting Oracle..." />
-                        ) : (
-                          <motion.div
-                            initial={{ opacity: 0 }}
-                            animate={{ opacity: 1 }}
-                            className="p-4 bg-black/30 rounded-lg border border-amber-500/30"
-                          >
-                            <p className="text-sm italic text-slate-200 leading-relaxed">
-                              "{prophecy}"
-                            </p>
-                          </motion.div>
-                        )}
-                      </div>
-                    )}
-
-                    <div className="pt-4 border-t border-amber-500/20">
+                    <div className="p-4 rounded-xl" style={{ background: 'rgba(244,63,94,0.06)', border: '1px solid rgba(244,63,94,0.12)' }}>
+                      <p className="text-sm text-slate-300 leading-relaxed italic mb-2">
+                        "The best anime is the one that changes how you see the world."
+                      </p>
+                      <p className="text-xs text-slate-600">— Community wisdom</p>
+                    </div>
+                    <div className="pt-4 border-t border-amber-500/10">
                       <TagGroup
                         tags={[
-                          { label: 'Daily', icon: Flame },
-                          { label: 'Wisdom', icon: Star }
+                          { label: 'Trending', icon: TrendingUp },
+                          { label: 'Community Pick', icon: Star }
                         ]}
                         variant="anime"
                       />
@@ -298,29 +267,22 @@ const Hub = () => {
               </motion.div>
             </div>
 
-            {}
             <motion.div
               initial={{ opacity: 0, y: 20 }}
               animate={{ opacity: 1, y: 0 }}
             >
-              <h2 className="text-2xl font-bold mb-4 text-white flex items-center gap-3">
-                <Sparkles className="text-amber-400" />
-                Featured Events
+              <h2 className="text-2xl font-bold mb-4 flex items-center gap-3" style={{ fontFamily: 'var(--font-display)', color: 'var(--color-pearl)' }}>
+                <Newspaper className="text-rose-400" size={22} />
+                Latest Updates
               </h2>
-              <ImageSlider
-                images={[
-                  'https://via.placeholder.com/1200x300/f59e0b/000000?text=Grand+Tournament',
-                  'https://via.placeholder.com/1200x300/d97706/000000?text=Seasonal+Event',
-                  'https://via.placeholder.com/1200x300/b45309/fbbf24?text=Challenge+Mode',
-                ]}
-                autoPlay={true}
-                height="h-64"
-              />
+              <div className="p-5 rounded-2xl" style={{ background: 'rgba(13,10,24,0.9)', border: '1px solid rgba(244,63,94,0.1)' }}>
+                <p className="text-slate-500 text-sm">Announcements and community updates will appear here.</p>
+              </div>
             </motion.div>
           </>
         )}
 
-        {}
+        { }
         {activeTab === 'stats' && (
           <motion.div
             initial={{ opacity: 0, y: 20 }}
@@ -393,7 +355,7 @@ const Hub = () => {
           </motion.div>
         )}
 
-        {}
+        { }
         {activeTab === 'achievements' && (
           <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
             {[
@@ -423,7 +385,7 @@ const Hub = () => {
           </div>
         )}
 
-        {}
+        { }
         {activeTab === 'settings' && (
           <GamifiedCard title="Preferences & Settings" icon={Sword} rarity="common" className="max-w-2xl">
             <div className="space-y-6">
@@ -456,15 +418,15 @@ const Hub = () => {
           </GamifiedCard>
         )}
 
-        {}
+        { }
         <motion.div
           initial={{ opacity: 0, y: 20 }}
           animate={{ opacity: 1, y: 0 }}
           transition={{ delay: 0.5 }}
         >
-          <h2 className="text-2xl font-bold mb-6 text-white flex items-center gap-3">
-            <Trophy className="text-amber-400" />
-            Top Shinobis
+          <h2 className="text-2xl font-bold mb-6 flex items-center gap-3" style={{ fontFamily: 'var(--font-display)', color: 'var(--color-pearl)' }}>
+            <Trophy className="text-rose-400" size={22} />
+            Top Community Members
           </h2>
 
           <div className="bg-gradient-to-br from-slate-800/50 to-slate-900/50 rounded-lg p-6 border border-amber-500/20">
@@ -505,16 +467,16 @@ const Hub = () => {
           </div>
         </motion.div>
 
-        {}
+        { }
         {announcements.length > 0 && (
           <motion.div
             initial={{ opacity: 0, y: 20 }}
             animate={{ opacity: 1, y: 0 }}
             transition={{ delay: 0.6 }}
           >
-            <h2 className="text-2xl font-bold mb-6 text-white flex items-center gap-3">
-              <TrendingUp className="text-amber-400" />
-              Latest Updates
+            <h2 className="text-2xl font-bold mb-6 flex items-center gap-3" style={{ fontFamily: 'var(--font-display)', color: 'var(--color-pearl)' }}>
+              <TrendingUp className="text-rose-400" size={22} />
+              Site Announcements
             </h2>
 
             <div className="space-y-4">

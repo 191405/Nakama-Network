@@ -37,3 +37,16 @@ firestore-debug.log
 # Build outputs
 build/
 out/
+
+# Python
+__pycache__/
+*.pyc
+*.pyo
+*.pdb
+*.db
+.venv/
+venv/
+
+# Coverage & test output
+coverage/
+.nyc_output/

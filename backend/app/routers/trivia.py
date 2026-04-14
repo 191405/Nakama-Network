@@ -22,7 +22,7 @@ def get_or_create_trivia_stats(db: Session, user_id: str):
     if not stats:
         stats = TriviaStats(user_id=user_id)
         db.add(stats)
-        db.commit()
+        db.flush() # Use flush instead of commit to allow caller to control transaction
         db.refresh(stats)
     return stats
 
@@ -64,15 +64,10 @@ def check_trivia_achievements(stats: TriviaStats, current_achievements: list) ->
     return unlocked
 
 @router.post("/submit")
-async def submit_trivia_answer(request: Request, db: Session = Depends(get_db)):
-    try:
-        body = await request.json()
-        logger.info(f"Received trivia submission: {body}")
-        
-        submission = TriviaSubmission(**body)
-    except Exception as e:
-        logger.error(f"Validation error: {e}, body was: {await request.body()}")
-        raise HTTPException(status_code=422, detail=str(e))
+async def submit_trivia_answer(submission: TriviaSubmission, db: Session = Depends(get_db)):
+    # Pydantic automatically validates the body against TriviaSubmission schema
+    # If invalid, FastAPI raises 422 automatically. We don't need manual try/except for parsing here.
+    logger.info(f"Received trivia submission for user: {submission.user_id}")
     
     stats = get_or_create_trivia_stats(db, submission.user_id)
     

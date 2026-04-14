@@ -7,7 +7,7 @@ import logging
 
 from fastapi.staticfiles import StaticFiles
 from app.config import settings
-from app.routers import anime, characters, ai, episodes, chat, interaction, reviews, clans, users, feedback, auth, trivia, achievements, manga, encoder, arcade
+from app.routers import anime, characters, ai, episodes, chat, interaction, reviews, clans, users, feedback, auth, trivia, achievements, manga, encoder, arcade, library, stories
 from app.services.cache import cache_service
 from app.database import engine, Base
 from app.middleware import (
@@ -26,6 +26,11 @@ logger = logging.getLogger(__name__)
 async def lifespan(app: FastAPI):
     logger.info("🚀 Starting Nakama Network API...")
     await cache_service.connect()
+    
+    # Auto-create any new tables (e.g. WebNovel, StoryChapter, StoryLore)
+    Base.metadata.create_all(bind=engine)
+    logger.info("📦 Database tables verified")
+    
     logger.info(f"📡 Running on {settings.host}:{settings.port}")
     logger.info(f"🔒 Production mode: {settings.is_production}")
     
@@ -112,6 +117,8 @@ app.include_router(auth.router, prefix=f"{API_PREFIX}/auth", tags=["Auth"])
 app.include_router(manga.router, prefix=f"{API_PREFIX}/manga", tags=["Manga"])
 app.include_router(encoder.router, prefix=f"{API_PREFIX}/encoder", tags=["Encoder"])
 app.include_router(arcade.router, prefix=f"{API_PREFIX}/arcade", tags=["Arcade"])
+app.include_router(library.router, prefix=f"{API_PREFIX}/library", tags=["Library"])
+app.include_router(stories.router, prefix=f"{API_PREFIX}/stories", tags=["Stories"])
 
 @app.get("/", tags=["Health"])
 async def root():

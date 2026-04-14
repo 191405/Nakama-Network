@@ -101,7 +101,7 @@ export default function SearchScreen({ navigation }) {
     const [hasMore, setHasMore] = useState(true);
     const [isRefreshing, setIsRefreshing] = useState(false);
 
-    const [mode, setMode] = useState('random'); 
+    const [mode, setMode] = useState('random');
 
     useEffect(() => {
         loadWatchlist();
@@ -120,18 +120,29 @@ export default function SearchScreen({ navigation }) {
         setMode('random');
 
         try {
-            
-            const randomPage = refresh ? Math.floor(Math.random() * 20) + 1 : page;
+            // Reset state on refresh
             if (refresh) {
                 setResults([]);
-                setPage(randomPage);
+                setPage(1);
+                setHasMore(true);
             }
 
-            const response = await api.searchAnime('', randomPage, 20); 
+            // Use sequential pagination (previous page + 1)
+            const targetPage = refresh ? 1 : page;
+
+            // Fetch popular/search results empty query usually returns generic popular list
+            const response = await api.searchAnime('', targetPage, 20);
 
             if (response?.anime?.length > 0) {
-                setResults(prev => refresh ? response.anime : [...prev, ...response.anime]);
-                setPage(prev => refresh ? randomPage + 1 : prev + 1);
+                // Filter out duplicates
+                setResults(prev => {
+                    const currentIds = new Set(prev.map(item => item.id));
+                    const newItems = response.anime.filter(item => !currentIds.has(item.id));
+                    return refresh ? response.anime : [...prev, ...newItems];
+                });
+
+                // Increment page for next call
+                setPage(prev => targetPage + 1);
             } else {
                 setHasMore(false);
             }
@@ -149,7 +160,7 @@ export default function SearchScreen({ navigation }) {
 
         if (query.trim().length < 2) {
             if (query.trim().length === 0 && mode === 'search') {
-                loadFreshContent(true); 
+                loadFreshContent(true);
             }
             return;
         }
@@ -236,7 +247,7 @@ export default function SearchScreen({ navigation }) {
         <View style={{ marginBottom: 16 }}>
             {mode === 'random' && !query && (
                 <>
-                    {}
+                    { }
                     <View style={{ marginBottom: 24 }}>
                         <View style={{ flexDirection: 'row', alignItems: 'center', marginBottom: 12 }}>
                             <TrendingUp color={theme.gold} size={18} />
@@ -255,7 +266,7 @@ export default function SearchScreen({ navigation }) {
                         </ScrollView>
                     </View>
 
-                    {}
+                    { }
                     <View style={{ marginBottom: 24 }}>
                         <Text style={{ color: theme.text, fontSize: 16, fontWeight: '600', marginBottom: 12 }}>Browse by Genre</Text>
                         <ScrollView horizontal showsHorizontalScrollIndicator={false}>
@@ -283,7 +294,7 @@ export default function SearchScreen({ navigation }) {
         <View style={{ flex: 1, backgroundColor: theme.bg }}>
             <StatusBar style={isDark ? "light" : "dark"} />
 
-            {}
+            { }
             <View style={{ paddingTop: 56, paddingHorizontal: 24, paddingBottom: 16 }}>
                 <View style={{ flexDirection: 'row', alignItems: 'center', justifyContent: 'space-between' }}>
                     <Text style={{ color: theme.text, fontSize: 24, fontWeight: '800' }}>Discover</Text>
@@ -293,7 +304,7 @@ export default function SearchScreen({ navigation }) {
                 </View>
             </View>
 
-            {}
+            { }
             <View style={{ paddingHorizontal: 24, marginBottom: 16 }}>
                 <View style={{ flexDirection: 'row', alignItems: 'center', backgroundColor: theme.bgCard, borderRadius: 16, paddingHorizontal: 16, borderWidth: 1, borderColor: theme.border }}>
                     <Search color={theme.textMuted} size={20} />

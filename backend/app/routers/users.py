@@ -8,7 +8,7 @@ import logging
 
 from app.database import get_db
 from app.models.sql import UserSettings, UserStreak, UserStats, calculate_rank
-from app.services.email_service import send_feedback_received_email, send_rank_promotion_email
+from app.services.email_service import send_rank_promotion_email
 
 logger = logging.getLogger(__name__)
 

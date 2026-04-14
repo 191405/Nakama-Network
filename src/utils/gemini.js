@@ -1,5 +1,5 @@
 const GEMINI_API_KEY = import.meta.env.VITE_GOOGLE_GEMINI_API_KEY;
-const GEMINI_API_URL = 'https://generativelanguage.googleapis.com/v1/models/gemini-2.0-flash:generateContent';
+const GEMINI_API_URL = 'https://generativelanguage.googleapis.com/v1beta/models/gemini-2.5-flash-lite:generateContent';
 
 export const generateAIResponse = async (prompt, context = '') => {
   try {
@@ -252,4 +252,24 @@ export const recommendByMood = async (mood, genres = []) => {
   3. [Title] - [Why it fits]`;
 
   return await generateAIResponse(prompt);
+};
+
+export const askAboutAnime = async (animeContext, userQuestion) => {
+  const context = `You are an AI anime expert assistant embedded on the wiki page for the anime: "${animeContext.title}".
+  
+  Here is the core information about this anime:
+  Synopsis: ${animeContext.synopsis || 'No synopsis available.'}
+  Genres: ${animeContext.genres?.map(g => g.name).join(', ') || 'N/A'}
+  Score: ${animeContext.score || 'N/A'}
+  Episodes: ${animeContext.episodes || 'N/A'}
+  Status: ${animeContext.status || 'N/A'}
+  Studio: ${animeContext.studios?.map(s => s.name).join(', ') || 'N/A'}
+
+  The user is asking a question specifically about THIS anime.
+  Your job: Answer their question accurately, based ONLY on the provided context or your general knowledge about THIS specific anime.
+  Keep your answer concise, engaging, and directly address the user's question. Do not hallucinate plot points. If you don't know, say so.`;
+
+  const prompt = `User Question: ${userQuestion}`;
+
+  return await generateAIResponse(prompt, context);
 };

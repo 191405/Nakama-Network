@@ -1,348 +1,368 @@
 import React, { useState, useEffect, useRef } from 'react';
-import { View, Text, TextInput, TouchableOpacity, KeyboardAvoidingView, Platform, Animated, Dimensions, ScrollView, ActivityIndicator, Keyboard } from 'react-native';
+import { View, Text, TextInput, TouchableOpacity, KeyboardAvoidingView, Platform, Animated, Dimensions, ImageBackground } from 'react-native';
 import { LinearGradient } from 'expo-linear-gradient';
+import { BlurView } from 'expo-blur';
 import { useAuth } from '../contexts/AuthContext';
 import { StatusBar } from 'expo-status-bar';
-import { Mail, Lock, User, Eye, EyeOff, ChevronRight, AlertTriangle, CheckCircle, Smartphone } from 'lucide-react-native';
+import * as Google from 'expo-auth-session/providers/google';
+import * as WebBrowser from 'expo-web-browser';
+import { Ionicons } from '@expo/vector-icons';
+
+// Ensure AuthSession works
+WebBrowser.maybeCompleteAuthSession();
 
 const { width, height } = Dimensions.get('window');
 
-const mapAuthError = (errorCode) => {
-    if (!errorCode) return 'An unexpected error occurred.';
-    const code = errorCode.toLowerCase();
-
-    if (code.includes('auth/email-already-in-use')) return 'That email is already in use. Please log in.';
-    if (code.includes('auth/invalid-email')) return 'Please enter a valid email address.';
-    if (code.includes('auth/user-not-found') || code.includes('auth/invalid-credential')) return 'Invalid email or password.';
-    if (code.includes('auth/wrong-password')) return 'Incorrect password.';
-    if (code.includes('auth/weak-password')) return 'Password should be at least 6 characters.';
-    if (code.includes('auth/network-request-failed')) return 'Network error. Please check your connection.';
-
-    if (code.includes('firebase:')) return code.replace('firebase: ', '').replace('error (', '').replace(').', '');
-
-    return errorCode;
-};
+// CLIENT IDs
+// Configure these in your .env file
+const ANDROID_CLIENT_ID = process.env.EXPO_PUBLIC_GOOGLE_ANDROID_CLIENT_ID;
+const IOS_CLIENT_ID = process.env.EXPO_PUBLIC_GOOGLE_IOS_CLIENT_ID;
+const WEB_CLIENT_ID = process.env.EXPO_PUBLIC_GOOGLE_WEB_CLIENT_ID;
 
 export default function AuthScreen({ navigation }) {
-    const { login, signup, loginAsGuest, forgotPassword } = useAuth();
+    const { login, signup, loginAsGuest, googleSignIn } = useAuth();
     const [isLogin, setIsLogin] = useState(true);
+
+    // Form States
     const [email, setEmail] = useState('');
     const [password, setPassword] = useState('');
-    const [confirmPassword, setConfirmPassword] = useState('');
-    const [displayName, setDisplayName] = useState('');
-    const [showPassword, setShowPassword] = useState(false);
+    const [username, setUsername] = useState('');
     const [loading, setLoading] = useState(false);
-    const [error, setError] = useState('');
-    const [successMessage, setSuccessMessage] = useState('');
+    const [showPassword, setShowPassword] = useState(false);
+
+    // Expo Auth Session Hook
+    const [request, response, promptAsync] = Google.useIdTokenAuthRequest({
+        clientId: WEB_CLIENT_ID,
+        iosClientId: IOS_CLIENT_ID,
+        androidClientId: ANDROID_CLIENT_ID,
+    });
 
     const fadeAnim = useRef(new Animated.Value(0)).current;
-    const slideAnim = useRef(new Animated.Value(50)).current;
-    const shakeAnim = useRef(new Animated.Value(0)).current;
+    const slideAnim = useRef(new Animated.Value(30)).current;
+
+    // Breathing Animation
+    const breatheAnim = useRef(new Animated.Value(1)).current;
 
     useEffect(() => {
+        // Entry Animation
         Animated.parallel([
-            Animated.timing(fadeAnim, { toValue: 1, duration: 1000, useNativeDriver: true }),
-            Animated.timing(slideAnim, { toValue: 0, duration: 800, useNativeDriver: true }),
+            Animated.timing(fadeAnim, {
+                toValue: 1,
+                duration: 1200,
+                useNativeDriver: true,
+            }),
+            Animated.spring(slideAnim, {
+                toValue: 0,
+                damping: 20,
+                stiffness: 90,
+                useNativeDriver: true,
+            }),
         ]).start();
+
+        // Loop Breathing
+        Animated.loop(
+            Animated.sequence([
+                Animated.timing(breatheAnim, {
+                    toValue: 1.05,
+                    duration: 3000,
+                    useNativeDriver: true,
+                }),
+                Animated.timing(breatheAnim, {
+                    toValue: 1,
+                    duration: 3000,
+                    useNativeDriver: true,
+                }),
+            ])
+        ).start();
     }, []);
 
+    // Handle Google Response
     useEffect(() => {
-        setError('');
-        setSuccessMessage('');
-        setEmail('');
-        setPassword('');
-        setConfirmPassword('');
-        setDisplayName('');
-    }, [isLogin]);
-
-    const shakeError = () => {
-        Animated.sequence([
-            Animated.timing(shakeAnim, { toValue: 10, duration: 100, useNativeDriver: true }),
-            Animated.timing(shakeAnim, { toValue: -10, duration: 100, useNativeDriver: true }),
-            Animated.timing(shakeAnim, { toValue: 10, duration: 100, useNativeDriver: true }),
-            Animated.timing(shakeAnim, { toValue: 0, duration: 100, useNativeDriver: true })
-        ]).start();
-    };
-
-    const handleAuth = async () => {
-        Keyboard.dismiss();
-        setError('');
-        setSuccessMessage('');
-
-        if (!email.trim() || !password.trim()) {
-            setError('Please fill in all required fields');
-            shakeError();
-            return;
+        if (response?.type === 'success') {
+            const { id_token } = response.params;
+            handleGoogleSignIn(id_token);
         }
+    }, [response]);
 
-        if (!isLogin) {
-            if (!displayName.trim()) {
-                setError('Please call yourself something, anything!');
-                shakeError();
-                return;
-            }
-            if (password !== confirmPassword) {
-                setError('Passwords do not match');
-                shakeError();
-                return;
-            }
-        }
-
+    const handleGoogleSignIn = async (token) => {
         try {
             setLoading(true);
-            if (isLogin) {
-                await login(email.trim(), password);
-            } else {
-                await signup(email.trim(), password, displayName.trim());
-            }
-        } catch (err) {
-            console.error("Auth error:", err);
-            const friendlyMsg = mapAuthError(err.message || err.code);
-            setError(friendlyMsg);
-            shakeError();
+            await googleSignIn(token);
+        } catch (error) {
+            console.error(error);
+            alert("Google Sign-In Error. Please check Client IDs.");
         } finally {
             setLoading(false);
         }
     };
 
-    const handleForgotPassword = async () => {
-        if (!email.trim()) {
-            setError('Please enter your email address to reset password');
-            shakeError();
-            return;
-        }
-        try {
-            setError('');
-            await forgotPassword(email.trim());
-            setSuccessMessage('Password reset email sent! Check your inbox.');
-        } catch (err) {
-            setError(mapAuthError(err.message));
-        }
-    };
+    const handleSubmit = async () => {
+        if (!email || !password) return alert("Please fill in all fields");
+        if (!isLogin && !username) return alert("Please choose a Shinobi name");
 
-    const handleGoogleSignIn = () => {
-        
-        setError('Google Sign-In coming soon! Please use email for now.');
-        shakeError();
+        try {
+            setLoading(true);
+            if (isLogin) {
+                await login(email, password);
+            } else {
+                await signup(email, password, username);
+            }
+        } catch (error) {
+            alert(error.message);
+        } finally {
+            setLoading(false);
+        }
     };
 
     return (
-        <View style={{ flex: 1, backgroundColor: '#0f172a' }}>
+        <View style={{ flex: 1, backgroundColor: '#000' }}>
             <StatusBar style="light" />
+
+            {/* Cinematic Background Gradient - "Midnight Gold" */}
             <LinearGradient
-                colors={['#0f172a', '#1e1b4b', '#312e81']}
+                colors={['#000000', '#0a0a0a', '#1a1a2e']}
+                start={{ x: 0, y: 0 }}
+                end={{ x: 1, y: 1 }}
                 style={{ position: 'absolute', width: '100%', height: '100%' }}
             />
 
-            {}
-            <View style={{ position: 'absolute', top: -80, left: -80, width: 250, height: 250, backgroundColor: '#7c3aed', borderRadius: 125, opacity: 0.15 }} />
-            <View style={{ position: 'absolute', bottom: -100, right: -80, width: 300, height: 300, backgroundColor: '#3b82f6', borderRadius: 150, opacity: 0.15 }} />
-            <View style={{ position: 'absolute', top: height * 0.4, left: -50, width: 100, height: 100, backgroundColor: '#ec4899', borderRadius: 50, opacity: 0.1 }} />
+            {/* Glowing Orbs - Simplified for Performance & Aesthetics */}
+            <Animated.View style={{
+                position: 'absolute',
+                top: -100,
+                left: -50,
+                width: width * 1.2,
+                height: width * 1.2,
+                borderRadius: width,
+                backgroundColor: '#7c3aed',
+                opacity: 0.15,
+                transform: [{ scale: breatheAnim }]
+            }} blurRadius={50} />
+
+            <Animated.View style={{
+                position: 'absolute',
+                bottom: -150,
+                right: -50,
+                width: width,
+                height: width,
+                borderRadius: width / 2,
+                backgroundColor: '#fbbf24',
+                opacity: 0.1,
+                transform: [{ scale: breatheAnim }]
+            }} blurRadius={50} />
 
             <KeyboardAvoidingView
                 behavior={Platform.OS === 'ios' ? 'padding' : 'height'}
-                style={{ flex: 1 }}
+                style={{ flex: 1, justifyContent: 'center', paddingHorizontal: 28 }}
             >
-                <ScrollView
-                    contentContainerStyle={{ flexGrow: 1, justifyContent: 'center', paddingHorizontal: 24, paddingVertical: 40 }}
-                    keyboardShouldPersistTaps="handled"
-                >
-                    {}
-                    <Animated.View style={{ alignItems: 'center', marginBottom: 30, opacity: fadeAnim, transform: [{ translateY: slideAnim }] }}>
-                        <Text style={{ fontSize: 42, fontWeight: '900', color: '#fff', letterSpacing: 6 }}>NAKAMA</Text>
-                        <Text style={{ fontSize: 18, color: '#93c5fd', letterSpacing: 8, marginTop: 4, fontWeight: '300' }}>NETWORK</Text>
-                        <Text style={{ fontSize: 12, color: '#64748b', marginTop: 8 }}>The Hidden Layer of Anime</Text>
-                    </Animated.View>
+                {/* Header Section */}
+                <Animated.View style={{ alignItems: 'center', marginBottom: 40, opacity: fadeAnim, transform: [{ translateY: slideAnim }] }}>
+                    <Text style={{
+                        fontSize: 48,
+                        fontWeight: '900',
+                        color: '#ffffff',
+                        letterSpacing: 4,
+                        textShadowColor: 'rgba(124, 58, 237, 0.8)',
+                        textShadowOffset: { width: 0, height: 0 },
+                        textShadowRadius: 25
+                    }}>
+                        NAKAMA
+                    </Text>
+                    <View style={{ flexDirection: 'row', alignItems: 'center', marginTop: 8 }}>
+                        <View style={{ width: 40, height: 2, backgroundColor: '#fbbf24' }} />
+                        <Text style={{
+                            fontSize: 16,
+                            color: '#fbbf24',
+                            marginHorizontal: 12,
+                            letterSpacing: 6,
+                            fontWeight: '600'
+                        }}>
+                            NETWORK
+                        </Text>
+                        <View style={{ width: 40, height: 2, backgroundColor: '#fbbf24' }} />
+                    </View>
+                    <Text style={{
+                        fontSize: 12,
+                        color: '#6b7280',
+                        marginTop: 10,
+                        letterSpacing: 1,
+                        fontStyle: 'italic'
+                    }}>
+                        The Hidden Layer of Anime
+                    </Text>
+                </Animated.View>
 
-                    {}
-                    <Animated.View
-                        style={{
-                            backgroundColor: 'rgba(15, 23, 42, 0.9)',
-                            borderRadius: 24,
-                            borderWidth: 1,
-                            borderColor: 'rgba(255,255,255,0.08)',
-                            padding: 24,
-                            opacity: fadeAnim,
-                            transform: [{ translateX: shakeAnim }]
-                        }}
-                    >
-                        {}
-                        {error ? (
-                            <View style={{ flexDirection: 'row', alignItems: 'center', backgroundColor: 'rgba(239, 68, 68, 0.1)', padding: 12, borderRadius: 12, marginBottom: 16, borderWidth: 1, borderColor: 'rgba(239, 68, 68, 0.3)' }}>
-                                <AlertTriangle color="#f87171" size={18} style={{ marginRight: 8 }} />
-                                <Text style={{ color: '#fca5a5', flex: 1, fontSize: 13, fontWeight: '500' }}>{error}</Text>
-                            </View>
-                        ) : null}
+                {/* Glass Card */}
+                <Animated.View style={{ opacity: fadeAnim, transform: [{ translateY: slideAnim }] }}>
+                    <BlurView intensity={20} tint="dark" style={{
+                        borderRadius: 30,
+                        overflow: 'hidden',
+                        borderWidth: 1,
+                        borderColor: 'rgba(255,255,255,0.08)',
+                        backgroundColor: 'rgba(10,10,20,0.5)'
+                    }}>
+                        <View style={{ padding: 28 }}>
 
-                        {}
-                        {successMessage ? (
-                            <View style={{ flexDirection: 'row', alignItems: 'center', backgroundColor: 'rgba(34, 197, 94, 0.1)', padding: 12, borderRadius: 12, marginBottom: 16, borderWidth: 1, borderColor: 'rgba(34, 197, 94, 0.3)' }}>
-                                <CheckCircle color="#4ade80" size={18} style={{ marginRight: 8 }} />
-                                <Text style={{ color: '#86efac', flex: 1, fontSize: 13, fontWeight: '500' }}>{successMessage}</Text>
-                            </View>
-                        ) : null}
-
-                        {}
-                        <View style={{ flexDirection: 'row', marginBottom: 24, backgroundColor: 'rgba(30, 41, 59, 1)', borderRadius: 14, padding: 4 }}>
-                            <TouchableOpacity
-                                onPress={() => setIsLogin(true)}
-                                style={{ flex: 1, paddingVertical: 10, borderRadius: 10, backgroundColor: isLogin ? '#3b82f6' : 'transparent', shadowColor: isLogin ? "#000" : "transparent", shadowOpacity: isLogin ? 0.2 : 0, shadowRadius: 3 }}
-                            >
-                                <Text style={{ textAlign: 'center', color: isLogin ? '#fff' : '#94a3b8', fontWeight: '600', fontSize: 14 }}>Log In</Text>
-                            </TouchableOpacity>
-                            <TouchableOpacity
-                                onPress={() => setIsLogin(false)}
-                                style={{ flex: 1, paddingVertical: 10, borderRadius: 10, backgroundColor: !isLogin ? '#3b82f6' : 'transparent', shadowColor: !isLogin ? "#000" : "transparent", shadowOpacity: !isLogin ? 0.2 : 0, shadowRadius: 3 }}
-                            >
-                                <Text style={{ textAlign: 'center', color: !isLogin ? '#fff' : '#94a3b8', fontWeight: '600', fontSize: 14 }}>Sign Up</Text>
-                            </TouchableOpacity>
-                        </View>
-
-                        {}
-                        {!isLogin && (
-                            <View style={{ marginBottom: 16 }}>
-                                <Text style={{ color: '#93c5fd', marginLeft: 4, marginBottom: 6, fontSize: 13, fontWeight: '600' }}>Ninja Name</Text>
-                                <View style={{ flexDirection: 'row', alignItems: 'center', backgroundColor: 'rgba(30, 41, 59, 0.6)', borderWidth: 1, borderColor: '#334155', borderRadius: 14, paddingHorizontal: 14, height: 50 }}>
-                                    <User color="#64748b" size={20} />
-                                    <TextInput
-                                        placeholder="Enter your display name"
-                                        placeholderTextColor="#64748b"
-                                        value={displayName}
-                                        onChangeText={setDisplayName}
-                                        style={{ flex: 1, paddingLeft: 12, color: '#fff', fontSize: 16 }}
-                                    />
-                                </View>
-                            </View>
-                        )}
-
-                        {}
-                        <View style={{ marginBottom: 16 }}>
-                            <Text style={{ color: '#93c5fd', marginLeft: 4, marginBottom: 6, fontSize: 13, fontWeight: '600' }}>Email Address</Text>
-                            <View style={{ flexDirection: 'row', alignItems: 'center', backgroundColor: 'rgba(30, 41, 59, 0.6)', borderWidth: 1, borderColor: '#334155', borderRadius: 14, paddingHorizontal: 14, height: 50 }}>
-                                <Mail color="#64748b" size={20} />
-                                <TextInput
-                                    placeholder="name@example.com"
-                                    placeholderTextColor="#64748b"
-                                    value={email}
-                                    onChangeText={(text) => {
-                                        setEmail(text);
-                                        if (error) setError('');
-                                    }}
-                                    style={{ flex: 1, paddingLeft: 12, color: '#fff', fontSize: 16 }}
-                                    autoCapitalize="none"
-                                    keyboardType="email-address"
-                                    autoCorrect={false}
-                                />
-                            </View>
-                        </View>
-
-                        {}
-                        <View style={{ marginBottom: isLogin ? 8 : 16 }}>
-                            <Text style={{ color: '#93c5fd', marginLeft: 4, marginBottom: 6, fontSize: 13, fontWeight: '600' }}>Password</Text>
-                            <View style={{ flexDirection: 'row', alignItems: 'center', backgroundColor: 'rgba(30, 41, 59, 0.6)', borderWidth: 1, borderColor: '#334155', borderRadius: 14, paddingHorizontal: 14, height: 50 }}>
-                                <Lock color="#64748b" size={20} />
-                                <TextInput
-                                    placeholder="••••••••"
-                                    placeholderTextColor="#64748b"
-                                    value={password}
-                                    onChangeText={(text) => {
-                                        setPassword(text);
-                                        if (error) setError('');
-                                    }}
-                                    secureTextEntry={!showPassword}
-                                    style={{ flex: 1, paddingLeft: 12, color: '#fff', fontSize: 16 }}
-                                />
-                                <TouchableOpacity onPress={() => setShowPassword(!showPassword)} style={{ padding: 4 }}>
-                                    {showPassword ? <EyeOff color="#94a3b8" size={20} /> : <Eye color="#94a3b8" size={20} />}
+                            {/* Toggle Sign In / Sign Up */}
+                            <View style={{ flexDirection: 'row', backgroundColor: 'rgba(255,255,255,0.05)', borderRadius: 12, marginBottom: 24, padding: 4 }}>
+                                <TouchableOpacity
+                                    onPress={() => setIsLogin(true)}
+                                    style={{ flex: 1, paddingVertical: 10, alignItems: 'center', borderRadius: 10, backgroundColor: isLogin ? 'rgba(255,255,255,0.1)' : 'transparent' }}
+                                >
+                                    <Text style={{ color: isLogin ? '#fff' : '#6b7280', fontWeight: '700' }}>Login</Text>
+                                </TouchableOpacity>
+                                <TouchableOpacity
+                                    onPress={() => setIsLogin(false)}
+                                    style={{ flex: 1, paddingVertical: 10, alignItems: 'center', borderRadius: 10, backgroundColor: !isLogin ? 'rgba(255,255,255,0.1)' : 'transparent' }}
+                                >
+                                    <Text style={{ color: !isLogin ? '#fff' : '#6b7280', fontWeight: '700' }}>Sign Up</Text>
                                 </TouchableOpacity>
                             </View>
-                        </View>
 
-                        {}
-                        {!isLogin && (
-                            <View style={{ marginBottom: 16 }}>
-                                <Text style={{ color: '#93c5fd', marginLeft: 4, marginBottom: 6, fontSize: 13, fontWeight: '600' }}>Confirm Password</Text>
-                                <View style={{ flexDirection: 'row', alignItems: 'center', backgroundColor: 'rgba(30, 41, 59, 0.6)', borderWidth: 1, borderColor: '#334155', borderRadius: 14, paddingHorizontal: 14, height: 50 }}>
-                                    <Lock color="#64748b" size={20} />
+                            {/* Input: Username (Sign Up Only) */}
+                            {!isLogin && (
+                                <View style={{ marginBottom: 20 }}>
+                                    <View style={{
+                                        backgroundColor: 'rgba(0,0,0,0.3)',
+                                        borderRadius: 16,
+                                        borderWidth: 1,
+                                        borderColor: 'rgba(255,255,255,0.1)',
+                                        flexDirection: 'row',
+                                        alignItems: 'center',
+                                        paddingHorizontal: 16
+                                    }}>
+                                        <Ionicons name="person-outline" size={20} color="#6b7280" />
+                                        <TextInput
+                                            placeholder="Shinobi Name"
+                                            placeholderTextColor="#4b5563"
+                                            value={username}
+                                            onChangeText={setUsername}
+                                            style={{ flex: 1, paddingVertical: 16, paddingHorizontal: 12, color: '#fff', fontSize: 16, fontWeight: '500' }}
+                                        />
+                                    </View>
+                                </View>
+                            )}
+
+                            {/* Input: Email */}
+                            <View style={{ marginBottom: 20 }}>
+                                <View style={{
+                                    backgroundColor: 'rgba(0,0,0,0.3)',
+                                    borderRadius: 16,
+                                    borderWidth: 1,
+                                    borderColor: 'rgba(255,255,255,0.1)',
+                                    flexDirection: 'row',
+                                    alignItems: 'center',
+                                    paddingHorizontal: 16
+                                }}>
+                                    <Ionicons name="mail-outline" size={20} color="#6b7280" />
                                     <TextInput
-                                        placeholder="••••••••"
-                                        placeholderTextColor="#64748b"
-                                        value={confirmPassword}
-                                        onChangeText={setConfirmPassword}
-                                        secureTextEntry={!showPassword}
-                                        style={{ flex: 1, paddingLeft: 12, color: '#fff', fontSize: 16 }}
+                                        placeholder="Email Address"
+                                        placeholderTextColor="#4b5563"
+                                        value={email}
+                                        onChangeText={setEmail}
+                                        autoCapitalize="none"
+                                        style={{ flex: 1, paddingVertical: 16, paddingHorizontal: 12, color: '#fff', fontSize: 16, fontWeight: '500' }}
                                     />
                                 </View>
                             </View>
-                        )}
 
-                        {}
-                        {isLogin && (
-                            <TouchableOpacity onPress={handleForgotPassword} style={{ alignSelf: 'flex-end', marginBottom: 24 }}>
-                                <Text style={{ color: '#93c5fd', fontSize: 13, fontWeight: '500' }}>Forgot password?</Text>
-                            </TouchableOpacity>
-                        )}
-
-                        {}
-                        <TouchableOpacity
-                            onPress={handleAuth}
-                            disabled={loading}
-                            activeOpacity={0.8}
-                            style={{ shadowColor: "#4f46e5", shadowOffset: { width: 0, height: 4 }, shadowOpacity: 0.3, shadowRadius: 8, elevation: 5, marginBottom: 20 }}
-                        >
-                            <LinearGradient
-                                colors={loading ? ['#475569', '#475569'] : ['#3b82f6', '#4f46e5']}
-                                start={{ x: 0, y: 0 }}
-                                end={{ x: 1, y: 0 }}
-                                style={{ borderRadius: 14, paddingVertical: 16, flexDirection: 'row', justifyContent: 'center', alignItems: 'center', opacity: loading ? 0.7 : 1 }}
-                            >
-                                {loading && <ActivityIndicator color="#fff" style={{ marginRight: 10 }} />}
-                                <Text style={{ color: '#fff', fontWeight: 'bold', fontSize: 16, marginRight: 8 }}>
-                                    {loading ? (isLogin ? 'Logging in...' : 'Creating Account...') : (isLogin ? 'Log In' : 'Create Account')}
-                                </Text>
-                                {!loading && <ChevronRight color="#fff" size={20} />}
-                            </LinearGradient>
-                        </TouchableOpacity>
-
-                        {}
-                        <View style={{ flexDirection: 'row', alignItems: 'center', marginVertical: 16 }}>
-                            <View style={{ height: 1, backgroundColor: '#334155', flex: 1 }} />
-                            <Text style={{ color: '#64748b', fontSize: 12, paddingHorizontal: 12, fontWeight: '500' }}>OR CONTINUE WITH</Text>
-                            <View style={{ height: 1, backgroundColor: '#334155', flex: 1 }} />
-                        </View>
-
-                        {}
-                        <View style={{ gap: 12 }}>
-                            {}
-                            <TouchableOpacity
-                                onPress={handleGoogleSignIn}
-                                style={{ backgroundColor: '#fff', borderRadius: 14, paddingVertical: 14, flexDirection: 'row', justifyContent: 'center', alignItems: 'center' }}
-                            >
-                                <View style={{ width: 20, height: 20, borderRadius: 10, marginRight: 10, alignItems: 'center', justifyContent: 'center' }}>
-                                    <Text style={{ fontSize: 16 }}>G</Text>
+                            {/* Input: Password */}
+                            <View style={{ marginBottom: 30 }}>
+                                <View style={{
+                                    backgroundColor: 'rgba(0,0,0,0.3)',
+                                    borderRadius: 16,
+                                    borderWidth: 1,
+                                    borderColor: 'rgba(255,255,255,0.1)',
+                                    flexDirection: 'row',
+                                    alignItems: 'center',
+                                    paddingHorizontal: 16
+                                }}>
+                                    <Ionicons name="lock-closed-outline" size={20} color="#6b7280" />
+                                    <TextInput
+                                        placeholder="Password"
+                                        placeholderTextColor="#4b5563"
+                                        value={password}
+                                        onChangeText={setPassword}
+                                        secureTextEntry={!showPassword}
+                                        style={{ flex: 1, paddingVertical: 16, paddingHorizontal: 12, color: '#fff', fontSize: 16, fontWeight: '500' }}
+                                    />
+                                    <TouchableOpacity onPress={() => setShowPassword(!showPassword)}>
+                                        <Ionicons name={showPassword ? "eye-off-outline" : "eye-outline"} size={20} color="#6b7280" />
+                                    </TouchableOpacity>
                                 </View>
-                                <Text style={{ color: '#1f2937', fontWeight: '600', fontSize: 15 }}>Google</Text>
-                            </TouchableOpacity>
+                            </View>
 
-                            {}
+                            {/* Submit Button */}
                             <TouchableOpacity
-                                onPress={loginAsGuest}
-                                style={{ backgroundColor: 'transparent', borderWidth: 1, borderColor: '#475569', borderRadius: 14, paddingVertical: 14, flexDirection: 'row', justifyContent: 'center', alignItems: 'center' }}
+                                onPress={handleSubmit}
+                                disabled={loading}
+                                activeOpacity={0.8}
                             >
-                                <Text style={{ textAlign: 'center', color: '#94a3b8', fontWeight: '600', fontSize: 15 }}>Continue as Guest</Text>
+                                <LinearGradient
+                                    colors={['#7c3aed', '#6d28d9']}
+                                    start={{ x: 0, y: 0 }}
+                                    end={{ x: 1, y: 0 }}
+                                    style={{
+                                        borderRadius: 16,
+                                        paddingVertical: 18,
+                                        alignItems: 'center',
+                                        shadowColor: '#7c3aed',
+                                        shadowOffset: { width: 0, height: 4 },
+                                        shadowOpacity: 0.3,
+                                        shadowRadius: 10,
+                                        elevation: 5
+                                    }}
+                                >
+                                    <Text style={{ color: '#fff', fontWeight: '800', fontSize: 16, letterSpacing: 1 }}>
+                                        {loading ? 'PROCESSING...' : (isLogin ? 'LOG IN' : 'SIGN UP')}
+                                    </Text>
+                                </LinearGradient>
                             </TouchableOpacity>
+
+                            <View style={{ flexDirection: 'row', alignItems: 'center', marginVertical: 24 }}>
+                                <View style={{ height: 1, backgroundColor: 'rgba(255,255,255,0.1)', flex: 1 }} />
+                                <Text style={{ color: '#6b7280', fontSize: 11, paddingHorizontal: 12, fontWeight: '600' }}>OR CONNECT WITH</Text>
+                                <View style={{ height: 1, backgroundColor: 'rgba(255,255,255,0.1)', flex: 1 }} />
+                            </View>
+
+                            {/* Social Buttons */}
+                            <View style={{ gap: 14 }}>
+                                <TouchableOpacity
+                                    onPress={() => promptAsync()}
+                                    disabled={!request}
+                                    style={{
+                                        backgroundColor: '#fff',
+                                        borderRadius: 16,
+                                        paddingVertical: 16,
+                                        flexDirection: 'row',
+                                        alignItems: 'center',
+                                        justifyContent: 'center'
+                                    }}
+                                >
+                                    <ImageBackground
+                                        source={{ uri: 'https://cdn-icons-png.flaticon.com/512/300/300221.png' }}
+                                        style={{ width: 20, height: 20, marginRight: 10 }}
+                                    />
+                                    <Text style={{ color: '#000', fontWeight: '700', fontSize: 16 }}>Google</Text>
+                                </TouchableOpacity>
+
+                                <TouchableOpacity
+                                    onPress={loginAsGuest}
+                                    style={{
+                                        backgroundColor: 'rgba(255, 255, 255, 0.05)',
+                                        borderRadius: 16,
+                                        paddingVertical: 16,
+                                        borderWidth: 1,
+                                        borderColor: 'rgba(255,255,255,0.1)'
+                                    }}
+                                >
+                                    <Text style={{ textAlign: 'center', color: '#9ca3af', fontWeight: '600', fontSize: 15 }}>Continue as Guest</Text>
+                                </TouchableOpacity>
+                            </View>
+
                         </View>
-
-                    </Animated.View>
-
-                    {}
-                    <Animated.View style={{ marginTop: 24, opacity: fadeAnim }}>
-                        <Text style={{ color: '#64748b', textAlign: 'center', fontSize: 12, lineHeight: 18 }}>
-                            Protected by the Ninja Code.
-                        </Text>
-                    </Animated.View>
-
-                </ScrollView>
+                    </BlurView>
+                </Animated.View>
             </KeyboardAvoidingView>
         </View>
     );

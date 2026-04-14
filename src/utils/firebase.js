@@ -1,5 +1,5 @@
 import { initializeApp } from 'firebase/app';
-import { getAuth, signInAnonymously, GoogleAuthProvider, signInWithPopup, createUserWithEmailAndPassword, signInWithEmailAndPassword, signOut, updateProfile } from 'firebase/auth';
+import { getAuth, signInAnonymously, GoogleAuthProvider, signInWithPopup, createUserWithEmailAndPassword, signInWithEmailAndPassword, signOut, updateProfile, sendPasswordResetEmail } from 'firebase/auth';
 import { getFirestore, doc, setDoc, getDoc, updateDoc, increment, collection, query, orderBy, limit, getDocs, onSnapshot, serverTimestamp, where } from 'firebase/firestore';
 import { getStorage, ref, uploadBytes, getDownloadURL, deleteObject } from 'firebase/storage';
 
@@ -61,6 +61,11 @@ export const signInWithGoogle = async () => {
   if (!auth) return Promise.reject(new Error('Firebase not initialized'));
   const provider = new GoogleAuthProvider();
   return signInWithPopup(auth, provider);
+};
+
+export const resetUserPassword = async (email) => {
+  if (!auth) return Promise.reject(new Error('Firebase not initialized'));
+  return sendPasswordResetEmail(auth, email);
 };
 
 export const createUserProfile = async (userId, data) => {
@@ -902,4 +907,105 @@ export const getUserMediaAnalytics = async (userId) => {
     console.error('Failed to get media analytics:', error);
     return { postsCount: 0, totalLikesReceived: 0, totalCommentsReceived: 0 };
   }
+};
+
+/* ═══════════════════════════════════════════════════════
+   CHARACTER CLAIM SYSTEM — unique character registration
+   ═══════════════════════════════════════════════════════ */
+
+/**
+ * Claim a character for a user. Enforces uniqueness — each character can only be claimed once.
+ */
+export const claimCharacter = async (userId, userName, character) => {
+    if (!db) throw new Error('Database not initialized');
+
+    const charId = String(character.mal_id);
+
+    // Check if character is already claimed
+    const claimsRef = collection(db, 'characterClaims');
+    const existingCheck = query(claimsRef, where('characterId', '==', charId));
+    const existingSnap = await getDocs(existingCheck);
+
+    if (!existingSnap.empty) {
+        const claimer = existingSnap.docs[0].data();
+        throw new Error(`Already claimed by ${claimer.claimedByName}`);
+    }
+
+    // Check if user already has a claim
+    const userCheck = query(claimsRef, where('claimedBy', '==', userId));
+    const userSnap = await getDocs(userCheck);
+
+    if (!userSnap.empty) {
+        // User already has a character — update their claim
+        const existingDoc = userSnap.docs[0];
+        await updateDoc(doc(db, 'characterClaims', existingDoc.id), {
+            characterId: charId,
+            characterName: character.name,
+            characterImage: character.images?.jpg?.image_url || '',
+            animeName: character.anime?.[0]?.anime?.title || 'Unknown',
+            claimedByName: userName,
+            updatedAt: serverTimestamp(),
+        });
+        return { updated: true };
+    }
+
+    // Create new claim
+    const claimRef = doc(collection(db, 'characterClaims'));
+    await setDoc(claimRef, {
+        characterId: charId,
+        characterName: character.name,
+        characterImage: character.images?.jpg?.image_url || '',
+        animeName: character.anime?.[0]?.anime?.title || 'Unknown',
+        claimedBy: userId,
+        claimedByName: userName,
+        claimedAt: serverTimestamp(),
+    });
+
+    // Update user profile with character info
+    const userRef = doc(db, 'users', userId);
+    await updateDoc(userRef, {
+        claimedCharacter: character.name,
+        claimedCharacterImage: character.images?.jpg?.image_url || '',
+        claimedCharacterId: charId,
+        lastActive: serverTimestamp(),
+    });
+
+    return { created: true };
+};
+
+/**
+ * Check if a specific character (by MAL ID) is already claimed.
+ */
+export const getCharacterClaim = async (characterMalId) => {
+    if (!db) return null;
+    const claimsRef = collection(db, 'characterClaims');
+    const q = query(claimsRef, where('characterId', '==', String(characterMalId)));
+    const snap = await getDocs(q);
+    if (snap.empty) return null;
+    return { id: snap.docs[0].id, ...snap.docs[0].data() };
+};
+
+/**
+ * Get the character claimed by a specific user.
+ */
+export const getUserClaim = async (userId) => {
+    if (!db) return null;
+    const claimsRef = collection(db, 'characterClaims');
+    const q = query(claimsRef, where('claimedBy', '==', userId));
+    const snap = await getDocs(q);
+    if (snap.empty) return null;
+    return { id: snap.docs[0].id, ...snap.docs[0].data() };
+};
+
+/**
+ * Subscribe to all character claims (real-time).
+ */
+export const subscribeToCharacterClaims = (callback, limitNum = 50) => {
+    if (!db) { callback([]); return () => {}; }
+    const claimsRef = collection(db, 'characterClaims');
+    const q = query(claimsRef, orderBy('claimedAt', 'desc'), limit(limitNum));
+    return onSnapshot(q, (snapshot) => {
+        const claims = snapshot.docs.map(d => ({ id: d.id, ...d.data() }));
+        callback(claims);
+    });
 };

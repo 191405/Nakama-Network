@@ -7,7 +7,17 @@ import logging
 import asyncio
 
 router = APIRouter()
-logger = logging.getLogger(__name__)
+from fastapi import APIRouter, HTTPException, WebSocket, WebSocketDisconnect, Depends
+from pydantic import BaseModel
+from typing import List, Optional, Dict
+from datetime import datetime, timedelta
+import logging
+import asyncio
+import uuid
+from sqlalchemy.orm import Session
+
+from app.database import get_db
+from app.models import sql as models
 
 online_players: Dict[str, dict] = {}
 game_rooms: Dict[str, dict] = {}
@@ -86,37 +96,42 @@ async def heartbeat(user_id: str):
     return {"success": False, "message": "Player not found"}
 
 @router.post("/find-match")
-async def find_match(player: PlayerStatus):
+async def find_match(player: PlayerStatus, db: Session = Depends(get_db)):
     await go_online(player)
     
-    for room_id, room in game_rooms.items():
-        if (room["game_type"] == player.game_type and 
-            room["status"] == "waiting" and 
-            len(room["players"]) < room["max_players"] and
-            player.user_id not in room["players"]):
-            
-            room["players"].append(player.user_id)
-            
-            if len(room["players"]) >= room["max_players"]:
-                room["status"] = "ready"
-            
-            return {
-                "matched": True if room["status"] == "ready" else False,
-                "room_id": room_id,
-                "players": room["players"],
-                "status": room["status"]
-            }
+    # 1. Search for an open room in DB
+    open_game = db.query(models.GameSession).filter(
+        models.GameSession.game_type == player.game_type,
+        models.GameSession.status == "waiting",
+        models.GameSession.host_id != player.user_id,
+        models.GameSession.opponent_id == None
+    ).first()
     
-    import uuid
+    if open_game:
+        # Join existing game
+        open_game.opponent_id = player.user_id
+        open_game.status = "ready" # Client will see "ready" and can start
+        db.commit()
+        db.refresh(open_game)
+        
+        return {
+            "matched": True,
+            "room_id": open_game.room_id,
+            "players": [open_game.host_id, open_game.opponent_id],
+            "status": "ready"
+        }
+    
+    # 2. Create new room if none found
     room_id = str(uuid.uuid4())[:8]
-    game_rooms[room_id] = {
-        "room_id": room_id,
-        "game_type": player.game_type,
-        "players": [player.user_id],
-        "status": "waiting",
-        "max_players": 2,
-        "created_at": datetime.utcnow()
-    }
+    new_game = models.GameSession(
+        room_id=room_id,
+        game_type=player.game_type,
+        host_id=player.user_id,
+        status="waiting",
+        created_at=datetime.utcnow()
+    )
+    db.add(new_game)
+    db.commit()
     
     return {
         "matched": False,
@@ -127,52 +142,67 @@ async def find_match(player: PlayerStatus):
     }
 
 @router.get("/room/{room_id}")
-async def get_room(room_id: str):
-    if room_id not in game_rooms:
+async def get_room(room_id: str, db: Session = Depends(get_db)):
+    game = db.query(models.GameSession).filter(models.GameSession.room_id == room_id).first()
+    if not game:
         raise HTTPException(status_code=404, detail="Room not found")
-    
-    room = game_rooms[room_id]
-    
+        
+    players = [game.host_id]
+    if game.opponent_id:
+        players.append(game.opponent_id)
+
+    # Hydrate player details from online_players cache (or DB if needed, but cache is fast)
     player_details = []
-    for uid in room["players"]:
+    for uid in players:
         if uid in online_players:
             player_details.append(online_players[uid])
+        else:
+             # Fallback: Minimal info if they aren't "online" right now but in game
+            player_details.append({
+                "user_id": uid, 
+                "display_name": "Player", 
+                "avatar_url": None
+            })
     
     return {
-        **room,
+        "room_id": game.room_id,
+        "game_type": game.game_type,
+        "status": game.status,
+        "players": players,
         "player_details": player_details
     }
 
 @router.post("/room/{room_id}/start")
-async def start_game(room_id: str):
-    if room_id not in game_rooms:
+async def start_game(room_id: str, db: Session = Depends(get_db)):
+    game = db.query(models.GameSession).filter(models.GameSession.room_id == room_id).first()
+    if not game:
         raise HTTPException(status_code=404, detail="Room not found")
     
-    room = game_rooms[room_id]
-    
-    if len(room["players"]) < 2:
+    if not game.opponent_id:
         raise HTTPException(status_code=400, detail="Not enough players")
     
-    room["status"] = "playing"
-    room["started_at"] = datetime.utcnow()
+    game.status = "playing"
+    game.started_at = datetime.utcnow()
+    db.commit()
+    db.refresh(game)
     
-    return {"success": True, "room": room}
+    return {"success": True, "room_id": game.room_id, "status": "playing"}
 
 @router.post("/room/{room_id}/leave/{user_id}")
-async def leave_room(room_id: str, user_id: str):
-    if room_id not in game_rooms:
+async def leave_room(room_id: str, user_id: str, db: Session = Depends(get_db)):
+    game = db.query(models.GameSession).filter(models.GameSession.room_id == room_id).first()
+    if not game:
         return {"success": True, "message": "Room already closed"}
     
-    room = game_rooms[room_id]
+    if game.host_id == user_id:
+        # Host left, close room or transfer? For now, close it.
+        db.delete(game)
+    elif game.opponent_id == user_id:
+        # Opponent left
+        game.opponent_id = None
+        game.status = "waiting"
     
-    if user_id in room["players"]:
-        room["players"].remove(user_id)
-    
-    if len(room["players"]) == 0:
-        del game_rooms[room_id]
-    else:
-        room["status"] = "waiting"
-    
+    db.commit()
     return {"success": True}
 
 @router.get("/quick-games")

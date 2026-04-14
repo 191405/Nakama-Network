@@ -110,6 +110,17 @@ export const jikanAPI = {
       console.error('Jikan Anime Characters Error:', error);
       return [];
     }
+  },
+
+  async getAnimeEpisodes(animeId, page = 1) {
+    try {
+      const response = await fetch(`${this.baseURL}/anime/${animeId}/episodes?page=${page}`);
+      const data = await response.json();
+      return data.data || [];
+    } catch (error) {
+      console.error('Jikan Anime Episodes Error:', error);
+      return [];
+    }
   }
 };
 

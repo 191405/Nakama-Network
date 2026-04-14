@@ -6,6 +6,23 @@ import {
     Rewind, FastForward, ChevronLeft, ChevronRight
 } from 'lucide-react';
 
+/**
+ * A feature-rich and customizable video player component for React applications.
+ *
+ * @param {object} props - The props for the AdvancedMediaPlayer component.
+ * @param {object} props.sources - An object where keys are quality labels (e.g., '1080p', '720p') and values are video URLs.
+ * @param {string} props.title - The title of the video, displayed in the player controls.
+ * @param {string} props.thumbnail - The URL of a thumbnail image to display before playback.
+ * @param {function} props.onProgress - A callback function that receives the current playback time in seconds.
+ * @param {number} props.initialTime - The initial time in seconds to start playback from.
+ * @param {function} props.onEnded - A callback function that is called when the video has finished playing.
+ * @param {function} props.onNext - A callback function to play the next video in a playlist.
+ * @param {function} props.onPrevious - A callback function to play the previous video in a playlist.
+ * @param {boolean} props.hasNext - A boolean to indicate if there is a next video in the playlist.
+ * @param {boolean} props.hasPrevious - A boolean to indicate if there is a previous video in the playlist.
+ * @param {number} props.skipIntroTime - The time in seconds to show the "Skip Intro" button.
+ * @returns {JSX.Element} A JSX element representing the Advanced Media Player.
+ */
 const AdvancedMediaPlayer = ({
     sources = {}, 
     title = '',

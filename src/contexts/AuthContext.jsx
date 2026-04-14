@@ -21,6 +21,8 @@ export const AuthProvider = ({ children }) => {
   const [loading, setLoading] = useState(true);
   const [isGuest, setIsGuest] = useState(false);
   const [isAuthenticated, setIsAuthenticated] = useState(false);
+  const [isAuthModalOpen, setIsAuthModalOpen] = useState(false);
+  const [authModalMessage, setAuthModalMessage] = useState('');
 
   useEffect(() => {
 
@@ -170,10 +172,29 @@ export const AuthProvider = ({ children }) => {
   };
 
   const canUseFeature = () => {
-    if (isGuest) return false;
     if (!isAuthenticated) return false;
-    
     return true;
+  };
+
+  const requireAuth = (actionCallback, message = 'Log in to continue') => {
+    if (isAuthenticated) {
+      if (actionCallback) actionCallback();
+      return true;
+    } else {
+      setAuthModalMessage(message);
+      setIsAuthModalOpen(true);
+      return false;
+    }
+  };
+
+  const closeAuthModal = () => {
+    setIsAuthModalOpen(false);
+    setAuthModalMessage('');
+  };
+
+  const openAuthModal = (message = '') => {
+    setAuthModalMessage(message);
+    setIsAuthModalOpen(true);
   };
 
   const value = {
@@ -185,9 +206,13 @@ export const AuthProvider = ({ children }) => {
     isAuthenticated,
     loginAsGuest,
     logout,
-    logout,
     refreshUserProfile,
     canUseFeature,
+    requireAuth,
+    isAuthModalOpen,
+    authModalMessage,
+    openAuthModal,
+    closeAuthModal,
     updateProfile: (data) => updateUserProfile(currentUser?.uid, data),
   };
 

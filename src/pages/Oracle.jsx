@@ -1,248 +1,151 @@
 import React, { useState, useRef, useEffect } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
-import { Send, Moon, Sparkles, Eye, Zap, Brain, MessageCircle } from 'lucide-react';
+import { Send, Scroll, Sparkles, MessageCircle, Brain, Zap } from 'lucide-react';
 import { askTheOracle } from '../utils/gemini';
 import { GuestGuard } from '../components/GuestGuard';
 
-const AIFeatureBadge = ({ icon: Icon, label }) => (
-  <div
-    className="flex items-center gap-2 px-3 py-1.5 rounded-full"
-    style={{
-      background: 'rgba(234, 179, 8, 0.1)',
-      border: '1px solid rgba(234, 179, 8, 0.2)',
-    }}
-  >
-    <Icon size={14} className="text-yellow-400" />
-    <span className="text-xs text-yellow-400/80 font-medium">{label}</span>
+const Badge = ({ icon: Icon, label }) => (
+  <div className="flex items-center gap-1.5 px-3 py-1.5 rounded-full text-xs font-medium"
+    style={{ background: 'rgba(244,63,94,0.08)', border: '1px solid rgba(244,63,94,0.15)', color: 'rgba(244,114,182,0.7)' }}>
+    <Icon size={12} /> {label}
   </div>
 );
 
 const Oracle = () => {
-  const [messages, setMessages] = useState([
-    {
-      role: 'oracle',
-      content: '✨ Greetings, wanderer. I am the Oracle—keeper of infinite anime knowledge. The stars have aligned for your arrival. Ask, and I shall pierce the veil of wisdom to illuminate your path...',
-    },
-  ]);
+  const [messages, setMessages] = useState([{
+    role: 'oracle',
+    content: '✨ Welcome, seeker. I am The Sensei — keeper of infinite anime wisdom. The threads of fate have brought you here. Ask freely, and I shall illuminate your path through the world of anime...',
+  }]);
   const [input, setInput] = useState('');
   const [loading, setLoading] = useState(false);
   const messagesEndRef = useRef(null);
 
-  useEffect(() => {
-    messagesEndRef.current?.scrollIntoView({ behavior: 'smooth' });
-  }, [messages]);
+  useEffect(() => { messagesEndRef.current?.scrollIntoView({ behavior: 'smooth' }); }, [messages]);
 
   const handleSend = async () => {
     if (!input.trim() || loading) return;
-
     const userMessage = { role: 'user', content: input };
-    setMessages((prev) => [...prev, userMessage]);
+    setMessages(prev => [...prev, userMessage]);
     setInput('');
     setLoading(true);
-
-    const conversationHistory = messages.map((m) => ({
-      role: m.role,
-      content: m.content,
-    }));
-    const response = await askTheOracle(input, conversationHistory);
-
-    setMessages((prev) => [...prev, { role: 'oracle', content: response }]);
+    const response = await askTheOracle(input, messages.map(m => ({ role: m.role, content: m.content })));
+    setMessages(prev => [...prev, { role: 'oracle', content: response }]);
     setLoading(false);
   };
 
   return (
     <GuestGuard feature="oracle">
-      <div className="min-h-screen pt-20 pb-24 md:pb-8 px-4 relative z-20" style={{ background: '#050505' }}>
-        {}
-        <div
-          className="fixed inset-0 pointer-events-none"
-          style={{
-            background: 'radial-gradient(ellipse at 50% 30%, rgba(234, 179, 8, 0.06) 0%, transparent 50%)',
-          }}
-        />
-
-        {}
-        <div className="fixed inset-0 flex items-start justify-center pointer-events-none overflow-hidden">
-          <motion.img
-            src="/oracle-hands-moon.png"
-            alt=""
-            initial={{ opacity: 0, y: 30 }}
-            animate={{ opacity: 0.25, y: 0 }}
-            transition={{ duration: 2 }}
-            className="w-full max-w-2xl mt-16"
-            style={{
-              filter: 'blur(1px)',
-              maskImage: 'radial-gradient(ellipse at 50% 40%, black 30%, transparent 70%)',
-              WebkitMaskImage: 'radial-gradient(ellipse at 50% 40%, black 30%, transparent 70%)',
-            }}
-          />
+      <div className="min-h-screen pt-20 pb-24 md:pb-8 relative bg-[#050505]">
+        {/* Background */}
+        <div className="fixed inset-0 pointer-events-none -z-10">
+          <div className="absolute top-0 left-1/2 -translate-x-1/2 w-[700px] h-[500px]"
+            style={{ background: 'radial-gradient(ellipse, rgba(244,63,94,0.05), transparent 70%)', filter: 'blur(60px)' }} />
+          <div className="absolute bottom-0 right-0 w-[400px] h-[400px]"
+            style={{ background: 'radial-gradient(ellipse, rgba(139,92,246,0.04), transparent 70%)', filter: 'blur(60px)' }} />
+          {/* Floating kanji */}
+          {['知', '悟', '道', '術'].map((char, i) => (
+            <span key={char} className="absolute text-7xl font-black select-none pointer-events-none"
+              style={{ color: `rgba(244,63,94,0.025)`, left: `${15 + i * 22}%`, top: `${20 + (i % 2) * 40}%`, fontFamily: '"Noto Sans JP", sans-serif' }}>
+              {char}
+            </span>
+          ))}
         </div>
 
-        <div className="max-w-3xl mx-auto relative z-10">
-
-          {}
-          <div className="text-center mb-8">
-            {}
+        <div className="max-w-3xl mx-auto px-4 relative z-10">
+          {/* Header */}
+          <div className="text-center mb-10">
             <motion.div
-              animate={{ scale: [1, 1.1, 1] }}
+              animate={{ boxShadow: ['0 0 20px rgba(244,63,94,0.2)', '0 0 40px rgba(244,63,94,0.5)', '0 0 20px rgba(244,63,94,0.2)'] }}
               transition={{ duration: 3, repeat: Infinity }}
-              className="inline-flex items-center justify-center w-16 h-16 rounded-full mb-4"
-              style={{
-                background: 'radial-gradient(circle, rgba(234, 179, 8, 0.15), transparent)',
-                border: '2px solid rgba(234, 179, 8, 0.3)',
-                boxShadow: '0 0 40px rgba(234, 179, 8, 0.2)',
-              }}
-            >
-              <Eye className="text-yellow-400" size={30} />
+              className="inline-flex items-center justify-center w-16 h-16 rounded-2xl mb-5"
+              style={{ background: 'linear-gradient(135deg, rgba(244,63,94,0.12), rgba(139,92,246,0.08))', border: '1px solid rgba(244,63,94,0.2)' }}>
+              <Scroll size={28} style={{ color: '#f43f5e' }} />
             </motion.div>
 
-            {}
-            <h1 className="text-5xl md:text-7xl font-black mb-3">
-              <span
-                style={{
-                  color: '#eab308',
-                  textShadow: '0 0 40px rgba(234, 179, 8, 0.5), 0 0 80px rgba(234, 179, 8, 0.3), 0 2px 4px rgba(0,0,0,1)',
-                }}
-              >
-                Oracle
-              </span>
+            <p className="text-xs tracking-[0.4em] mb-3" style={{ color: 'rgba(244,114,182,0.3)', fontFamily: '"Noto Sans JP", sans-serif' }}>師匠の知恵</p>
+            <h1 className="font-black mb-2" style={{ fontFamily: 'var(--font-display, Cinzel, serif)', fontSize: 'clamp(2.5rem, 6vw, 4.5rem)', letterSpacing: '-0.02em' }}>
+              <span style={{ background: 'linear-gradient(135deg,#f43f5e,#ec4899,#fda4af)', WebkitBackgroundClip: 'text', WebkitTextFillColor: 'transparent', backgroundClip: 'text', filter: 'drop-shadow(0 0 20px rgba(244,63,94,0.4))' }}>The</span>
+              {' '}<span style={{ color: '#e2d9f3' }}>Sensei</span>
             </h1>
-
-            {}
-            <p className="text-slate-400 text-sm md:text-base mb-4">
-              Ancient wisdom meets artificial intelligence
-            </p>
-
-            {}
+            <p className="text-slate-600 text-sm mb-5">Ancient anime wisdom powered by AI</p>
             <div className="flex flex-wrap justify-center gap-2">
-              <AIFeatureBadge icon={Brain} label="AI Powered" />
-              <AIFeatureBadge icon={Sparkles} label="Anime Expert" />
-              <AIFeatureBadge icon={Zap} label="Instant Insights" />
-              <AIFeatureBadge icon={MessageCircle} label="Conversational" />
+              <Badge icon={Brain} label="AI-Powered" />
+              <Badge icon={Sparkles} label="Anime Expert" />
+              <Badge icon={Zap} label="Instant Insights" />
+              <Badge icon={MessageCircle} label="Conversational" />
             </div>
           </div>
 
-          {}
-          <div
-            className="rounded-2xl p-4 mb-4"
-            style={{
-              background: 'rgba(10, 10, 10, 0.8)',
-              border: '1px solid rgba(234, 179, 8, 0.15)',
-              minHeight: '300px',
-              maxHeight: '50vh',
-              overflowY: 'auto',
-            }}
-          >
-            {}
+          {/* Messages */}
+          <div className="rounded-3xl p-5 mb-4 overflow-y-auto"
+            style={{ minHeight: 300, maxHeight: '50vh', background: 'rgba(10,7,20,0.8)', border: '1px solid rgba(244,63,94,0.1)' }}>
             <div className="space-y-4">
               <AnimatePresence>
                 {messages.map((msg, idx) => (
-                  <motion.div
-                    key={idx}
-                    initial={{ opacity: 0, y: 10 }}
-                    animate={{ opacity: 1, y: 0 }}
-                    transition={{ duration: 0.3 }}
-                    className={`flex ${msg.role === 'user' ? 'justify-end' : 'justify-start'}`}
-                  >
-                    <div
-                      className="max-w-xs md:max-w-md lg:max-w-lg px-5 py-4 rounded-2xl"
-                      style={{
-                        background: msg.role === 'user'
-                          ? 'linear-gradient(135deg, rgba(234, 179, 8, 0.2), rgba(202, 138, 4, 0.15))'
-                          : 'linear-gradient(135deg, rgba(20, 20, 20, 0.95), rgba(15, 15, 15, 0.95))',
-                        border: msg.role === 'user'
-                          ? '1px solid rgba(234, 179, 8, 0.4)'
-                          : '1px solid rgba(234, 179, 8, 0.2)',
-                      }}
-                    >
+                  <motion.div key={idx} initial={{ opacity: 0, y: 8 }} animate={{ opacity: 1, y: 0 }}
+                    className={`flex ${msg.role === 'user' ? 'justify-end' : 'justify-start'}`}>
+                    <div className="max-w-[80%] px-5 py-4 rounded-2xl"
+                      style={msg.role === 'user' ? {
+                        background: 'linear-gradient(135deg, rgba(244,63,94,0.15), rgba(236,72,153,0.1))',
+                        border: '1px solid rgba(244,63,94,0.25)',
+                      } : {
+                        background: 'rgba(255,255,255,0.03)',
+                        border: '1px solid rgba(244,63,94,0.1)',
+                      }}>
                       {msg.role === 'oracle' && (
                         <div className="flex items-center gap-2 mb-2">
-                          <Moon size={14} className="text-yellow-400" />
-                          <span className="text-xs text-yellow-400/70 font-medium">Oracle</span>
+                          <Scroll size={12} style={{ color: '#f43f5e' }} />
+                          <span className="text-xs font-semibold" style={{ color: 'rgba(244,114,182,0.6)' }}>The Sensei</span>
                         </div>
                       )}
-                      <p className="text-slate-100 leading-relaxed text-sm md:text-base">
-                        {msg.content}
-                      </p>
+                      <p className="text-slate-200 leading-relaxed text-sm">{msg.content}</p>
                     </div>
                   </motion.div>
                 ))}
               </AnimatePresence>
 
               {loading && (
-                <motion.div
-                  initial={{ opacity: 0 }}
-                  animate={{ opacity: 1 }}
-                  className="flex justify-start"
-                >
-                  <div
-                    className="px-5 py-4 rounded-2xl"
-                    style={{
-                      background: 'linear-gradient(135deg, rgba(20, 20, 20, 0.95), rgba(15, 15, 15, 0.95))',
-                      border: '1px solid rgba(234, 179, 8, 0.2)',
-                    }}
-                  >
-                    <div className="flex items-center gap-2">
-                      <Moon size={14} className="text-yellow-400" />
-                      <span className="text-xs text-yellow-400/70 font-medium">Oracle is divining...</span>
+                <motion.div initial={{ opacity: 0 }} animate={{ opacity: 1 }} className="flex justify-start">
+                  <div className="px-5 py-4 rounded-2xl" style={{ background: 'rgba(255,255,255,0.03)', border: '1px solid rgba(244,63,94,0.1)' }}>
+                    <div className="flex items-center gap-2 mb-2">
+                      <Scroll size={12} style={{ color: '#f43f5e' }} />
+                      <span className="text-xs font-semibold" style={{ color: 'rgba(244,114,182,0.6)' }}>Contemplating...</span>
                     </div>
-                    <div className="flex gap-2 mt-2">
-                      {[0, 1, 2].map((i) => (
-                        <motion.div
-                          key={i}
-                          animate={{ scale: [1, 1.3, 1], opacity: [0.5, 1, 0.5] }}
-                          transition={{ duration: 0.8, repeat: Infinity, delay: i * 0.15 }}
-                          className="w-2 h-2 bg-yellow-500 rounded-full"
-                        />
+                    <div className="flex gap-1.5">
+                      {[0, 1, 2].map(i => (
+                        <motion.div key={i} className="w-2 h-2 rounded-full" style={{ background: '#f43f5e' }}
+                          animate={{ scale: [1, 1.4, 1], opacity: [0.4, 1, 0.4] }}
+                          transition={{ duration: 0.7, repeat: Infinity, delay: i * 0.15 }} />
                       ))}
                     </div>
                   </div>
                 </motion.div>
               )}
-
               <div ref={messagesEndRef} />
             </div>
           </div>
 
-          {}
-          <div
-            className="flex gap-3 p-2 rounded-2xl"
-            style={{
-              background: 'rgba(10, 10, 10, 0.95)',
-              border: '1px solid rgba(234, 179, 8, 0.25)',
-              boxShadow: '0 4px 30px rgba(0,0,0,0.5)',
-            }}
-          >
+          {/* Input */}
+          <div className="flex gap-3 p-2 rounded-2xl"
+            style={{ background: 'rgba(10,7,20,0.9)', border: '1px solid rgba(244,63,94,0.15)', boxShadow: '0 4px 30px rgba(0,0,0,0.5)' }}>
             <input
-              type="text"
-              value={input}
-              onChange={(e) => setInput(e.target.value)}
-              onKeyPress={(e) => e.key === 'Enter' && handleSend()}
-              placeholder="Seek wisdom from the Oracle..."
+              type="text" value={input}
+              onChange={e => setInput(e.target.value)}
+              onKeyPress={e => e.key === 'Enter' && handleSend()}
+              placeholder="Seek wisdom from The Sensei..."
               disabled={loading}
-              className="flex-1 px-5 py-4 bg-transparent outline-none text-slate-100 placeholder-slate-500 text-base"
+              className="flex-1 px-5 py-4 bg-transparent outline-none text-slate-200 placeholder-slate-700 text-sm"
             />
-
-            <motion.button
-              whileHover={{ scale: 1.05 }}
-              whileTap={{ scale: 0.95 }}
-              onClick={handleSend}
-              disabled={loading || !input.trim()}
-              className="px-6 py-4 rounded-xl font-bold text-black transition-all disabled:opacity-50 disabled:cursor-not-allowed flex items-center justify-center gap-2"
-              style={{
-                background: 'linear-gradient(135deg, #eab308, #ca8a04)',
-                boxShadow: '0 0 20px rgba(234, 179, 8, 0.3)',
-              }}
-            >
-              <Send size={18} />
+            <motion.button whileHover={{ scale: 1.04 }} whileTap={{ scale: 0.96 }}
+              onClick={handleSend} disabled={loading || !input.trim()}
+              className="px-6 py-4 rounded-xl font-bold text-white text-sm flex items-center gap-2 disabled:opacity-40"
+              style={{ background: 'linear-gradient(135deg, #f43f5e, #e11d48)', boxShadow: '0 4px 20px rgba(244,63,94,0.35)' }}>
+              <Send size={16} />
               <span className="hidden md:inline">Ask</span>
             </motion.button>
           </div>
 
-          {}
-          <p className="text-xs text-slate-600 text-center mt-3">
-            ✨ The Oracle sees all • Powered by advanced AI
-          </p>
+          <p className="text-center text-xs text-slate-700 mt-3">師匠はすべてを知っている · Powered by advanced AI</p>
         </div>
       </div>
     </GuestGuard>

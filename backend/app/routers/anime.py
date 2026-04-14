@@ -4,6 +4,10 @@ from typing import Optional, List
 from pydantic import BaseModel
 
 from app.services.jikan import jikan_client
+from app.database import get_db
+from app.models import sql
+from sqlalchemy.orm import Session
+from fastapi import Depends
 
 router = APIRouter()
 
@@ -147,7 +151,25 @@ async def list_genres():
     }
 
 @router.get("/{anime_id}")
-async def get_anime_details(anime_id: int):
+async def get_anime_details(anime_id: int, db: Session = Depends(get_db)):
+    # 1. Check Local DB First (Robustness)
+    local_anime = db.query(sql.Anime).filter(sql.Anime.mal_id == anime_id).first()
+    
+    if local_anime:
+        # Convert local model to response format
+        return {
+            "id": local_anime.mal_id,
+            "mal_id": local_anime.mal_id,
+            "title": local_anime.title,
+            "image": local_anime.image_url,
+            "synopsis": local_anime.synopsis,
+            "score": local_anime.score,
+            "genres": local_anime.genres.split(",") if local_anime.genres else [],
+            "year": local_anime.year,
+            "source": "local"  # Debug flag
+        }
+
+    # 2. Fallback to Jikan (External API)
     result = await jikan_client.get_anime_details(anime_id)
     
     if not result:

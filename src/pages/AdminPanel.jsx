@@ -148,7 +148,7 @@ const AdminPanel = () => {
 
     if (!isUnlocked) {
         return (
-            <div className="min-h-screen pt-20 pb-24 px-4 flex items-center justify-center relative z-50" style={{ background: '#050505' }}>
+            <div className="min-h-screen pt-20 pb-24 px-4 flex items-center justify-center relative z-50 bg-[#050505]">
                 <motion.div
                     initial={{ opacity: 0, scale: 0.9 }}
                     animate={{ opacity: 1, scale: 1 }}
@@ -195,7 +195,7 @@ const AdminPanel = () => {
     }
 
     return (
-        <div className="min-h-screen pt-20 pb-24 md:pb-8 px-4 relative z-20" style={{ background: '#050505' }}>
+        <div className="min-h-screen pt-20 pb-24 md:pb-8 px-4 relative z-20 bg-[#050505]">
             <div className="max-w-6xl mx-auto">
                 {}
                 <motion.div

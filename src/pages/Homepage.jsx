@@ -1,408 +1,258 @@
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, useRef } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
 import { Link } from 'react-router-dom';
-import {
-    Sword, TrendingUp, Users, Star, Zap,
-    MessageCircle, ChevronRight, Sparkles,
-    Play, Heart, Shield, Flame, Trophy,
-    Crown, Eye, Activity, Globe, ArrowRight,
-    Bell, Image as ImageIcon
-} from 'lucide-react';
+import { TrendingUp, Star, Play, Film, Newspaper, ChevronRight, Shield, Sparkles, ArrowRight, Calendar, Feather } from 'lucide-react';
 import { useAuth } from '../contexts/AuthContext';
 import { jikanAPI } from '../utils/animeDataAPIs';
-import { subscribeToActiveBattles, getSystemStats } from '../utils/firebase';
-import { NakamaLogo } from '../components/NakamaLogo';
 
-const AnimatedCounter = ({ value, duration = 2000 }) => {
-    const [count, setCount] = useState(0);
-
-    useEffect(() => {
-        let start = 0;
-        const end = parseInt(value) || 0;
-        const increment = end / (duration / 16);
-
-        const timer = setInterval(() => {
-            start += increment;
-            if (start >= end) {
-                setCount(end);
-                clearInterval(timer);
-            } else {
-                setCount(Math.floor(start));
-            }
-        }, 16);
-
-        return () => clearInterval(timer);
-    }, [value, duration]);
-
-    return <span>{count.toLocaleString()}</span>;
-};
-
-const HeroSection = ({ userName }) => {
-    return (
-        <section className="relative py-12 md:py-20 overflow-hidden">
-            {}
-            <div className="absolute inset-0 pointer-events-none overflow-hidden">
-                {[...Array(5)].map((_, i) => (
-                    <motion.div
-                        key={i}
-                        className="absolute rounded-full blur-3xl"
-                        style={{
-                            width: `${150 + i * 50}px`,
-                            height: `${150 + i * 50}px`,
-                            background: `radial-gradient(circle, ${i % 2 === 0 ? 'rgba(234,179,8,0.15)' : 'rgba(251,146,60,0.1)'}, transparent)`,
-                            left: `${10 + i * 20}%`,
-                            top: `${20 + (i % 3) * 20}%`,
-                        }}
-                        animate={{
-                            y: [-20, 20, -20],
-                            x: [-10, 10, -10],
-                            scale: [1, 1.1, 1],
-                        }}
-                        transition={{
-                            duration: 6 + i,
-                            repeat: Infinity,
-                            ease: "easeInOut",
-                        }}
-                    />
-                ))}
-            </div>
-
-            <div className="relative z-10 text-center">
-                {}
-                {userName ? (
-                    <motion.div
-                        initial={{ opacity: 0, y: -20 }}
-                        animate={{ opacity: 1, y: 0 }}
-                        className="inline-flex items-center gap-2 px-6 py-3 rounded-full mb-8"
-                        style={{
-                            background: 'rgba(234, 179, 8, 0.05)',
-                            border: '1px solid rgba(234, 179, 8, 0.2)'
-                        }}
-                    >
-                        <Crown size={16} className="text-yellow-400" />
-                        <span className="text-yellow-400 font-medium">Welcome back, {userName}</span>
-                    </motion.div>
-                ) : (
-                    <div className="h-8"></div> 
-                )}
-
-                {}
-                <motion.div
-                    initial={{ opacity: 0 }}
-                    animate={{ opacity: 1 }}
-                    className="h-24 flex flex-col items-center justify-center mb-8"
-                >
-                    <NakamaLogo size="xl" showTagline={false} />
-                    <p className="text-slate-500 mt-2 font-light tracking-wide">The Hidden Layer of Anime</p>
-                </motion.div>
-
-                {}
-                <div className="flex flex-wrap justify-center gap-4 mt-4">
-                    <Link to="/arena">
-                        <motion.button
-                            whileHover={{ scale: 1.05, boxShadow: '0 8px 30px rgba(234,179,8,0.4)' }}
-                            whileTap={{ scale: 0.95 }}
-                            className="px-8 py-4 rounded-2xl font-bold text-black flex items-center gap-3 text-lg"
-                            style={{
-                                background: 'linear-gradient(135deg, #eab308, #f59e0b, #ca8a04)',
-                                boxShadow: '0 4px 20px rgba(234,179,8,0.3)'
-                            }}
-                        >
-                            <Sword size={22} />
-                            Enter Arena
-                            <ArrowRight size={18} />
-                        </motion.button>
-                    </Link>
-                    <Link to="/discover">
-                        <motion.button
-                            whileHover={{ scale: 1.05, backgroundColor: 'rgba(234, 179, 8, 0.15)' }}
-                            whileTap={{ scale: 0.95 }}
-                            className="px-8 py-4 rounded-2xl font-bold text-yellow-400 flex items-center gap-3 text-lg transition-colors"
-                            style={{
-                                background: 'rgba(234, 179, 8, 0.08)',
-                                border: '2px solid rgba(234, 179, 8, 0.4)'
-                            }}
-                        >
-                            <Sparkles size={22} />
-                            Explore
-                        </motion.button>
-                    </Link>
-                </div>
-            </div>
-        </section>
-    );
-};
-
-const LiveActivityFeed = ({ activities }) => (
-    <motion.div
-        initial={{ opacity: 0, x: -20 }}
-        animate={{ opacity: 1, x: 0 }}
-        className="rounded-2xl p-6 h-full min-h-[300px]"
-        style={{
-            background: 'rgba(15, 15, 20, 0.95)',
-            border: '1px solid rgba(234, 179, 8, 0.15)',
-            boxShadow: '0 4px 20px rgba(0,0,0,0.4)'
-        }}
-    >
-        <div className="flex items-center gap-2 mb-6">
-            <div className="w-2 h-2 bg-green-500 rounded-full animate-pulse" />
-            <h3 className="font-bold text-white text-lg">Live Network Activity</h3>
-        </div>
-        <div className="space-y-4 max-h-[400px] overflow-y-auto hide-scrollbar">
-            {activities.length > 0 ? activities.map((activity, idx) => (
-                <motion.div
-                    key={idx}
-                    initial={{ opacity: 0, x: -10 }}
-                    animate={{ opacity: 1, x: 0 }}
-                    transition={{ delay: idx * 0.1 }}
-                    className="flex items-center gap-3 p-3 rounded-xl hover:bg-white/5 transition-colors border border-transparent hover:border-white/5"
-                >
-                    <div className="w-10 h-10 rounded-full bg-gradient-to-br from-yellow-500 to-amber-600 flex items-center justify-center flex-shrink-0">
-                        <activity.icon size={18} className="text-black" />
-                    </div>
-                    <div className="flex-1 min-w-0">
-                        <p className="text-slate-200 text-sm truncate font-medium">{activity.text}</p>
-                        <p className="text-slate-500 text-xs">{activity.time}</p>
-                    </div>
-                </motion.div>
-            )) : (
-                <div className="flex flex-col items-center justify-center h-48 text-center text-slate-500">
-                    <Activity size={40} className="mb-4 opacity-50" />
-                    <p className="text-sm">Waiting for live signals...</p>
-                </div>
-            )}
-        </div>
-    </motion.div>
-);
+/* ── Hero background images (high-quality anime key visuals) ── */
+const HERO_IMAGES = [
+    'https://cdn.myanimelist.net/images/anime/1015/138006l.jpg',
+    'https://cdn.myanimelist.net/images/anime/1286/99889l.jpg',
+    'https://cdn.myanimelist.net/images/anime/1208/94745l.jpg',
+    'https://cdn.myanimelist.net/images/anime/1337/99013l.jpg',
+    'https://cdn.myanimelist.net/images/anime/1171/109222l.jpg',
+];
 
 const TrendingCard = ({ anime, rank }) => {
-    const imageUrl = anime?.images?.jpg?.large_image_url || anime?.images?.jpg?.image_url;
+    const imageUrl = anime?.images?.jpg?.large_image_url || anime?.images?.webp?.large_image_url || anime?.images?.jpg?.image_url;
 
     return (
-        <Link to={`/anime/${anime?.mal_id}`}>
-            <motion.div
-                whileHover={{ scale: 1.05, y: -5 }}
-                className="relative rounded-xl overflow-hidden group cursor-pointer h-full"
-                style={{ boxShadow: '0 4px 20px rgba(0,0,0,0.4)' }}
-            >
-                <div className="aspect-[3/4]">
-                    <img
-                        src={imageUrl}
-                        alt={anime?.title}
-                        className="w-full h-full object-cover transition-transform duration-500 group-hover:scale-110"
-                        onError={(e) => { e.target.src = 'https://via.placeholder.com/200x280/1a1a2e/eab308?text=Anime'; }}
-                    />
-                </div>
+        <Link to={`/anime/${anime?.mal_id}`} className="flex-shrink-0 w-[160px] sm:w-auto block relative rounded-xl overflow-hidden group aspect-[3/4]">
+            <img
+                src={imageUrl}
+                alt={anime?.title}
+                className="w-full h-full object-cover transition-transform duration-500 group-hover:scale-105"
+                loading="lazy"
+            />
+            <div className="absolute inset-0 bg-gradient-to-t from-black/80 via-black/20 to-transparent" />
 
-                {}
-                <div className="absolute inset-0 bg-gradient-to-t from-black via-black/30 to-transparent" />
+            <div className="absolute top-2.5 left-2.5 px-2 py-0.5 rounded-md text-[10px] font-bold text-white/90 bg-black/50 backdrop-blur-sm">
+                {rank}
+            </div>
 
-                {}
-                <div
-                    className="absolute top-2 left-2 w-8 h-8 rounded-lg flex items-center justify-center font-black text-sm"
-                    style={{
-                        background: rank <= 3 ? 'linear-gradient(135deg, #eab308, #ca8a04)' : 'rgba(0,0,0,0.8)',
-                        color: rank <= 3 ? '#000' : '#eab308'
-                    }}
-                >
-                    #{rank}
+            <div className="absolute bottom-0 left-0 right-0 p-3">
+                <h4 className="font-semibold text-[13px] text-white line-clamp-2 leading-tight mb-1">{anime?.title}</h4>
+                <div className="flex items-center gap-2 text-[11px] text-white/50">
+                    <span className="flex items-center gap-0.5"><Star size={10} className="text-amber-400" fill="currentColor" /> {anime?.score || '—'}</span>
+                    <span>·</span>
+                    <span>{anime?.episodes || '?'} ep</span>
                 </div>
-
-                {}
-                <div className="absolute bottom-0 left-0 right-0 p-3">
-                    <h4 className="font-bold text-white text-sm line-clamp-2 mb-1">{anime?.title}</h4>
-                    <div className="flex items-center gap-2 text-xs">
-                        <div className="flex items-center gap-1 text-yellow-400">
-                            <Star size={12} fill="currentColor" />
-                            <span>{anime?.score || 'N/A'}</span>
-                        </div>
-                        <span className="text-slate-500">•</span>
-                        <span className="text-slate-400">{anime?.episodes || '?'} eps</span>
-                    </div>
-                </div>
-            </motion.div>
+            </div>
         </Link>
     );
 };
 
-const QuickAccessCard = ({ icon: Icon, title, desc, path, color }) => (
-    <Link to={path}>
-        <motion.div
-            whileHover={{ scale: 1.03, y: -3 }}
-            whileTap={{ scale: 0.98 }}
-            className="p-6 rounded-2xl h-full relative overflow-hidden group"
-            style={{
-                background: 'rgba(15, 15, 20, 0.95)',
-                border: '1px solid rgba(202, 138, 4, 0.15)',
-                boxShadow: '0 4px 20px rgba(0,0,0,0.4)'
-            }}
-        >
-            {}
-            <div
-                className="absolute inset-0 opacity-0 group-hover:opacity-100 transition-opacity duration-500"
-                style={{ background: `radial-gradient(circle at center, ${color}15, transparent 70%)` }}
-            />
-
-            <div className="relative z-10">
-                <div
-                    className="w-12 h-12 rounded-xl flex items-center justify-center mb-4"
-                    style={{ background: `${color}20`, border: `1px solid ${color}40` }}
-                >
-                    <Icon size={24} style={{ color }} />
-                </div>
-                <h3 className="font-bold text-white text-lg mb-1">{title}</h3>
-                <p className="text-slate-500 text-sm">{desc}</p>
-            </div>
-        </motion.div>
-    </Link>
-);
-
-const StatsBar = ({ stats }) => (
-    <motion.section
-        initial={{ opacity: 0, y: 20 }}
-        whileInView={{ opacity: 1, y: 0 }}
-        viewport={{ once: true }}
-        className="py-8 px-6 rounded-2xl"
-        style={{
-            background: 'linear-gradient(135deg, rgba(234,179,8,0.1), rgba(202,138,4,0.05))',
-            border: '1px solid rgba(202, 138, 4, 0.2)',
-            boxShadow: '0 4px 30px rgba(234,179,8,0.1)'
-        }}
+const FeatureCard = ({ to, icon: Icon, title, desc, delay = 0 }) => (
+    <motion.div
+        initial={{ opacity: 0, y: 16 }}
+        animate={{ opacity: 1, y: 0 }}
+        transition={{ duration: 0.5, delay, ease: [0.22, 1, 0.36, 1] }}
     >
-        <div className="grid grid-cols-2 lg:grid-cols-4 gap-8">
-            {[
-                { value: stats.users || 0, label: 'Active Warriors', icon: Users },
-                { value: stats.battles || 0, label: 'Battles Fought', icon: Sword },
-                { value: stats.anime || 0, label: 'Anime Indexed', icon: Play },
-                { value: 0, label: 'Live Events', icon: Zap },
-            ].map((stat, idx) => (
-                <motion.div
-                    key={idx}
-                    initial={{ opacity: 0, y: 20 }}
-                    whileInView={{ opacity: 1, y: 0 }}
-                    transition={{ delay: idx * 0.1 }}
-                    viewport={{ once: true }}
-                    className="text-center"
-                >
-                    <div className="inline-flex items-center justify-center w-12 h-12 rounded-xl mb-3" style={{ background: 'rgba(234,179,8,0.15)' }}>
-                        <stat.icon size={24} className="text-yellow-400" />
-                    </div>
-                    <div className="text-3xl md:text-4xl font-black text-yellow-400 mb-1" style={{ textShadow: '0 2px 10px rgba(234,179,8,0.3)' }}>
-                        <AnimatedCounter value={stat.value} />
-                    </div>
-                    <div className="text-slate-500 text-sm">{stat.label}</div>
-                </motion.div>
-            ))}
-        </div>
-    </motion.section>
+        <Link to={to} className="group block p-5 rounded-2xl border border-white/[0.06] hover:border-white/[0.1] bg-[#0a0a0a] hover:bg-[#0e0e0e] transition-all duration-300">
+            <div className="flex items-start justify-between mb-4">
+                <div className="p-2.5 rounded-xl bg-white/[0.04]">
+                    <Icon size={18} className="text-[#888]" />
+                </div>
+                <ArrowRight size={14} className="text-transparent group-hover:text-[#555] transition-colors mt-1" />
+            </div>
+            <h3 className="text-[15px] font-semibold text-white mb-1">{title}</h3>
+            <p className="text-[13px] text-[#666] leading-relaxed">{desc}</p>
+        </Link>
+    </motion.div>
 );
 
 const Homepage = () => {
-    const { userProfile } = useAuth();
-    const [trendingAnime, setTrendingAnime] = useState([]);
+    const { userProfile, openAuthModal } = useAuth();
+    const [seasonalAnime, setSeasonalAnime] = useState([]);
     const [loading, setLoading] = useState(true);
-    const [siteStats, setSiteStats] = useState({ users: 0, battles: 0, votes: 0, anime: 0 });
-    const [liveActivities, setLiveActivities] = useState([]);
+    const [totalTitles, setTotalTitles] = useState(0);
+    const [currentHeroIdx, setCurrentHeroIdx] = useState(0);
+    const [heroImages, setHeroImages] = useState(HERO_IMAGES);
 
-    const FALLBACK_TRENDING = [
-        { mal_id: 1, title: "Jujutsu Kaisen", score: 8.7, episodes: 24, images: { jpg: { image_url: "https://cdn.myanimelist.net/images/anime/1171/109222.jpg" } } },
-        { mal_id: 2, title: "Attack on Titan", score: 9.0, episodes: 87, images: { jpg: { image_url: "https://cdn.myanimelist.net/images/anime/10/47347.jpg" } } },
-        { mal_id: 3, title: "Demon Slayer", score: 8.5, episodes: 44, images: { jpg: { image_url: "https://cdn.myanimelist.net/images/anime/1286/99889.jpg" } } },
-        { mal_id: 4, title: "One Piece", score: 8.7, episodes: 1100, images: { jpg: { image_url: "https://cdn.myanimelist.net/images/anime/6/73245.jpg" } } },
-        { mal_id: 5, title: "My Hero Academia", score: 8.0, episodes: 138, images: { jpg: { image_url: "https://cdn.myanimelist.net/images/anime/10/78745.jpg" } } },
-        { mal_id: 6, title: "Naruto Shippuden", score: 8.3, episodes: 500, images: { jpg: { image_url: "https://cdn.myanimelist.net/images/anime/5/17407.jpg" } } }
-    ];
+    // Auto-slide hero background every 6 seconds
+    useEffect(() => {
+        const interval = setInterval(() => {
+            setCurrentHeroIdx(prev => (prev + 1) % heroImages.length);
+        }, 6000);
+        return () => clearInterval(interval);
+    }, [heroImages.length]);
 
     useEffect(() => {
-        loadData();
+        const fetchData = async () => {
+            try {
+                // Fetch current season anime (monthly schedule)
+                const now = new Date();
+                const month = now.getMonth();
+                const year = now.getFullYear();
+                const season = month < 3 ? 'winter' : month < 6 ? 'spring' : month < 9 ? 'summer' : 'fall';
 
-        getSystemStats().then(stats => {
-            setSiteStats({
-                users: stats.users || 0,
-                battles: stats.battles || 0,
-                votes: 0,
-                anime: stats.anime || 0
-            });
-        });
+                const response = await fetch(`https://api.jikan.moe/v4/seasons/${year}/${season}?limit=12&order_by=score&sort=desc`);
+                const data = await response.json();
+                const results = data.data || [];
+                setSeasonalAnime(results);
 
-        setLiveActivities([]);
+                // Use top seasonal anime images as hero backgrounds
+                const dynamicImages = results
+                    .filter(a => a?.images?.jpg?.large_image_url)
+                    .slice(0, 5)
+                    .map(a => a.images.jpg.large_image_url);
+                if (dynamicImages.length >= 3) {
+                    setHeroImages(dynamicImages);
+                }
 
+                // Fetch live total title count
+                const statsResponse = await fetch('https://api.jikan.moe/v4/anime?limit=1');
+                const statsData = await statsResponse.json();
+                setTotalTitles(statsData.pagination?.items?.total || 28000);
+            } catch (err) {
+                console.error("Failed to load data:", err);
+            } finally {
+                setLoading(false);
+            }
+        };
+        fetchData();
     }, []);
 
-    const loadData = async () => {
-        setLoading(true);
-        try {
-            const animeData = await jikanAPI.getTrendingAnime(12).catch(() => null);
-
-            if (animeData && animeData.length > 0) {
-                setTrendingAnime(animeData);
-            } else {
-                console.log('Using fallback trending data');
-                setTrendingAnime(FALLBACK_TRENDING);
-            }
-        } catch (error) {
-            console.error('Failed to load data, using fallback:', error);
-            setTrendingAnime(FALLBACK_TRENDING);
-        } finally {
-            setLoading(false);
-        }
+    // Determine current season label
+    const getSeasonLabel = () => {
+        const month = new Date().getMonth();
+        const year = new Date().getFullYear();
+        const season = month < 3 ? 'Winter' : month < 6 ? 'Spring' : month < 9 ? 'Summer' : 'Fall';
+        return `${season} ${year}`;
     };
 
     return (
-        <div className="min-h-screen pt-20 pb-24 md:pb-8 px-4 relative z-20">
-            <div className="max-w-7xl mx-auto">
-                {}
-                <HeroSection userName={userProfile?.displayName} />
+        <div className="min-h-screen bg-[#050505]">
 
-                {}
-                <div className="mb-12">
-                    <LiveActivityFeed activities={liveActivities} />
+            {/* === HERO with auto-sliding backgrounds === */}
+            <section className="relative min-h-[85vh] flex items-end overflow-hidden">
+                {/* Sliding background images */}
+                <AnimatePresence mode="wait">
+                    <motion.div
+                        key={currentHeroIdx}
+                        initial={{ opacity: 0, scale: 1.05 }}
+                        animate={{ opacity: 1, scale: 1 }}
+                        exit={{ opacity: 0 }}
+                        transition={{ duration: 1.2, ease: [0.22, 1, 0.36, 1] }}
+                        className="absolute inset-0"
+                    >
+                        <img
+                            src={heroImages[currentHeroIdx]}
+                            alt=""
+                            className="w-full h-full object-cover"
+                            fetchpriority="high"
+                            decoding="sync"
+                        />
+                        <div className="absolute inset-0 bg-gradient-to-t from-[#050505] via-[#050505]/70 to-[#050505]/30" />
+                        <div className="absolute inset-0 bg-gradient-to-r from-[#050505]/90 to-transparent" />
+                    </motion.div>
+                </AnimatePresence>
+
+                {/* Slide indicators */}
+                <div className="absolute bottom-6 right-6 md:right-10 z-20 flex gap-1.5">
+                    {heroImages.map((_, idx) => (
+                        <button
+                            key={idx}
+                            onClick={() => setCurrentHeroIdx(idx)}
+                            className={`h-1 rounded-full transition-all duration-300 ${
+                                idx === currentHeroIdx ? 'w-6 bg-white/60' : 'w-1.5 bg-white/15'
+                            }`}
+                        />
+                    ))}
                 </div>
 
-                {}
-                <section className="mb-12">
-                    <div className="flex items-center justify-between mb-6">
-                        <div className="flex items-center gap-3">
-                            <div className="w-10 h-10 rounded-xl flex items-center justify-center" style={{ background: 'linear-gradient(135deg, #eab308, #ca8a04)' }}>
-                                <TrendingUp size={20} className="text-black" />
-                            </div>
-                            <div>
-                                <h2 className="text-xl font-bold text-white">Trending Now</h2>
-                                <p className="text-slate-500 text-xs">Hottest anime this season</p>
-                            </div>
+                <div className="relative z-10 w-full max-w-[1400px] mx-auto px-4 md:px-8 pb-16 pt-32">
+                    <motion.div
+                        initial={{ opacity: 0, y: 20 }}
+                        animate={{ opacity: 1, y: 0 }}
+                        transition={{ duration: 0.7, ease: [0.22, 1, 0.36, 1] }}
+                        className="max-w-2xl"
+                    >
+                        <h1 className="text-4xl sm:text-5xl lg:text-7xl font-extrabold text-white leading-[1.05] tracking-tight mb-5">
+                            Your anime,{' '}
+                            <span className="text-transparent bg-clip-text bg-gradient-to-r from-white to-white/40">elevated.</span>
+                        </h1>
+                        <p className="text-base sm:text-lg text-white/50 mb-8 max-w-lg leading-relaxed font-light">
+                            Discover, rank, and debate with the most dedicated anime community on the internet.
+                        </p>
+                        <div className="flex flex-wrap gap-3">
+                            <Link
+                                to="/library"
+                                className="px-6 py-3 rounded-xl bg-white text-black font-semibold text-sm hover:bg-white/90 transition-colors flex items-center gap-2"
+                            >
+                                <Play size={16} className="fill-black" /> Browse Library
+                            </Link>
+                            {!userProfile && (
+                                <button
+                                    onClick={() => openAuthModal()}
+                                    className="px-6 py-3 rounded-xl bg-white/[0.08] border border-white/[0.1] text-white font-medium text-sm hover:bg-white/[0.12] transition-colors"
+                                >
+                                    Create Account
+                                </button>
+                            )}
                         </div>
-                        <Link to="/discover" className="text-yellow-400 hover:text-yellow-300 flex items-center gap-1 text-sm font-medium">
-                            See All <ChevronRight size={16} />
-                        </Link>
-                    </div>
 
-                    {loading ? (
-                        <div className="flex justify-center py-16">
-                            <div className="w-10 h-10 rounded-full border-2 border-yellow-500/30 border-t-yellow-500 animate-spin" />
+                        {/* Live title count */}
+                        {totalTitles > 0 && (
+                            <div className="flex items-center gap-2 mt-10 text-[12px] text-white/25 font-medium">
+                                <Film size={12} />
+                                <span>{totalTitles.toLocaleString()} titles in database</span>
+                            </div>
+                        )}
+                    </motion.div>
+                </div>
+            </section>
+
+            {/* === SEASONAL ANIME (This Season's Schedule) === */}
+            <section className="max-w-[1400px] mx-auto px-4 md:px-8 py-16">
+                <div className="flex items-center justify-between mb-6">
+                    <div className="flex items-center gap-3">
+                        <Calendar size={18} className="text-[#555]" />
+                        <div>
+                            <h2 className="text-lg font-bold text-white">{getSeasonLabel()} Anime</h2>
+                            <p className="text-[11px] text-[#444]">This season's top-rated releases</p>
                         </div>
-                    ) : (
-                        <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-6 gap-4">
-                            {trendingAnime.slice(0, 12).map((anime, idx) => (
-                                <TrendingCard key={anime?.mal_id || idx} anime={anime} rank={idx + 1} />
+                    </div>
+                    <Link to="/library" className="text-[12px] font-medium text-[#555] hover:text-white transition-colors flex items-center gap-1">
+                        Full library <ChevronRight size={14} />
+                    </Link>
+                </div>
+
+                {loading ? (
+                    <div className="flex justify-center py-16">
+                        <div className="loading-spinner" />
+                    </div>
+                ) : (
+                    <>
+                        {/* Mobile: horizontal scroll */}
+                        <div className="flex gap-3 overflow-x-auto snap-x snap-mandatory pb-4 hide-scrollbar sm:hidden">
+                            {seasonalAnime.slice(0, 12).map((anime, idx) => (
+                                <div key={anime.mal_id} className="snap-start">
+                                    <TrendingCard anime={anime} rank={idx + 1} />
+                                </div>
                             ))}
                         </div>
-                    )}
-                </section>
+                        {/* Desktop: grid */}
+                        <div className="hidden sm:grid grid-cols-3 md:grid-cols-4 lg:grid-cols-6 gap-4">
+                            {seasonalAnime.slice(0, 12).map((anime, idx) => (
+                                <TrendingCard key={anime.mal_id} anime={anime} rank={idx + 1} />
+                            ))}
+                        </div>
+                    </>
+                )}
+            </section>
 
-                {}
-                <section className="mb-12">
-                    <h2 className="text-xl font-bold text-white mb-6">Quick Access</h2>
-                    <div className="grid grid-cols-2 lg:grid-cols-4 gap-4">
-                        <QuickAccessCard icon={Zap} title="Hub" desc="Command Center" path="/command-center" color="#eab308" />
-                        <QuickAccessCard icon={Users} title="Community" desc="Wiki & Discussions" path="/community" color="#22c55e" />
-                        <QuickAccessCard icon={Shield} title="Clans" desc="Join epic battles" path="/clan" color="#3b82f6" />
-                        <QuickAccessCard icon={ImageIcon} title="Media" desc="Share & discover" path="/global-media" color="#a855f7" />
-                    </div>
-                </section>
-
-                {}
-                <StatsBar stats={siteStats} />
-            </div>
+            {/* === FEATURES === */}
+            <section className="max-w-[1400px] mx-auto px-4 md:px-8 pb-20">
+                <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-5 gap-4">
+                    <FeatureCard to="/community" icon={TrendingUp} title="Community" desc="Wikis, discussions, and guides curated by fans." delay={0.1} />
+                    <FeatureCard to="/clan" icon={Shield} title="Clans" desc="Build alliances and compete on the leaderboards." delay={0.15} />
+                    <FeatureCard to="/oracle" icon={Sparkles} title="The Sensei" desc="Get personalized anime recommendations." delay={0.2} />
+                    <FeatureCard to="/news" icon={Newspaper} title="Industry Intel" desc="Studio announcements and release calendars." delay={0.25} />
+                    <FeatureCard to="/story-writer" icon={Feather} title="Story Writer" desc="Write and publish web novels with continuity tracking." delay={0.3} />
+                </div>
+            </section>
         </div>
     );
 };

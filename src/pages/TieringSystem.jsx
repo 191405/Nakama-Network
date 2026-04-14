@@ -13,80 +13,80 @@ const TIERS = {
         color: "#6b7280",
         description: "Characters or objects that affect lower-dimensional universes or layers of reality. Qualitatively inferior to standard 3-dimensional reality.",
         subTiers: [
-            { id: "11-C", name: "Low Hypoverse", description: "Power equivalent to destroying/creating infinitely inferior 0-dimensional constructs", detail: "A 0-dimensional point has no length, width, or height. In mathematical terms, it is a singularity." },
-            { id: "11-B", name: "Hypoverse", description: "Power equivalent to destroying/creating infinitely inferior 1-dimensional constructs", detail: "A 1-dimensional line has length but no width or height. Strictly linear existence." },
-            { id: "11-A", name: "High Hypoverse", description: "Power equivalent to destroying/creating infinitely inferior 2-dimensional constructs", detail: "A 2-dimensional plane has length and width but no depth. Infinite area but zero volume." }
+            { id: "11-C", name: "Low Hypoverse", description: "Power equivalent to destroying/creating infinitely inferior 0-dimensional constructs", detail: "A 0-dimensional point has no length, width, or height. In mathematical terms, it is a singularity — a coordinate with no extension. Entities at this tier can influence or destroy such constructs, but have zero capacity against anything with actual spatial extension.", examples: "Abstract computational entities, theoretical particles" },
+            { id: "11-B", name: "Hypoverse", description: "Power equivalent to destroying/creating infinitely inferior 1-dimensional constructs", detail: "A 1-dimensional line has length but no width or height. Think of it as an infinitely thin thread through reality. From a geometric perspective, an infinite number of 0D points fit on this line, making it infinitely superior to 11-C.", examples: "Line-bound entities, 1D narrative constructs" },
+            { id: "11-A", name: "High Hypoverse", description: "Power equivalent to destroying/creating infinitely inferior 2-dimensional constructs", detail: "A 2-dimensional plane has length and width but no depth. An infinite number of 1D lines can fit side by side on a 2D plane, making it infinitely superior to 11-B. Real-world analogy: the surface of a piece of paper has area but zero volume." }
         ]
     },
     tier10: {
         name: "Tier 10: Human",
         color: "#22c55e",
-        description: "Standard scale of human existence and physical capability.",
+        description: "Standard scale of human existence and physical capability. The baseline for all fictional scaling.",
         subTiers: [
-            { id: "10-C", name: "Below Average Human", description: "0 to 60 Joules", examples: "Small animals (cats, dogs), small children, infirm or elderly humans" },
-            { id: "10-B", name: "Human Level", description: "60 to 106 Joules", examples: "Average teenagers, unathletic adults. Baseline for normal humans." },
-            { id: "10-A", name: "Athlete Level", description: "106 to 300 Joules", examples: "Trained fighters, soldiers, police officers. Upper crust of normal human potential." }
+            { id: "10-C", name: "Below Average Human", description: "0 to 60 Joules", detail: "For reference, 60 Joules is roughly the kinetic energy of a tennis ball served at 120 mph. Characters at this level include small animals, young children, and physically impaired individuals.", examples: "Ash's Pikachu (base, no electricity), Chopper (base human form), small animals" },
+            { id: "10-B", name: "Human Level", description: "60 to 106 Joules", detail: "The average untrained adult punch carries about 50-80 Joules of energy. This tier represents the baseline of normal human capability — no special training, no superhuman genes. Just normal people.", examples: "Average teenagers in slice-of-life anime, unathletic adults, civilian NPCs" },
+            { id: "10-A", name: "Athlete Level", description: "106 to 300 Joules", detail: "A professional boxer's punch can deliver ~400 Joules peak, but averages around 200-300J. This tier represents the absolute peak of what a normal, well-trained human can achieve without any supernatural augmentation.", examples: "Ippo Makunouchi (early career), Rock Lee (no gates)" }
         ]
     },
     tier9: {
         name: "Tier 9: Superhuman",
         color: "#3b82f6",
-        description: "Beyond normal human limits, entering superhuman territory.",
+        description: "Beyond normal human limits. Characters here consistently perform feats impossible for real humans.",
         subTiers: [
-            { id: "9-C", name: "Street Level", description: "300 Joules to 15 Kilojoules", examples: "Peak humans, Olympic athletes, low-level superhumans. Breaking bones, shattering boards." },
-            { id: "9-B", name: "Wall Level", description: "15 Kilojoules to 0.005 Tons TNT", examples: "Destroying stone walls, steel plates, large boulders. Smashing through brick walls." },
-            { id: "9-A", name: "Small Building Level", description: "0.005 to 0.25 Tons TNT", examples: "Destroying rooms or small detached houses." }
+            { id: "9-C", name: "Street Level", description: "300 Joules to 15 Kilojoules", detail: "15 KJ is roughly the energy of a .50 caliber bullet impact. Characters at this level can shatter concrete with bare fists, break steel chains, and survive falls that would kill normal humans. They dominate street-level combat.", examples: "Spike Spiegel (Cowboy Bebop), Deku (early MHA), Tanjiro (early Demon Slayer)" },
+            { id: "9-B", name: "Wall Level", description: "15 Kilojoules to 0.005 Tons TNT", detail: "0.005 Tons of TNT is about 20.9 Megajoules — enough energy to demolish a reinforced concrete wall or shatter a car. Characters routinely bust through walls, crush boulders, and tank hits that would obliterate normal structures.", examples: "Zoro (East Blue Saga), Jonathan Joestar, Gon Freecss (early)" },
+            { id: "9-A", name: "Small Building Level", description: "0.005 to 0.25 Tons TNT", detail: "Equivalent to 20.9 MJ to 1.05 GJ. For context, a hand grenade produces about 0.0003 Tons TNT. Characters at this tier can demolish small houses, shatter reinforced bunkers, and create craters several meters wide with their attacks.", examples: "Izuku Midoriya (5% Full Cowl), Kaneki Ken, early Bleach characters" }
         ]
     },
     tier8: {
         name: "Tier 8: Urban",
         color: "#8b5cf6",
-        description: "Urban-scale destruction capabilities.",
+        description: "Urban-scale destruction. Characters here can level buildings to entire city blocks.",
         subTiers: [
-            { id: "8-C", name: "Building Level", description: "0.25 to 2 Tons TNT", examples: "Medium-sized buildings, large factories" },
-            { id: "High 8-C", name: "Large Building Level", description: "2 to 11 Tons TNT", examples: "Skyscrapers or large commercial structures" },
-            { id: "8-B", name: "City Block Level", description: "11 to 100 Tons TNT", examples: "Urban city block destruction" },
-            { id: "8-A", name: "Multi-City Block Level", description: "100 Tons to 1 Kiloton TNT", examples: "Multiple city blocks, small neighborhoods" }
+            { id: "8-C", name: "Building Level", description: "0.25 to 2 Tons TNT", detail: "2 Tons of TNT is the explosive yield of most conventional bombs used in WWII. A character at this level can completely demolish a multi-story building with a single attack. The kinetic energy involved is staggering compared to anything humans can produce.", examples: "Luffy (Alabasta), Naruto (Part 1 Rasengan), Ichigo (early Bankai)" },
+            { id: "High 8-C", name: "Large Building Level", description: "2 to 11 Tons TNT", detail: "11 Tons TNT is comparable to the GBU-43/B MOAB ('Mother of All Bombs'). Characters can topple skyscrapers, create massive craters, and demolish large industrial complexes with ease.", examples: "All Might (weakened), Ban (Seven Deadly Sins), Garou (early)" },
+            { id: "8-B", name: "City Block Level", description: "11 to 100 Tons TNT", detail: "100 Tons of TNT would flatten an entire city block — every building, every structure reduced to rubble. Real-world equivalent: a very large conventional airstrike concentrated on a single point.", examples: "Deku (100%), Grimmjow, early Fairy Tail top-tiers" },
+            { id: "8-A", name: "Multi-City Block Level", description: "100 Tons to 1 Kiloton TNT", detail: "1 Kiloton TNT — one-fifteenth the yield of the Hiroshima bomb. Characters at this level can destroy multiple city blocks simultaneously. Their shockwaves shatter windows for blocks around. Craters in the hundreds of meters.", examples: "Endeavor, Erza Scarlet, mid-tier Bleach captains" }
         ]
     },
     tier7: {
         name: "Tier 7: Nuclear",
         color: "#f59e0b",
-        description: "Destruction comparable to nuclear weaponry.",
+        description: "Destruction comparable to nuclear weaponry. Characters here reshape geography.",
         subTiers: [
-            { id: "Low 7-C", name: "Small Town Level", description: "1 - 5.8 Kilotons", examples: "Small settlements, tactical nukes" },
-            { id: "7-C", name: "Town Level", description: "5.8 - 100 Kilotons", examples: "Average town, Hiroshima bomb (~15KT)" },
-            { id: "High 7-C", name: "Large Town Level", description: "100 KT - 1 Megaton", examples: "Large sprawling towns, strategic nukes" },
-            { id: "Low 7-B", name: "Small City Level", description: "1 - 6.3 Megatons", examples: "Small cities, high-yield warheads" },
-            { id: "7-B", name: "City Level", description: "6.3 - 100 Megatons", examples: "Major metropolitan areas, Tsar Bomba (50MT)" },
-            { id: "7-A", name: "Mountain Level", description: "100 MT - 1 Gigaton", examples: "Fragmenting or vaporizing a standard mountain" },
-            { id: "High 7-A", name: "Large Mountain Level", description: "1 - 4.3 Gigatons", examples: "Large mountains (Rockies, Himalayas)" }
+            { id: "Low 7-C", name: "Small Town Level", description: "1 - 5.8 Kilotons", detail: "For perspective, the smallest nuclear weapon ever used in combat (W54 'Davy Crockett') had a yield of 0.01-0.02 Kilotons. Characters at this level casually exceed tactical nuclear devices.", examples: "Pain (individual path), Laxus Dreyar, mid-grade Demon Slayer Hashira" },
+            { id: "7-C", name: "Town Level", description: "5.8 - 100 Kilotons", detail: "The Hiroshima bomb 'Little Boy' was approximately 15 Kilotons. Characters at this tier can wipe a town off the map. The energy released is equivalent to thousands of conventional bombs detonating simultaneously.", examples: "Naruto (Sage Mode), Escanor (daytime), Adult Gon" },
+            { id: "High 7-C", name: "Large Town Level", description: "100 KT - 1 Megaton", detail: "1 Megaton equals 1,000 Kilotons — about 67 times the Hiroshima bomb. Characters can obliterate sprawling urban areas. The blast radius exceeds 10 km. Thermal radiation causes third-degree burns at 20+ km.", examples: "Natsu (Dragon Force), drained Meruem" },
+            { id: "Low 7-B", name: "Small City Level", description: "1 - 6.3 Megatons", detail: "The largest US nuclear test (Castle Bravo, 15 MT) falls within the upper range here. Characters can destroy small metropolitan areas. Their attacks create mushroom clouds visible from space.", examples: "Post-Rose Meruem, Kenpachi (Bankai)" },
+            { id: "7-B", name: "City Level", description: "6.3 - 100 Megatons", detail: "Tsar Bomba, the most powerful nuclear weapon ever detonated, was 50 Megatons. Characters at this tier can annihilate major cities like New York or Tokyo in a single attack.", examples: "Naruto (KCM2), Cell (Semi-Perfect), Madara Uchiha" },
+            { id: "7-A", name: "Mountain Level", description: "100 MT - 1 Gigaton", detail: "1 Gigaton = 1,000 Megatons. To fragment an average mountain requires roughly 200-500 MT. Characters at this tier can vaporize mountains, creating massive geological depressions visible from orbit.", examples: "Perfect Cell, Kurama (full power), Pain (Shinra Tensei)" },
+            { id: "High 7-A", name: "Large Mountain Level", description: "1 - 4.3 Gigatons", detail: "Equivalent to the energy of asteroid impacts that cause mass extinction events. Characters at this tier destroy mountain ranges. For reference, the Chicxulub asteroid that killed the dinosaurs released ~100,000 GT.", examples: "Hashirama Senju, Gilgamesh (serious)" }
         ]
     },
     tier6: {
         name: "Tier 6: Tectonic",
         color: "#ef4444",
-        description: "Destruction of landmasses and continental structures.",
+        description: "Destruction of landmasses and continental structures. Characters reshape the planet's geography.",
         subTiers: [
-            { id: "6-C", name: "Island Level", description: "4.3 - 100 Gigatons", examples: "Destruction of a standard island" },
-            { id: "High 6-C", name: "Large Island Level", description: "100 GT - 1 Teraton", examples: "Great Britain, Honshu-sized islands" },
-            { id: "Low 6-B", name: "Small Country Level", description: "1 - 7 Teratons", examples: "Portugal, Belgium-sized nations" },
-            { id: "6-B", name: "Country Level", description: "7 - 100 Teratons", examples: "Average-sized countries" },
-            { id: "High 6-B", name: "Large Country Level", description: "100 - 760 Teratons", examples: "China, USA, Russia" },
-            { id: "6-A", name: "Continent Level", description: "760 TT - 4.435 Petatons", examples: "Africa, North America" },
-            { id: "High 6-A", name: "Multi-Continent Level", description: "4.435 PT - 29.6 Exatons", examples: "Multiple continents, planetary surface (Life Wiping)" }
+            { id: "6-C", name: "Island Level", description: "4.3 - 100 Gigatons", detail: "An average volcanic island has a mass of about 10^15 kg. Destroying it requires overcoming its gravitational binding energy. Characters at this tier sink islands, create tsunamis that devastate coastlines thousands of km away.", examples: "Whitebeard (One Piece), current Naruto/Sasuke, Goku (Saiyan Saga)" },
+            { id: "High 6-C", name: "Large Island Level", description: "100 GT - 1 Teraton", detail: "Great Britain is roughly 209,000 km². Destroying an island this size requires enormous energy — equivalent to the total solar energy hitting Earth in about a day. Characters leave permanent scars on the planet.", examples: "Akainu vs Aokiji (changed Punk Hazard), EOS Naruto" },
+            { id: "Low 6-B", name: "Small Country Level", description: "1 - 7 Teratons", detail: "The total nuclear arsenal of all nations on Earth is estimated at about 6,500+ warheads totaling roughly 1.5 Teratons. Characters at this level exceed humanity's entire destructive arsenal.", examples: "Frieza (destroying Planet Vegeta — gravity-adjusted), high-end Naruto" },
+            { id: "6-B", name: "Country Level", description: "7 - 100 Teratons", detail: "France is 640,000 km². The energy to fragment a country this size is staggering. Characters at this tier reshape continental geography with their battles.", examples: "Majin Buu (base), Momoshiki Otsutsuki" },
+            { id: "High 6-B", name: "Large Country Level", description: "100 - 760 Teratons", detail: "Countries like China (9.6 million km²) or Russia (17 million km²). The energy involved exceeds what our Sun outputs in milliseconds. Characters at this tier are walking extinction events.", examples: "Super Buu, Kaguya Otsutsuki" },
+            { id: "6-A", name: "Continent Level", description: "760 TT - 4.435 Petatons", detail: "Africa is 30.37 million km². To fragment an entire continent requires energy comparable to large asteroid impacts — events that cause global darkness, acid rain, and mass extinction.", examples: "Goku (Namek Saga SSJ), Kid Buu" },
+            { id: "High 6-A", name: "Multi-Continent Level", description: "4.435 PT - 29.6 Exatons", detail: "Destroying multiple continents simultaneously approaches 'life-wiping' — stripping a planet's entire biosphere. The energy is comparable to a fraction of Earth's gravitational binding energy (2.49 × 10^32 J).", examples: "Frieza (Final Form), Cell Saga characters" }
         ]
     },
     tier5: {
         name: "Tier 5: Substellar",
         color: "#06b6d4",
-        description: "Destruction of celestial bodies held by Gravitational Binding Energy.",
+        description: "Destruction of celestial bodies. Characters here operate on a planetary or sub-stellar scale.",
         subTiers: [
-            { id: "5-C", name: "Moon Level", description: "29.6 - 433 Exatons", examples: "Earth's Moon destruction" },
-            { id: "Low 5-B", name: "Small Planet Level", description: "433 Exatons - 59.44 Zettatons", examples: "Mercury-class planets" },
-            { id: "5-B", name: "Planet Level", description: "59.44 ZT - 3.8 Yottatons", examples: "Earth destruction" },
-            { id: "5-A", name: "Large Planet Level", description: "3.8 YT - 16.512 Ronnatons", examples: "Jupiter / Saturn class" },
-            { id: "High 5-A", name: "Brown Dwarf Level", description: "16.512 RT - 7.505 Quettatons", examples: "OTS 44 (Sub-stellar objects)" }
+            { id: "5-C", name: "Moon Level", description: "29.6 - 433 Exatons", detail: "Earth's Moon has a gravitational binding energy of 1.24 × 10^29 J. Destroying it would cause catastrophic tidal disruption on Earth. The Moon's mass is 7.3 × 10^22 kg — and characters at this level obliterate it casually.", examples: "Piccolo (Destroying the Moon), Master Roshi (first Moon-bust)" },
+            { id: "Low 5-B", name: "Small Planet Level", description: "433 Exatons - 59.44 Zettatons", detail: "Mercury's GBE is 1.8 × 10^30 J. Mars is 5.37 × 10^30 J. Characters at this tier can blow apart small rocky planets. The energy involved exceeds the total output of our Sun over several seconds.", examples: "Vegeta (Saiyan Saga, claimed planet-buster)" },
+            { id: "5-B", name: "Planet Level", description: "59.44 ZT - 3.8 Yottatons", detail: "Earth's GBE is 2.49 × 10^32 J. This is the gold standard of power scaling — the ability to completely destroy Earth. Characters at this tier are walking apocalypses, capable of rendering any terrestrial planet uninhabitable instantly.", examples: "Frieza (First Form, casually), Perfect Cell (stated)" },
+            { id: "5-A", name: "Large Planet Level", description: "3.8 YT - 16.512 Ronnatons", detail: "Jupiter's GBE is 2.09 × 10^36 J — roughly 8,400 times Earth's. Saturn is about 1,400 times Earth. Gas giants are enormously more durable than rocky planets due to their massive gravitational binding.", examples: "SSJ Goku (Buu Saga), Beerus (suppressed)" },
+            { id: "High 5-A", name: "Brown Dwarf Level", description: "16.512 RT - 7.505 Quettatons", detail: "Brown Dwarfs are 'failed stars' — too massive to be planets but too small to sustain hydrogen fusion. The smallest (like OTS 44) have masses ~15 times Jupiter. Destroying one requires energy exceeding any planet-busting feat by orders of magnitude.", examples: "High-end Dragon Ball characters" }
         ]
     },
     tier4: {
@@ -255,7 +255,7 @@ const TOC_ITEMS = [
 const Section = ({ id, title, icon: Icon, children }) => (
     <section id={id} className="scroll-mt-20 mb-12">
         <h2 className="text-2xl md:text-3xl font-black text-white mb-6 flex items-center gap-3">
-            {Icon && <Icon className="text-yellow-400" size={28} />}
+            {Icon && <Icon size={26} style={{ color: '#f43f5e' }} />}
             {title}
         </h2>
         {children}
@@ -266,27 +266,27 @@ const TierCard = ({ tier, isExpanded, onToggle }) => (
     <motion.div
         initial={{ opacity: 0, y: 20 }}
         animate={{ opacity: 1, y: 0 }}
-        className="rounded-xl overflow-hidden mb-4"
+        className="rounded-2xl overflow-hidden mb-3"
         style={{
-            background: 'rgba(15,15,20,0.95)',
-            border: `2px solid ${tier.color}40`
+            background: '#0a0a0a',
+            border: `1px solid ${tier.color}25`
         }}
     >
         <button
             onClick={onToggle}
-            className="w-full p-4 flex items-center justify-between text-left"
-            style={{ background: `linear-gradient(90deg, ${tier.color}20, transparent)` }}
+            className="w-full p-5 flex items-center justify-between text-left"
+            style={{ background: `linear-gradient(90deg, ${tier.color}08, transparent)` }}
         >
             <div className="flex items-center gap-3">
                 <div
-                    className="w-4 h-4 rounded-full"
-                    style={{ background: tier.color }}
+                    className="w-3 h-3 rounded-full flex-shrink-0"
+                    style={{ background: tier.color, boxShadow: `0 0 10px ${tier.color}50` }}
                 />
-                <h3 className="font-bold text-lg text-white">{tier.name}</h3>
+                <h3 className="font-bold text-white text-sm md:text-base">{tier.name}</h3>
             </div>
             <ChevronDown
-                className={`text-slate-400 transition-transform ${isExpanded ? 'rotate-180' : ''}`}
-                size={20}
+                className={`text-[#444] transition-transform duration-200 ${isExpanded ? 'rotate-180' : ''}`}
+                size={18}
             />
         </button>
 
@@ -296,33 +296,34 @@ const TierCard = ({ tier, isExpanded, onToggle }) => (
                     initial={{ height: 0, opacity: 0 }}
                     animate={{ height: 'auto', opacity: 1 }}
                     exit={{ height: 0, opacity: 0 }}
+                    transition={{ duration: 0.25 }}
                     className="overflow-hidden"
                 >
-                    <div className="p-4 pt-0">
-                        <p className="text-slate-400 text-sm mb-4">{tier.description}</p>
+                    <div className="px-5 pb-5">
+                        <p className="text-[#555] text-sm mb-5 border-b border-white/[0.04] pb-4">{tier.description}</p>
 
                         <div className="space-y-3">
                             {tier.subTiers.map((sub, idx) => (
                                 <div
                                     key={idx}
-                                    className="p-3 rounded-lg"
-                                    style={{ background: 'rgba(30,30,40,0.6)' }}
+                                    className="p-4 rounded-xl"
+                                    style={{ background: 'rgba(255,255,255,0.02)', border: '1px solid rgba(255,255,255,0.04)' }}
                                 >
                                     <div className="flex items-center gap-2 mb-2">
                                         <span
-                                            className="px-2 py-0.5 rounded text-xs font-bold"
-                                            style={{ background: `${tier.color}30`, color: tier.color }}
+                                            className="px-2 py-0.5 rounded-md text-[11px] font-bold tracking-wider"
+                                            style={{ background: `${tier.color}15`, color: tier.color, border: `1px solid ${tier.color}25` }}
                                         >
                                             {sub.id}
                                         </span>
-                                        <span className="font-semibold text-white">{sub.name}</span>
+                                        <span className="font-semibold text-white text-sm">{sub.name}</span>
                                     </div>
-                                    <p className="text-sm text-slate-300">{sub.description}</p>
-                                    {sub.examples && (
-                                        <p className="text-xs text-slate-500 mt-1">Examples: {sub.examples}</p>
-                                    )}
+                                    <p className="text-[13px] text-[#888] font-medium mb-1">{sub.description}</p>
                                     {sub.detail && (
-                                        <p className="text-xs text-slate-500 mt-1 italic">{sub.detail}</p>
+                                        <p className="text-[12px] text-[#555] leading-relaxed mt-2 pl-3 border-l-2" style={{ borderLeftColor: `${tier.color}40` }}>{sub.detail}</p>
+                                    )}
+                                    {sub.examples && (
+                                        <p className="text-[11px] text-[#444] mt-2"><span className="text-[#666] font-medium">Examples:</span> {sub.examples}</p>
                                     )}
                                 </div>
                             ))}
@@ -338,9 +339,9 @@ const SpeedTable = () => (
     <div className="overflow-x-auto">
         <table className="w-full text-sm">
             <thead>
-                <tr className="border-b border-slate-700">
-                    <th className="text-left py-3 px-4 text-yellow-400 font-bold">Rating</th>
-                    <th className="text-left py-3 px-4 text-yellow-400 font-bold">Value / Benchmark</th>
+                <tr style={{ borderBottom: '1px solid rgba(244,63,94,0.15)' }}>
+                    <th className="text-left py-3 px-4 font-bold" style={{ color: '#fb7185' }}>Rating</th>
+                    <th className="text-left py-3 px-4 font-bold" style={{ color: '#fb7185' }}>Value / Benchmark</th>
                 </tr>
             </thead>
             <tbody>
@@ -406,47 +407,38 @@ const TieringSystem = () => {
     };
 
     return (
-        <div className="min-h-screen pt-20 pb-24 md:pb-8 px-4 relative z-20">
+        <div className="min-h-screen pt-20 pb-24 md:pb-8 px-4 relative bg-[#050505]">
+        <div className="fixed inset-0 pointer-events-none -z-10" />
             <div className="max-w-5xl mx-auto">
-                {}
                 <motion.div
                     initial={{ opacity: 0, y: 20 }}
                     animate={{ opacity: 1, y: 0 }}
-                    className="text-center mb-12"
+                    className="text-center mb-12 pt-6"
                 >
-                    <div className="inline-flex items-center gap-2 px-4 py-2 rounded-full mb-4"
-                        style={{ background: 'rgba(234,179,8,0.1)', border: '1px solid rgba(234,179,8,0.3)' }}>
-                        <BookOpen size={16} className="text-yellow-400" />
-                        <span className="text-yellow-400 text-sm font-medium">Ultimate Guide</span>
-                    </div>
-                    <h1 className="text-3xl md:text-5xl font-black text-white mb-4">
-                        Tiering System & <span className="text-yellow-400">Power Scaling</span>
+                    <h1 className="font-bold text-white mb-3" style={{ fontFamily: 'var(--font-display)', fontSize: 'clamp(2rem, 5vw, 3.5rem)' }}>
+                        Power <span className="text-[#e5484d]">Rankings</span>
                     </h1>
-                    <p className="text-slate-400 max-w-2xl mx-auto">
+                    <p className="text-[#555] text-sm max-w-2xl mx-auto">
                         The complete framework for categorizing fictional characters based on destructive capacity,
                         dimensional transcendence, and ontological complexity.
                     </p>
                 </motion.div>
 
-                {}
                 <div className="sticky top-16 z-30 mb-8">
                     <motion.button
                         whileHover={{ scale: 1.02 }}
                         whileTap={{ scale: 0.98 }}
                         onClick={() => setShowTOC(!showTOC)}
-                        className="w-full p-4 rounded-xl flex items-center justify-between"
-                        style={{
-                            background: 'rgba(15,15,20,0.98)',
-                            border: '1px solid rgba(234,179,8,0.2)'
-                        }}
+                        className="w-full p-4 rounded-2xl flex items-center justify-between"
+                        style={{ background: 'rgba(10,7,20,0.97)', border: '1px solid rgba(244,63,94,0.15)', backdropFilter: 'blur(12px)' }}
                     >
                         <div className="flex items-center gap-3">
-                            <Menu size={20} className="text-yellow-400" />
-                            <span className="font-bold text-white">Table of Contents</span>
+                            <Menu size={18} style={{ color: '#f43f5e' }} />
+                            <span className="font-bold text-white text-sm">Table of Contents</span>
                         </div>
                         <ChevronDown
-                            className={`text-slate-400 transition-transform ${showTOC ? 'rotate-180' : ''}`}
-                            size={20}
+                            className={`text-slate-600 transition-transform ${showTOC ? 'rotate-180' : ''}`}
+                            size={18}
                         />
                     </motion.button>
 
@@ -456,18 +448,18 @@ const TieringSystem = () => {
                                 initial={{ opacity: 0, y: -10 }}
                                 animate={{ opacity: 1, y: 0 }}
                                 exit={{ opacity: 0, y: -10 }}
-                                className="absolute left-0 right-0 mt-2 p-4 rounded-xl z-40"
-                                style={{
-                                    background: 'rgba(15,15,20,0.98)',
-                                    border: '1px solid rgba(234,179,8,0.2)'
-                                }}
+                                className="absolute left-0 right-0 mt-2 p-4 rounded-2xl z-40"
+                                style={{ background: 'rgba(10,7,20,0.98)', border: '1px solid rgba(244,63,94,0.15)', backdropFilter: 'blur(12px)' }}
                             >
-                                <div className="grid md:grid-cols-2 gap-2">
+                                <div className="grid md:grid-cols-2 gap-1.5">
                                     {TOC_ITEMS.map((item) => (
                                         <button
                                             key={item.id}
                                             onClick={() => scrollToSection(item.id)}
-                                            className="text-left p-2 rounded-lg hover:bg-yellow-500/10 text-slate-300 hover:text-yellow-400 transition-colors text-sm"
+                                            className="text-left p-2 rounded-xl text-slate-600 hover:text-white transition-colors text-sm"
+                                            style={{ background: 'transparent' }}
+                                            onMouseEnter={e => e.target.style.background = 'rgba(244,63,94,0.06)'}
+                                            onMouseLeave={e => e.target.style.background = 'transparent'}
                                         >
                                             {item.title}
                                         </button>
@@ -478,12 +470,12 @@ const TieringSystem = () => {
                     </AnimatePresence>
                 </div>
 
-                {}
+                { }
                 <Section id="introduction" title="Introduction to Tiering Systems" icon={Info}>
                     <div className="prose prose-invert max-w-none">
-                        <div className="p-6 rounded-xl mb-6" style={{ background: 'rgba(234,179,8,0.05)', border: '1px solid rgba(234,179,8,0.2)' }}>
+                        <div className="p-6 rounded-2xl mb-6" style={{ background: 'rgba(244,63,94,0.04)', border: '1px solid rgba(244,63,94,0.15)' }}>
                             <p className="text-slate-300 mb-4">
-                                The <strong className="text-yellow-400">Tiering System</strong> serves as the backbone of modern power scaling and VS debating.
+                                The <strong style={{ color: '#f43f5e' }}>Tiering System</strong> serves as the backbone of modern power scaling and VS debating.
                                 It is a hierarchical framework designed to categorize fictional characters, entities, and objects based on
                                 the scale of their feats, destructive capacity, and the scope of reality they can affect.
                             </p>
@@ -508,18 +500,20 @@ const TieringSystem = () => {
                     </div>
                 </Section>
 
-                {}
+                { }
                 <Section id="tiers" title="Complete Tiering System (11-C to 0)" icon={Crown}>
-                    <div className="flex gap-3 mb-6">
+                    <div className="flex gap-3 mb-5">
                         <button
                             onClick={expandAll}
-                            className="px-4 py-2 rounded-lg bg-yellow-500/10 text-yellow-400 text-sm hover:bg-yellow-500/20"
+                            className="px-4 py-2 rounded-xl text-sm font-medium transition-all"
+                            style={{ background: 'rgba(244,63,94,0.08)', border: '1px solid rgba(244,63,94,0.2)', color: '#fb7185' }}
                         >
                             Expand All
                         </button>
                         <button
                             onClick={collapseAll}
-                            className="px-4 py-2 rounded-lg bg-slate-800 text-slate-400 text-sm hover:bg-slate-700"
+                            className="px-4 py-2 rounded-xl text-sm font-medium transition-all"
+                            style={{ background: 'rgba(255,255,255,0.04)', color: '#475569' }}
                         >
                             Collapse All
                         </button>
@@ -535,11 +529,11 @@ const TieringSystem = () => {
                     ))}
                 </Section>
 
-                {}
+                { }
                 <Section id="attack-potency" title="Attack Potency" icon={Sword}>
-                    <div className="p-6 rounded-xl" style={{ background: 'rgba(30,30,40,0.6)' }}>
+                    <div className="p-6 rounded-2xl" style={{ background: 'rgba(10,7,20,0.6)', border: '1px solid rgba(255,255,255,0.04)' }}>
                         <p className="text-slate-300 mb-4">
-                            <strong className="text-yellow-400">Attack Potency (AP)</strong> measures the destructive capacity of an attack.
+                            <strong style={{ color: '#fb7185' }}>Attack Potency (AP)</strong> measures the destructive capacity of an attack.
                             It's crucial to distinguish AP from <strong>Destructive Capacity (DC)</strong>.
                         </p>
 
@@ -554,7 +548,7 @@ const TieringSystem = () => {
                             </div>
                         </div>
 
-                        <div className="p-4 rounded-lg bg-slate-800/50 border-l-4 border-yellow-500">
+                        <div className="p-4 rounded-xl border-l-4" style={{ background: 'rgba(244,63,94,0.05)', borderLeftColor: '#f43f5e' }}>
                             <p className="text-slate-300 text-sm">
                                 <strong>Example:</strong> A character punches with force equal to an exploding star (Star Level AP),
                                 but the punch only destroys a building (Building Level DC). In VS battles, their AP is Star Level
@@ -571,9 +565,9 @@ const TieringSystem = () => {
                                 { mod: "Likely", desc: "High probability" },
                                 { mod: "Varies", desc: "Variable power" }
                             ].map((item, idx) => (
-                                <div key={idx} className="p-3 rounded-lg bg-slate-800/50 text-center">
-                                    <div className="text-yellow-400 font-bold">{item.mod}</div>
-                                    <div className="text-slate-500 text-xs">{item.desc}</div>
+                                <div key={idx} className="p-3 rounded-xl text-center" style={{ background: 'rgba(255,255,255,0.03)', border: '1px solid rgba(255,255,255,0.04)' }}>
+                                    <div className="font-bold" style={{ color: '#fb7185' }}>{item.mod}</div>
+                                    <div className="text-slate-600 text-xs">{item.desc}</div>
                                 </div>
                             ))}
                         </div>
@@ -582,9 +576,9 @@ const TieringSystem = () => {
 
                 {/* Speed */}
                 <Section id="speed" title="Speed Tiering" icon={Zap}>
-                    <div className="p-6 rounded-xl" style={{ background: 'rgba(30,30,40,0.6)' }}>
+                    <div className="p-6 rounded-2xl" style={{ background: 'rgba(10,7,20,0.6)', border: '1px solid rgba(255,255,255,0.04)' }}>
                         <p className="text-slate-300 mb-6">
-                            Speed is categorized into: <strong className="text-yellow-400">Attack Speed</strong>,
+                            Speed is categorized into: <strong style={{ color: '#fb7185' }}>Attack Speed</strong>,
                             <strong className="text-blue-400"> Combat Speed</strong>,
                             <strong className="text-green-400"> Reaction Speed</strong>,
                             <strong className="text-purple-400"> Travel Speed</strong>, and
@@ -620,7 +614,7 @@ const TieringSystem = () => {
                     </div>
                 </Section>
 
-                {}
+                { }
                 <Section id="striking" title="Striking Strength" icon={Target}>
                     <div className="p-6 rounded-xl" style={{ background: 'rgba(30,30,40,0.6)' }}>
                         <p className="text-slate-300">
@@ -631,7 +625,7 @@ const TieringSystem = () => {
                     </div>
                 </Section>
 
-                {}
+                { }
                 <Section id="durability" title="Durability" icon={Shield}>
                     <div className="p-6 rounded-xl" style={{ background: 'rgba(30,30,40,0.6)' }}>
                         <p className="text-slate-300 mb-6">
@@ -662,7 +656,7 @@ const TieringSystem = () => {
                     </div>
                 </Section>
 
-                {}
+                { }
                 <Section id="range" title="Range" icon={Crosshair}>
                     <div className="p-6 rounded-xl" style={{ background: 'rgba(30,30,40,0.6)' }}>
                         <p className="text-slate-300 mb-4">
@@ -691,7 +685,7 @@ const TieringSystem = () => {
                     </div>
                 </Section>
 
-                {}
+                { }
                 <Section id="stamina" title="Stamina" icon={Battery}>
                     <div className="p-6 rounded-xl" style={{ background: 'rgba(30,30,40,0.6)' }}>
                         <p className="text-slate-300 mb-4">
@@ -719,7 +713,7 @@ const TieringSystem = () => {
                     </div>
                 </Section>
 
-                {}
+                { }
                 <Section id="intelligence" title="Intelligence" icon={Brain}>
                     <div className="p-6 rounded-xl" style={{ background: 'rgba(30,30,40,0.6)' }}>
                         <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
@@ -748,7 +742,7 @@ const TieringSystem = () => {
                     </div>
                 </Section>
 
-                {}
+                { }
                 <Section id="hax" title="Hax & Abilities" icon={Sparkles}>
                     <div className="p-6 rounded-xl mb-6" style={{ background: 'rgba(30,30,40,0.6)' }}>
                         <p className="text-slate-300 mb-6">
@@ -774,7 +768,7 @@ const TieringSystem = () => {
                     </div>
                 </Section>
 
-                {}
+                { }
                 <Section id="dimensional" title="Dimensional Tiering" icon={Star}>
                     <div className="p-6 rounded-xl" style={{ background: 'rgba(30,30,40,0.6)' }}>
                         <p className="text-slate-300 mb-4">
@@ -818,10 +812,10 @@ const TieringSystem = () => {
                         ].map((faq, idx) => (
                             <div
                                 key={idx}
-                                className="p-4 rounded-xl"
-                                style={{ background: 'rgba(30,30,40,0.6)', border: '1px solid rgba(234,179,8,0.1)' }}
+                                className="p-4 rounded-2xl"
+                                style={{ background: 'rgba(10,7,20,0.85)', border: '1px solid rgba(244,63,94,0.12)' }}
                             >
-                                <h4 className="font-bold text-yellow-400 mb-2">Q: {faq.q}</h4>
+                                <h4 className="font-bold mb-2" style={{ color: '#fb7185' }}>Q: {faq.q}</h4>
                                 <p className="text-slate-300 text-sm">A: {faq.a}</p>
                             </div>
                         ))}
@@ -830,17 +824,14 @@ const TieringSystem = () => {
 
                 {/* Back to Top */}
                 <motion.button
-                    whileHover={{ scale: 1.1 }}
-                    whileTap={{ scale: 0.9 }}
+                    whileHover={{ scale: 1.05 }}
+                    whileTap={{ scale: 0.95 }}
                     onClick={() => window.scrollTo({ top: 0, behavior: 'smooth' })}
-                    className="fixed bottom-24 md:bottom-8 left-1/2 -translate-x-1/2 px-6 py-3 rounded-full flex items-center gap-2 z-30"
-                    style={{
-                        background: 'rgba(15,15,20,0.95)',
-                        border: '1px solid rgba(234,179,8,0.3)'
-                    }}
+                    className="fixed bottom-24 md:bottom-8 left-1/2 -translate-x-1/2 px-5 py-2.5 rounded-full flex items-center gap-2 z-30"
+                    style={{ background: 'rgba(10,7,20,0.97)', border: '1px solid rgba(244,63,94,0.2)', backdropFilter: 'blur(12px)' }}
                 >
-                    <ArrowUp size={16} className="text-yellow-400" />
-                    <span className="text-yellow-400 text-sm font-medium">Back to Top</span>
+                    <ArrowUp size={14} style={{ color: '#f43f5e' }} />
+                    <span className="text-sm font-medium" style={{ color: '#fb7185' }}>Top</span>
                 </motion.button>
             </div>
         </div>

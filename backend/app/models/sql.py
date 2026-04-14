@@ -3,17 +3,36 @@ from sqlalchemy.orm import relationship
 from datetime import datetime
 from app.database import Base
 
+class Anime(Base):
+    __tablename__ = "anime"
+
+    id = Column(Integer, primary_key=True, index=True)
+    mal_id = Column(Integer, unique=True, index=True)
+    title = Column(String, index=True)
+    image_url = Column(String)
+    synopsis = Column(String)
+    score = Column(Float)
+    genres = Column(String)  # Stored as comma-separated string
+    year = Column(Integer)
+    created_at = Column(DateTime, default=datetime.utcnow)
+    
+    # Relationship: One anime has many episodes
+    episodes = relationship("Episode", back_populates="anime")
+
 class Episode(Base):
     __tablename__ = "episodes"
 
     id = Column(Integer, primary_key=True, index=True)
-    anime_id = Column(Integer, index=True)
-    anime_title = Column(String, index=True)
+    anime_id = Column(Integer, ForeignKey("anime.mal_id"), index=True) # Link to Anime table
+    anime_title = Column(String, index=True) # Keep for redundancy/legacy
     episode_number = Column(Integer)
     title = Column(String, nullable=True)
     video_url = Column(String)
     quality = Column(String)
     created_at = Column(DateTime, default=datetime.utcnow)
+    
+    # Relationship
+    anime = relationship("Anime", back_populates="episodes")
 
 class UserStats(Base):
     __tablename__ = "user_stats"
@@ -140,6 +159,19 @@ class Feedback(Base):
     message = Column(String)
     created_at = Column(DateTime, default=datetime.utcnow)
 
+class GameSession(Base):
+    __tablename__ = "game_sessions"
+    id = Column(Integer, primary_key=True, index=True)
+    room_id = Column(String, unique=True, index=True)
+    game_type = Column(String)
+    host_id = Column(String)
+    opponent_id = Column(String, nullable=True)
+    status = Column(String, default="waiting") # waiting, playing, finished
+    winner_id = Column(String, nullable=True)
+    created_at = Column(DateTime, default=datetime.utcnow)
+    started_at = Column(DateTime, nullable=True)
+    ended_at = Column(DateTime, nullable=True)
+
 class TriviaStats(Base):
     __tablename__ = "trivia_stats"
     id = Column(Integer, primary_key=True, index=True)
@@ -154,6 +186,62 @@ class TriviaStats(Base):
     
     created_at = Column(DateTime, default=datetime.utcnow)
     updated_at = Column(DateTime, default=datetime.utcnow, onupdate=datetime.utcnow)
+
+# ─── AI Story Writer Models ───────────────────────────────────────────────────
+
+class WebNovel(Base):
+    __tablename__ = "web_novels"
+    id = Column(Integer, primary_key=True, index=True)
+    user_id = Column(String, index=True)
+    title = Column(String, index=True)
+    synopsis = Column(String, nullable=True)
+    genre = Column(String, nullable=True)          # e.g. "Fantasy, Romance"
+    cover_image = Column(String, nullable=True)
+    status = Column(String, default="ongoing")      # ongoing, completed, hiatus
+    ai_model = Column(String, default="gemini-1.5-flash")
+    world_rules = Column(String, nullable=True)     # User-defined static rules for the AI
+    tone = Column(String, default="dramatic")       # dramatic, comedic, dark, literary
+    chapter_count = Column(Integer, default=0)
+    total_words = Column(Integer, default=0)
+    created_at = Column(DateTime, default=datetime.utcnow)
+    updated_at = Column(DateTime, default=datetime.utcnow, onupdate=datetime.utcnow)
+
+    chapters = relationship("StoryChapter", back_populates="novel", cascade="all, delete-orphan")
+    lore_entries = relationship("StoryLore", back_populates="novel", cascade="all, delete-orphan")
+
+class StoryChapter(Base):
+    __tablename__ = "story_chapters"
+    id = Column(Integer, primary_key=True, index=True)
+    novel_id = Column(Integer, ForeignKey("web_novels.id"), index=True)
+    chapter_number = Column(Integer)
+    title = Column(String, nullable=True)
+    content = Column(String)                        # Full chapter text (HTML or Markdown)
+    word_count = Column(Integer, default=0)
+    summary = Column(String, nullable=True)         # AI-generated chapter summary
+    ai_generated = Column(Integer, default=0)       # 1 if AI wrote it, 0 if user
+    created_at = Column(DateTime, default=datetime.utcnow)
+    updated_at = Column(DateTime, default=datetime.utcnow, onupdate=datetime.utcnow)
+
+    novel = relationship("WebNovel", back_populates="chapters")
+
+class StoryLore(Base):
+    """The Lorebook — discrete memory fragments extracted from chapters.
+    These are fed to the AI before generating the next chapter so it
+    maintains perfect continuity across 1000+ chapters."""
+    __tablename__ = "story_lore"
+    id = Column(Integer, primary_key=True, index=True)
+    novel_id = Column(Integer, ForeignKey("web_novels.id"), index=True)
+    source_chapter = Column(Integer)                # Which chapter this was extracted from
+    category = Column(String, index=True)           # character, plot, world, timeline, secret
+    key = Column(String, index=True)                # e.g. "Akira Tanaka", "The Curse of Moonfall"
+    value = Column(String)                          # The full lore description
+    importance = Column(Integer, default=5)         # 1-10 scale; higher = always include
+    active = Column(Integer, default=1)             # 0 if user archived/deleted this lore
+    created_at = Column(DateTime, default=datetime.utcnow)
+
+    novel = relationship("WebNovel", back_populates="lore_entries")
+
+# ─── Rank Tiers ───────────────────────────────────────────────────────────────
 
 RANK_TIERS = [
     {"name": "Academy Student", "required_days": 0, "color": "#94a3b8", "badge": "🎓"},
