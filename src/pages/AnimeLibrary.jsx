@@ -24,7 +24,7 @@ const SORT_OPTIONS = [
 ];
 
 const AnimeCard = ({ anime }) => {
-    const imageUrl = anime?.images?.jpg?.large_image_url || anime?.images?.jpg?.image_url;
+    const imageUrl = anime?.images?.webp?.large_image_url || anime?.images?.jpg?.large_image_url || anime?.images?.webp?.image_url;
     const genres = anime?.genres?.slice(0, 2) || [];
 
     return (
@@ -79,7 +79,7 @@ const AnimeCard = ({ anime }) => {
 };
 
 const AnimeListItem = ({ anime }) => {
-    const imageUrl = anime?.images?.jpg?.large_image_url || anime?.images?.jpg?.image_url;
+    const imageUrl = anime?.images?.webp?.large_image_url || anime?.images?.jpg?.large_image_url || anime?.images?.webp?.image_url;
     return (
         <Link
             to={`/anime/${anime?.mal_id}`}

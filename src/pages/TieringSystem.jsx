@@ -262,32 +262,68 @@ const Section = ({ id, title, icon: Icon, children }) => (
     </section>
 );
 
-const TierCard = ({ tier, isExpanded, onToggle }) => (
+const TierCard = ({ tier, tierKey, isExpanded, onToggle }) => (
     <motion.div
-        initial={{ opacity: 0, y: 20 }}
-        animate={{ opacity: 1, y: 0 }}
-        className="rounded-2xl overflow-hidden mb-3"
+        initial={{ opacity: 0, scale: 0.98, y: 20 }}
+        whileInView={{ opacity: 1, scale: 1, y: 0 }}
+        viewport={{ once: true, margin: "-50px" }}
+        transition={{ duration: 0.5, ease: "easeOut" }}
+        className="rounded-3xl overflow-hidden mb-8 relative group cursor-pointer"
         style={{
-            background: '#0a0a0a',
-            border: `1px solid ${tier.color}25`
+            background: '#050505',
+            border: `1px solid ${tier.color}30`,
+            boxShadow: `0 10px 40px ${tier.color}10`
         }}
     >
+        {/* Background Banner Image */}
+        <div className="absolute inset-0 z-0 opacity-40 group-hover:opacity-60 transition-all duration-700">
+            <img 
+                src={`/assets/tiers/${tierKey}.png`} 
+                alt={tier.name} 
+                className="w-full h-full object-cover mix-blend-luminosity scale-100 group-hover:scale-105 transition-transform duration-700"
+                onError={(e) => { 
+                    e.target.style.display = 'none'; 
+                    e.target.nextSibling.style.display = 'none'; // hide the black gradient if no image
+                }}
+            />
+            {/* Smooth fades into the solid UI below */}
+            <div className="absolute inset-0 bg-gradient-to-t from-[#050505] via-[#050505]/95 to-transparent/30" />
+            
+            {/* Color tint based on tier */}
+            <div className="absolute inset-0 mix-blend-multiply" style={{ background: `linear-gradient(45deg, ${tier.color}40, transparent)` }} />
+        </div>
+
         <button
             onClick={onToggle}
-            className="w-full p-5 flex items-center justify-between text-left"
-            style={{ background: `linear-gradient(90deg, ${tier.color}08, transparent)` }}
+            className="w-full p-6 md:p-8 relative z-10 flex flex-col md:flex-row md:items-center justify-between text-left gap-6 transition-colors duration-300 rounded-3xl hover:bg-white/[0.02]"
         >
-            <div className="flex items-center gap-3">
+            <div className="flex items-start md:items-center gap-5">
                 <div
-                    className="w-3 h-3 rounded-full flex-shrink-0"
-                    style={{ background: tier.color, boxShadow: `0 0 10px ${tier.color}50` }}
-                />
-                <h3 className="font-bold text-white text-sm md:text-base">{tier.name}</h3>
+                    className="w-14 h-14 rounded-2xl flex items-center justify-center flex-shrink-0 backdrop-blur-md shadow-lg"
+                    style={{ 
+                        background: `linear-gradient(135deg, ${tier.color}20, ${tier.color}05)`, 
+                        border: `1px solid ${tier.color}50`, 
+                        boxShadow: `0 0 30px ${tier.color}30, inset 0 0 20px ${tier.color}20` 
+                    }}
+                >
+                    <Crown size={26} color={tier.color} style={{ filter: `drop-shadow(0 0 8px ${tier.color})` }} />
+                </div>
+                <div>
+                    <h3 className="font-black text-white text-2xl md:text-3xl tracking-tight mb-2" style={{ textShadow: `0 2px 20px ${tier.color}50` }}>
+                        {tier.name}
+                    </h3>
+                    <p className="text-slate-300 text-sm md:text-base max-w-3xl font-medium leading-relaxed" style={{ textShadow: '0 2px 4px rgba(0,0,0,0.8)' }}>
+                        {tier.description}
+                    </p>
+                </div>
             </div>
-            <ChevronDown
-                className={`text-[#444] transition-transform duration-200 ${isExpanded ? 'rotate-180' : ''}`}
-                size={18}
-            />
+            
+            <div className="md:w-12 md:h-12 w-full h-10 rounded-xl flex items-center justify-center bg-white/5 backdrop-blur-md border border-white/10 group-hover:bg-white/10 transition-colors shadow-inner self-end md:self-auto flex-shrink-0">
+                <ChevronDown
+                    className={`text-white transition-transform duration-500 ease-in-out ${isExpanded ? 'rotate-180' : ''}`}
+                    size={22}
+                />
+            </div>
         </button>
 
         <AnimatePresence>
@@ -296,36 +332,52 @@ const TierCard = ({ tier, isExpanded, onToggle }) => (
                     initial={{ height: 0, opacity: 0 }}
                     animate={{ height: 'auto', opacity: 1 }}
                     exit={{ height: 0, opacity: 0 }}
-                    transition={{ duration: 0.25 }}
-                    className="overflow-hidden"
+                    transition={{ duration: 0.4, ease: [0.22, 1, 0.36, 1] }}
+                    className="overflow-hidden relative z-10"
                 >
-                    <div className="px-5 pb-5">
-                        <p className="text-[#555] text-sm mb-5 border-b border-white/[0.04] pb-4">{tier.description}</p>
-
-                        <div className="space-y-3">
+                    <div className="px-6 md:px-8 pb-8 pt-2">
+                        <div className="grid lg:grid-cols-2 gap-4 mt-2">
                             {tier.subTiers.map((sub, idx) => (
-                                <div
+                                <motion.div
+                                    initial={{ opacity: 0, y: 10 }}
+                                    animate={{ opacity: 1, y: 0 }}
+                                    transition={{ delay: idx * 0.05 }}
                                     key={idx}
-                                    className="p-4 rounded-xl"
-                                    style={{ background: 'rgba(255,255,255,0.02)', border: '1px solid rgba(255,255,255,0.04)' }}
+                                    className="p-6 rounded-2xl transition-all hover:bg-white/[0.05]"
+                                    style={{ 
+                                        background: 'rgba(255,255,255,0.02)', 
+                                        border: '1px solid rgba(255,255,255,0.08)', 
+                                        backdropFilter: 'blur(16px)' 
+                                    }}
                                 >
-                                    <div className="flex items-center gap-2 mb-2">
+                                    <div className="flex items-center gap-3 mb-4 pb-4 border-b border-white/[0.06]">
                                         <span
-                                            className="px-2 py-0.5 rounded-md text-[11px] font-bold tracking-wider"
-                                            style={{ background: `${tier.color}15`, color: tier.color, border: `1px solid ${tier.color}25` }}
+                                            className="px-3 py-1.5 rounded-lg text-xs font-black tracking-widest shadow-sm"
+                                            style={{ 
+                                                background: `linear-gradient(90deg, ${tier.color}30, ${tier.color}10)`, 
+                                                color: tier.color, 
+                                                border: `1px solid ${tier.color}40`,
+                                                textShadow: `0 0 10px ${tier.color}`
+                                            }}
                                         >
                                             {sub.id}
                                         </span>
-                                        <span className="font-semibold text-white text-sm">{sub.name}</span>
+                                        <span className="font-bold text-white text-lg tracking-wide">{sub.name}</span>
                                     </div>
-                                    <p className="text-[13px] text-[#888] font-medium mb-1">{sub.description}</p>
+                                    <p className="text-[15px] text-slate-300 font-medium mb-4 leading-relaxed">{sub.description}</p>
+                                    
                                     {sub.detail && (
-                                        <p className="text-[12px] text-[#555] leading-relaxed mt-2 pl-3 border-l-2" style={{ borderLeftColor: `${tier.color}40` }}>{sub.detail}</p>
+                                        <div className="mt-4 p-4 rounded-xl bg-[#030303]/80 border border-white/[0.03] shadow-inner">
+                                            <p className="text-sm text-slate-400 leading-relaxed font-light">{sub.detail}</p>
+                                        </div>
                                     )}
                                     {sub.examples && (
-                                        <p className="text-[11px] text-[#444] mt-2"><span className="text-[#666] font-medium">Examples:</span> {sub.examples}</p>
+                                        <div className="mt-5 flex items-start gap-3 p-3 rounded-xl bg-gradient-to-r from-yellow-500/10 to-transparent border-l-2 border-yellow-500/50">
+                                            <span className="text-yellow-500/90 font-black text-xs tracking-wider shrink-0 mt-0.5">FEATS:</span> 
+                                            <span className="text-slate-300 text-sm">{sub.examples}</span>
+                                        </div>
                                     )}
-                                </div>
+                                </motion.div>
                             ))}
                         </div>
                     </div>
@@ -522,6 +574,7 @@ const TieringSystem = () => {
                     {Object.entries(TIERS).map(([key, tier]) => (
                         <TierCard
                             key={key}
+                            tierKey={key}
                             tier={tier}
                             isExpanded={expandedTiers.has(key)}
                             onToggle={() => toggleTier(key)}

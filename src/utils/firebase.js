@@ -488,7 +488,7 @@ const fetchFreshAnimeNews = async () => {
           title: item.title,
           summary: item.excerpt || item.title,
           url: item.url,
-          image: item.images?.jpg?.image_url || 'https://via.placeholder.com/600x400/1a1a2e/eab308?text=News',
+          image: item.images?.webp?.large_image_url || item.images?.jpg?.large_image_url || item.images?.webp?.image_url || 'https://via.placeholder.com/600x400/1a1a2e/eab308?text=News',
           date: item.date,
           author: item.author_username || 'Anime News',
           source: 'MyAnimeList',
@@ -941,7 +941,7 @@ export const claimCharacter = async (userId, userName, character) => {
         await updateDoc(doc(db, 'characterClaims', existingDoc.id), {
             characterId: charId,
             characterName: character.name,
-            characterImage: character.images?.jpg?.image_url || '',
+            characterImage: character.images?.webp?.image_url || character.images?.jpg?.image_url || '',
             animeName: character.anime?.[0]?.anime?.title || 'Unknown',
             claimedByName: userName,
             updatedAt: serverTimestamp(),
@@ -954,7 +954,7 @@ export const claimCharacter = async (userId, userName, character) => {
     await setDoc(claimRef, {
         characterId: charId,
         characterName: character.name,
-        characterImage: character.images?.jpg?.image_url || '',
+        characterImage: character.images?.webp?.image_url || character.images?.jpg?.image_url || '',
         animeName: character.anime?.[0]?.anime?.title || 'Unknown',
         claimedBy: userId,
         claimedByName: userName,
@@ -965,7 +965,7 @@ export const claimCharacter = async (userId, userName, character) => {
     const userRef = doc(db, 'users', userId);
     await updateDoc(userRef, {
         claimedCharacter: character.name,
-        claimedCharacterImage: character.images?.jpg?.image_url || '',
+        claimedCharacterImage: character.images?.webp?.image_url || character.images?.jpg?.image_url || '',
         claimedCharacterId: charId,
         lastActive: serverTimestamp(),
     });

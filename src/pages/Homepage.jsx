@@ -15,7 +15,7 @@ const HERO_IMAGES = [
 ];
 
 const TrendingCard = ({ anime, rank }) => {
-    const imageUrl = anime?.images?.jpg?.large_image_url || anime?.images?.webp?.large_image_url || anime?.images?.jpg?.image_url;
+    const imageUrl = anime?.images?.webp?.large_image_url || anime?.images?.jpg?.large_image_url || anime?.images?.webp?.image_url;
 
     return (
         <Link to={`/anime/${anime?.mal_id}`} className="flex-shrink-0 w-[160px] sm:w-auto block relative rounded-xl overflow-hidden group aspect-[3/4]">
@@ -94,9 +94,9 @@ const Homepage = () => {
 
                 // Use top seasonal anime images as hero backgrounds
                 const dynamicImages = results
-                    .filter(a => a?.images?.jpg?.large_image_url)
+                    .filter(a => a?.images?.webp?.large_image_url || a?.images?.jpg?.large_image_url)
                     .slice(0, 5)
-                    .map(a => a.images.jpg.large_image_url);
+                    .map(a => a.images.webp?.large_image_url || a.images.jpg?.large_image_url);
                 if (dynamicImages.length >= 3) {
                     setHeroImages(dynamicImages);
                 }

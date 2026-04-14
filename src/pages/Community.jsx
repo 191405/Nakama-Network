@@ -44,7 +44,7 @@ const ClaimedMemberCard = ({ claim }) => (
 
 /* ── Character Search Card (for claiming) ── */
 const SearchCharacterCard = ({ character, onClaim, claimStatus, loading }) => {
-    const image = character?.images?.jpg?.image_url;
+    const image = character?.images?.webp?.image_url || character?.images?.jpg?.image_url;
     const animeName = character?.anime?.[0]?.anime?.title || 'Unknown';
     const isClaimed = claimStatus === 'claimed';
 

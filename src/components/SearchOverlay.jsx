@@ -60,7 +60,7 @@ const SearchOverlay = ({ isOpen, onClose }) => {
     const handleSelect = (anime) => {
         // Save to recent searches
         const recent = JSON.parse(localStorage.getItem('nk_recent_searches') || '[]');
-        const updated = [{ id: anime.mal_id, title: anime.title, image: anime.images?.jpg?.small_image_url }, ...recent.filter(r => r.id !== anime.mal_id)].slice(0, 6);
+        const updated = [{ id: anime.mal_id, title: anime.title, image: anime.images?.webp?.small_image_url || anime.images?.jpg?.small_image_url }, ...recent.filter(r => r.id !== anime.mal_id)].slice(0, 6);
         localStorage.setItem('nk_recent_searches', JSON.stringify(updated));
         onClose();
         navigate(`/anime/${anime.mal_id}`);
@@ -127,7 +127,7 @@ const SearchOverlay = ({ isOpen, onClose }) => {
                                         className="w-full flex items-center gap-3 p-3 rounded-xl hover:bg-white/[0.04] transition-colors text-left group"
                                     >
                                         <img
-                                            src={anime.images?.jpg?.small_image_url}
+                                            src={anime.images?.webp?.small_image_url || anime.images?.jpg?.small_image_url}
                                             alt=""
                                             className="w-10 h-14 rounded-lg object-cover flex-shrink-0 bg-[#111]"
                                         />

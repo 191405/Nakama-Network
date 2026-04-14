@@ -39,7 +39,7 @@ const fetchNewsPage = async (pageIndex, usedIds) => {
                     title: item.title,
                     excerpt: item.excerpt || item.title,
                     url: item.url,
-                    image: item.images?.jpg?.large_image_url || item.images?.jpg?.image_url || `https://via.placeholder.com/600x400/100714/f43f5e?text=Nakama+News`,
+                    image: item.images?.webp?.large_image_url || item.images?.jpg?.large_image_url || item.images?.webp?.image_url || `https://via.placeholder.com/600x400/100714/f43f5e?text=Nakama+News`,
                     date: item.date,
                     author: item.author_username || 'MAL News',
                     source: 'MyAnimeList',

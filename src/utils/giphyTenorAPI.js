@@ -4,7 +4,7 @@ const GIPHY_BASE_URL = 'https://api.giphy.com/v1/gifs';
 const GIPHY_API_KEY = 'dc6zaTOxFJmzC'; 
 
 const TENOR_BASE_URL = 'https://tenor.googleapis.com/v2';
-const TENOR_API_KEY = 'AIzaSyAyimkuYQYF_FXVALexPuGQctUWRURdCYQ'; 
+const TENOR_API_KEY = import.meta.env.VITE_TENOR_API_KEY || 'AIzaSyAyimkuYQYF_FXVALexPuGQctUWRURdCYQ';
 
 export const searchGiphy = async (query, limit = 20, offset = 0) => {
     try {

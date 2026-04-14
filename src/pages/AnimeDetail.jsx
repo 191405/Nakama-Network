@@ -298,7 +298,7 @@ const AnimeDetail = () => {
                                 {characters.map(({ character, role }) => (
                                     <div key={character.mal_id} className="rounded-xl overflow-hidden bg-[#0a0a0a] border border-white/[0.06] flex flex-col">
                                         <div className="aspect-[3/4] relative">
-                                            <img src={character.images?.jpg?.image_url} alt={character.name} className="w-full h-full object-cover" />
+                                            <img src={character.images?.webp?.image_url || character.images?.jpg?.image_url} alt={character.name} className="w-full h-full object-cover" />
                                             <div className="absolute inset-0 bg-gradient-to-t from-black/80 to-transparent" />
                                             <div className="absolute bottom-2 left-2 right-2">
                                                 <p className="text-white font-bold text-xs line-clamp-1">{character.name.split(',').reverse().join(' ').trim()}</p>
