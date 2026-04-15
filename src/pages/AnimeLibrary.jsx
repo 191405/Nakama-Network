@@ -3,9 +3,11 @@ import { motion, AnimatePresence } from 'framer-motion';
 import { Link } from 'react-router-dom';
 import {
     Search, Film, Star, Filter, Grid, List,
-    ChevronDown, Calendar, Tv, TrendingUp, Clock, X
+    ChevronDown, Calendar, Tv, TrendingUp, Clock, X, Sparkles, Eye
 } from 'lucide-react';
 import { jikanAPI } from '../utils/animeDataAPIs';
+import { getAnimeImage, PLACEHOLDERS, handleImageError } from '../utils/imageUtils';
+import OracleTileModal from '../components/OracleTileModal';
 
 const GENRES = [
     { id: 1, name: 'Action' }, { id: 2, name: 'Adventure' }, { id: 4, name: 'Comedy' },
@@ -23,63 +25,113 @@ const SORT_OPTIONS = [
     { value: 'episodes', label: 'Most Episodes', icon: Tv },
 ];
 
-const AnimeCard = ({ anime }) => {
-    const imageUrl = anime?.images?.webp?.large_image_url || anime?.images?.jpg?.large_image_url || anime?.images?.webp?.image_url;
+const AnimeCard = ({ anime, onAskOracle }) => {
+    const imageUrl = getAnimeImage(anime?.images, 'large');
     const genres = anime?.genres?.slice(0, 2) || [];
+    const [hovered, setHovered] = useState(false);
+    const synopsis = anime?.synopsis?.slice(0, 90);
 
     return (
-        <Link to={`/anime/${anime?.mal_id}`} className="group block">
-            <div className="relative rounded-xl overflow-hidden aspect-[3/4] bg-[#111]">
-                {imageUrl ? (
-                    <img
-                        src={imageUrl}
-                        alt={anime?.title}
-                        className="w-full h-full object-cover transition-transform duration-500 group-hover:scale-105"
-                        loading="lazy"
-                    />
-                ) : (
-                    <div className="w-full h-full flex items-center justify-center">
-                        <Film size={32} className="text-[#333]" />
-                    </div>
-                )}
-                <div className="absolute inset-0 bg-gradient-to-t from-black/80 via-black/20 to-transparent opacity-60 group-hover:opacity-80 transition-opacity" />
-
-                {anime?.score && (
-                    <div className="absolute top-2 left-2 flex items-center gap-1 px-2 py-0.5 rounded-md bg-black/60 backdrop-blur-sm text-[11px] font-semibold text-amber-400">
-                        <Star size={10} fill="currentColor" /> {anime.score}
-                    </div>
-                )}
-
-                {anime?.status === 'Currently Airing' && (
-                    <div className="absolute top-2 right-2 px-2 py-0.5 rounded-md bg-emerald-500/80 text-[10px] font-bold text-white">
-                        AIRING
-                    </div>
-                )}
-
-                <div className="absolute bottom-0 left-0 right-0 p-3">
-                    <h3 className="text-white font-semibold text-[13px] line-clamp-2 leading-tight mb-1.5">{anime?.title}</h3>
-                    <div className="flex items-center gap-2 text-[11px] text-white/40">
-                        {anime?.episodes && <span>{anime.episodes} ep</span>}
-                        {anime?.year && <span>· {anime.year}</span>}
-                        {anime?.type && <span>· {anime.type}</span>}
-                    </div>
-                    {genres.length > 0 && (
-                        <div className="flex flex-wrap gap-1 mt-1.5">
-                            {genres.map(g => (
-                                <span key={g.mal_id} className="px-1.5 py-0.5 rounded text-[9px] font-medium bg-white/[0.06] text-white/50">
-                                    {g.name}
-                                </span>
-                            ))}
+        <div
+            className="group block relative"
+            onMouseEnter={() => setHovered(true)}
+            onMouseLeave={() => setHovered(false)}
+        >
+            <Link to={`/anime/${anime?.mal_id}`}>
+                <div className="relative rounded-xl overflow-hidden aspect-[3/4] bg-[#111]">
+                    {imageUrl ? (
+                        <img
+                            src={imageUrl}
+                            alt={anime?.title}
+                            className="w-full h-full object-cover transition-transform duration-500 group-hover:scale-105"
+                            loading="lazy"
+                            onError={(e) => handleImageError(e, PLACEHOLDERS.anime)}
+                        />
+                    ) : (
+                        <div className="w-full h-full flex items-center justify-center">
+                            <Film size={32} className="text-[#333]" />
                         </div>
                     )}
+                    <div className="absolute inset-0 bg-gradient-to-t from-black/90 via-black/20 to-transparent opacity-60 group-hover:opacity-90 transition-opacity" />
+
+                    {anime?.score && (
+                        <div className="absolute top-2 left-2 flex items-center gap-1 px-2 py-0.5 rounded-md bg-black/60 backdrop-blur-sm text-[11px] font-semibold text-amber-400">
+                            <Star size={10} fill="currentColor" /> {anime.score}
+                        </div>
+                    )}
+
+                    {anime?.status === 'Currently Airing' && (
+                        <div className="absolute top-2 right-2 px-2 py-0.5 rounded-md bg-emerald-500/80 text-[10px] font-bold text-white">
+                            AIRING
+                        </div>
+                    )}
+
+                    <div className="absolute bottom-0 left-0 right-0 p-3">
+                        <h3 className="text-white font-semibold text-[13px] line-clamp-2 leading-tight mb-1.5">{anime?.title}</h3>
+                        <div className="flex items-center gap-2 text-[11px] text-white/40">
+                            {anime?.episodes && <span>{anime.episodes} ep</span>}
+                            {anime?.year && <span>· {anime.year}</span>}
+                            {anime?.type && <span>· {anime.type}</span>}
+                        </div>
+                        {genres.length > 0 && (
+                            <div className="flex flex-wrap gap-1 mt-1.5">
+                                {genres.map(g => (
+                                    <span key={g.mal_id} className="px-1.5 py-0.5 rounded text-[9px] font-medium bg-white/[0.06] text-white/50">
+                                        {g.name}
+                                    </span>
+                                ))}
+                            </div>
+                        )}
+                    </div>
                 </div>
-            </div>
-        </Link>
+            </Link>
+
+            {/* Hover expansion — deeper info + Oracle */}
+            <AnimatePresence>
+                {hovered && (
+                    <motion.div
+                        initial={{ opacity: 0, y: 6 }}
+                        animate={{ opacity: 1, y: 0 }}
+                        exit={{ opacity: 0, y: 6 }}
+                        transition={{ duration: 0.2 }}
+                        className="absolute inset-x-0 bottom-0 p-3 pt-8 rounded-b-xl z-10"
+                        style={{ background: 'linear-gradient(to top, rgba(0,0,0,0.97) 70%, transparent)' }}
+                    >
+                        {synopsis && (
+                            <p className="text-[10px] text-white/35 leading-relaxed line-clamp-3 mb-2">
+                                {synopsis}…
+                            </p>
+                        )}
+                        <div className="flex items-center gap-2 text-[10px] text-white/25 mb-2">
+                            {anime?.members && (
+                                <span className="flex items-center gap-0.5">
+                                    <Eye size={9} /> {(anime.members / 1000).toFixed(0)}k members
+                                </span>
+                            )}
+                            {anime?.studios?.[0]?.name && (
+                                <span>· {anime.studios[0].name}</span>
+                            )}
+                        </div>
+                        <button
+                            onClick={(e) => { e.preventDefault(); e.stopPropagation(); onAskOracle?.(anime); }}
+                            className="w-full flex items-center justify-center gap-1.5 px-2 py-1.5 rounded-lg text-[10px] font-semibold transition-all hover:scale-[1.02]"
+                            style={{
+                                background: 'linear-gradient(135deg, rgba(200,160,120,0.12), rgba(200,160,120,0.04))',
+                                border: '1px solid rgba(200,160,120,0.2)',
+                                color: 'rgba(200,160,120,0.8)',
+                            }}
+                        >
+                            <Sparkles size={10} /> Ask Oracle
+                        </button>
+                    </motion.div>
+                )}
+            </AnimatePresence>
+        </div>
     );
 };
 
 const AnimeListItem = ({ anime }) => {
-    const imageUrl = anime?.images?.webp?.large_image_url || anime?.images?.jpg?.large_image_url || anime?.images?.webp?.image_url;
+    const imageUrl = getAnimeImage(anime?.images, 'large');
     return (
         <Link
             to={`/anime/${anime?.mal_id}`}
@@ -87,7 +139,8 @@ const AnimeListItem = ({ anime }) => {
         >
             <div className="w-14 h-20 rounded-lg overflow-hidden flex-shrink-0 bg-[#111]">
                 {imageUrl ? (
-                    <img src={imageUrl} alt="" className="w-full h-full object-cover" loading="lazy" />
+                    <img src={imageUrl} alt="" className="w-full h-full object-cover" loading="lazy"
+                        onError={(e) => handleImageError(e, PLACEHOLDERS.anime)} />
                 ) : (
                     <div className="w-full h-full flex items-center justify-center"><Film size={18} className="text-[#333]" /></div>
                 )}
@@ -123,6 +176,7 @@ const AnimeLibrary = () => {
     const [showFilters, setShowFilters] = useState(false);
     const [page, setPage] = useState(1);
     const [hasMore, setHasMore] = useState(true);
+    const [oracleAnime, setOracleAnime] = useState(null);
 
     const fetchAnime = useCallback(async (reset = false) => {
         try {
@@ -330,7 +384,7 @@ const AnimeLibrary = () => {
                 ) : viewMode === 'grid' ? (
                     <motion.div layout className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-5 xl:grid-cols-6 gap-3 md:gap-4">
                         {animeList.map(anime => (
-                            <AnimeCard key={anime.mal_id} anime={anime} />
+                            <AnimeCard key={anime.mal_id} anime={anime} onAskOracle={setOracleAnime} />
                         ))}
                     </motion.div>
                 ) : (
@@ -367,6 +421,13 @@ const AnimeLibrary = () => {
                     </div>
                 )}
             </div>
+
+            {/* Oracle Modal */}
+            <OracleTileModal
+                anime={oracleAnime}
+                isOpen={!!oracleAnime}
+                onClose={() => setOracleAnime(null)}
+            />
         </div>
     );
 };

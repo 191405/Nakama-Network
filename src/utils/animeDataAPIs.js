@@ -1,11 +1,91 @@
 
+/* ── 3-Day localStorage Cache Layer ── */
+const CACHE_TTL = 3 * 24 * 60 * 60 * 1000; // 3 days in ms
+
+const getCacheKey = (url) => `nk_cache_${btoa(url).slice(0, 60)}`;
+
+const getFromCache = (url) => {
+  try {
+    const key = getCacheKey(url);
+    const raw = localStorage.getItem(key);
+    if (!raw) return null;
+    const { data, timestamp } = JSON.parse(raw);
+    if (Date.now() - timestamp > CACHE_TTL) {
+      localStorage.removeItem(key);
+      return null; // expired
+    }
+    return data;
+  } catch {
+    return null;
+  }
+};
+
+const setToCache = (url, data) => {
+  try {
+    const key = getCacheKey(url);
+    localStorage.setItem(key, JSON.stringify({ data, timestamp: Date.now() }));
+  } catch (e) {
+    // localStorage full — evict oldest entries
+    try {
+      const keys = Object.keys(localStorage).filter(k => k.startsWith('nk_cache_'));
+      if (keys.length > 0) {
+        let oldest = keys[0], oldestTime = Infinity;
+        keys.forEach(k => {
+          try {
+            const t = JSON.parse(localStorage.getItem(k))?.timestamp || 0;
+            if (t < oldestTime) { oldestTime = t; oldest = k; }
+          } catch {}
+        });
+        localStorage.removeItem(oldest);
+        localStorage.setItem(getCacheKey(url), JSON.stringify({ data, timestamp: Date.now() }));
+      }
+    } catch {}
+  }
+};
+
+const safeFetch = async (url, options = {}, retries = 2, delay = 1000) => {
+  // Check cache first (GET requests only)
+  if (!options.method || options.method === 'GET') {
+    const cached = getFromCache(url);
+    if (cached) {
+      return cached;
+    }
+  }
+
+  for (let i = 0; i <= retries; i++) {
+    try {
+      const response = await fetch(url, options);
+      if (response.status === 429) {
+        const waitTime = delay * Math.pow(2, i);
+        console.warn(`Rate limited. Retrying in ${waitTime}ms...`);
+        await new Promise(resolve => setTimeout(resolve, waitTime));
+        continue;
+      }
+      if (!response.ok) throw new Error(`HTTP error! status: ${response.status}`);
+      const json = await response.json();
+      // Cache the successful response (but not empty data arrays)
+      if (!options.method || options.method === 'GET') {
+        const hasData = !json.data || (Array.isArray(json.data) && json.data.length > 0) || !Array.isArray(json.data);
+        if (hasData) {
+          setToCache(url, json);
+        }
+      }
+      return json;
+    } catch (error) {
+      if (i === retries) throw error;
+      const waitTime = delay * Math.pow(2, i);
+      console.warn(`Fetch error. Retrying in ${waitTime}ms...`, error.message);
+      await new Promise(resolve => setTimeout(resolve, waitTime));
+    }
+  }
+};
+
 export const jikanAPI = {
   baseURL: 'https://api.jikan.moe/v4',
 
   async getTrendingAnime(limit = 24) {
     try {
-      const response = await fetch(`${this.baseURL}/top/anime?filter=airing&limit=${limit}`);
-      const data = await response.json();
+      const data = await safeFetch(`${this.baseURL}/top/anime?filter=airing&limit=${limit}`);
       return data.data || [];
     } catch (error) {
       console.error('Jikan API Error:', error);
@@ -15,8 +95,7 @@ export const jikanAPI = {
 
   async searchAnime(query, page = 1) {
     try {
-      const response = await fetch(`${this.baseURL}/anime?query=${encodeURIComponent(query)}&limit=25&page=${page}`);
-      const data = await response.json();
+      const data = await safeFetch(`${this.baseURL}/anime?q=${encodeURIComponent(query)}&limit=25&page=${page}`);
       return data.data || [];
     } catch (error) {
       console.error('Jikan Search Error:', error);
@@ -26,8 +105,7 @@ export const jikanAPI = {
 
   async getAnimeDetails(malId) {
     try {
-      const response = await fetch(`${this.baseURL}/anime/${malId}/full`);
-      const data = await response.json();
+      const data = await safeFetch(`${this.baseURL}/anime/${malId}/full`);
       return data.data || null;
     } catch (error) {
       console.error('Jikan Details Error:', error);
@@ -37,8 +115,7 @@ export const jikanAPI = {
 
   async getUpcomingAnime(limit = 12) {
     try {
-      const response = await fetch(`${this.baseURL}/seasons/upcoming?limit=${limit}`);
-      const data = await response.json();
+      const data = await safeFetch(`${this.baseURL}/seasons/upcoming?limit=${limit}`);
       return data.data || [];
     } catch (error) {
       console.error('Jikan Upcoming Error:', error);
@@ -46,10 +123,29 @@ export const jikanAPI = {
     }
   },
 
+  async getSeasonNow(limit = 12) {
+    try {
+      const data = await safeFetch(`${this.baseURL}/seasons/now?limit=${limit}`);
+      return data.data || [];
+    } catch (error) {
+      console.error('Jikan Season Now Error:', error);
+      return [];
+    }
+  },
+
+  async getSeasonalAnime(year, season, limit = 12) {
+    try {
+      const data = await safeFetch(`${this.baseURL}/seasons/${year}/${season}?limit=${limit}&order_by=score&sort=desc`);
+      return data.data || [];
+    } catch (error) {
+      console.error('Jikan Seasonal Error:', error);
+      return [];
+    }
+  },
+
   async getAnimesByGenre(genreId, limit = 24) {
     try {
-      const response = await fetch(`${this.baseURL}/anime?genres=${genreId}&limit=${limit}`);
-      const data = await response.json();
+      const data = await safeFetch(`${this.baseURL}/anime?genres=${genreId}&limit=${limit}`);
       return data.data || [];
     } catch (error) {
       console.error('Jikan Genre Error:', error);
@@ -59,8 +155,7 @@ export const jikanAPI = {
 
   async getRandomAnime() {
     try {
-      const response = await fetch(`${this.baseURL}/random/anime`);
-      const data = await response.json();
+      const data = await safeFetch(`${this.baseURL}/random/anime`);
       return data.data || null;
     } catch (error) {
       console.error('Jikan Random Error:', error);
@@ -70,8 +165,7 @@ export const jikanAPI = {
 
   async searchCharacters(query, limit = 25) {
     try {
-      const response = await fetch(`${this.baseURL}/characters?q=${encodeURIComponent(query)}&limit=${limit}`);
-      const data = await response.json();
+      const data = await safeFetch(`${this.baseURL}/characters?q=${encodeURIComponent(query)}&limit=${limit}`);
       return data.data || [];
     } catch (error) {
       console.error('Jikan Character Search Error:', error);
@@ -81,8 +175,7 @@ export const jikanAPI = {
 
   async getTopCharacters(limit = 25) {
     try {
-      const response = await fetch(`${this.baseURL}/top/characters?limit=${limit}`);
-      const data = await response.json();
+      const data = await safeFetch(`${this.baseURL}/top/characters?limit=${limit}`);
       return data.data || [];
     } catch (error) {
       console.error('Jikan Top Characters Error:', error);
@@ -92,8 +185,7 @@ export const jikanAPI = {
 
   async getCharacterById(characterId) {
     try {
-      const response = await fetch(`${this.baseURL}/characters/${characterId}/full`);
-      const data = await response.json();
+      const data = await safeFetch(`${this.baseURL}/characters/${characterId}/full`);
       return data.data || null;
     } catch (error) {
       console.error('Jikan Character Details Error:', error);
@@ -103,8 +195,7 @@ export const jikanAPI = {
 
   async getAnimeCharacters(animeId) {
     try {
-      const response = await fetch(`${this.baseURL}/anime/${animeId}/characters`);
-      const data = await response.json();
+      const data = await safeFetch(`${this.baseURL}/anime/${animeId}/characters`);
       return data.data || [];
     } catch (error) {
       console.error('Jikan Anime Characters Error:', error);
@@ -114,11 +205,21 @@ export const jikanAPI = {
 
   async getAnimeEpisodes(animeId, page = 1) {
     try {
-      const response = await fetch(`${this.baseURL}/anime/${animeId}/episodes?page=${page}`);
-      const data = await response.json();
+      const data = await safeFetch(`${this.baseURL}/anime/${animeId}/episodes?page=${page}`);
       return data.data || [];
     } catch (error) {
       console.error('Jikan Anime Episodes Error:', error);
+      return [];
+    }
+  },
+
+  async getAnimeNews(animeId, limit = 5) {
+    try {
+      const data = await safeFetch(`${this.baseURL}/anime/${animeId}/news?limit=${limit}`);
+      return data.data || [];
+    } catch (error) {
+      console.error('Jikan Anime News Error:', error);
+      // With 3-day cache in place, real data persists — no placeholder fallback needed
       return [];
     }
   }

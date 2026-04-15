@@ -2,8 +2,9 @@ import React, { useState, useEffect, useCallback, useRef } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
 import {
     Newspaper, Clock, ExternalLink, Calendar,
-    Flame, Globe, MessageCircle, Loader2, ArrowUpRight, Search, Play, Volume2
+    Flame, Globe, MessageCircle, Loader2, ArrowUpRight, Search, Play, Volume2, RefreshCw
 } from 'lucide-react';
+import { jikanAPI } from '../utils/animeDataAPIs';
 
 /* ─── Constants & Fetch Logic ─── */
 const ANIME_IDS_POOL = [
@@ -28,12 +29,9 @@ const fetchNewsPage = async (pageIndex, usedIds) => {
     const allNews = [];
     for (const malId of batch) {
         try {
-            await new Promise(r => setTimeout(r, 400)); // Jikan rate limit
-            const resp = await fetch(`https://api.jikan.moe/v4/anime/${malId}/news?limit=5`);
-            if (!resp.ok) continue;
-            const data = await resp.json();
-            if (data.data) {
-                allNews.push(...data.data.map(item => ({
+            const newsItems = await jikanAPI.getAnimeNews(malId, 5);
+            if (newsItems && newsItems.length > 0) {
+                allNews.push(...newsItems.map(item => ({
                     id: `${malId}-${item.mal_id}`,
                     mal_id: item.mal_id,
                     title: item.title,
@@ -261,6 +259,11 @@ const AnimeNews = () => {
                         <h1 className="text-4xl md:text-5xl font-black text-white" style={{ fontFamily: 'var(--font-display, Cinzel, serif)' }}>
                             Top <span style={{ background: 'linear-gradient(135deg, #f43f5e, #ec4899)', WebkitBackgroundClip: 'text', WebkitTextFillColor: 'transparent' }}>Stories</span>
                         </h1>
+                    </div>
+                    <div className="flex items-center gap-2 px-3 py-1.5 rounded-lg text-[11px] font-medium"
+                        style={{ background: 'rgba(244,63,94,0.06)', border: '1px solid rgba(244,63,94,0.1)', color: 'rgba(251,113,133,0.7)' }}>
+                        <RefreshCw size={12} />
+                        <span>Auto-refreshes every 3 days</span>
                     </div>
                 </div>
 
