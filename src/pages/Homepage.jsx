@@ -8,13 +8,13 @@ import { getAnimeImage, PLACEHOLDERS, handleImageError } from '../utils/imageUti
 import Skeleton, { AnimeCardSkeleton } from '../components/Skeleton';
 import OracleTileModal from '../components/OracleTileModal';
 
-/* ── Hero background images — using Jikan CDN which allows hotlinking ── */
+/* ── Hero background images — Premium High-Resolution Landscape Banners ── */
 const HERO_IMAGES = [
-    'https://cdn.myanimelist.net/images/anime/1015/138006l.jpg',
-    'https://cdn.myanimelist.net/images/anime/1286/99889l.jpg',
-    'https://cdn.myanimelist.net/images/anime/1208/94745l.jpg',
-    'https://cdn.myanimelist.net/images/anime/1337/99013l.jpg',
-    'https://cdn.myanimelist.net/images/anime/1171/109222l.jpg',
+    'https://s4.anilist.co/file/anilistcdn/media/anime/banner/180745-Iicz1F6Kuj4e.jpg',
+    'https://s4.anilist.co/file/anilistcdn/media/anime/banner/21-wf37VakJmZqs.jpg',
+    'https://s4.anilist.co/file/anilistcdn/media/anime/banner/166613-drS86exJlIjG.jpg',
+    'https://s4.anilist.co/file/anilistcdn/media/anime/banner/172463-3J2o3qQZadFJ.jpg',
+    'https://s4.anilist.co/file/anilistcdn/media/anime/banner/167152-6QxZG8Dmf1EL.jpg',
 ];
 
 // Fallback hero images from a more permissive CDN
@@ -218,17 +218,7 @@ const Homepage = () => {
 
                 setSpringAnime(springResults || []);
 
-                // Use top spring anime images as hero backgrounds
-                if (springResults && springResults.length > 0) {
-                    const dynamicImages = springResults
-                        .filter(a => a?.images?.webp?.large_image_url || a?.images?.jpg?.large_image_url)
-                        .slice(0, 5)
-                        .map(a => getAnimeImage(a.images, 'large'));
 
-                    if (dynamicImages.length >= 3) {
-                        setHeroImages(dynamicImages);
-                    }
-                }
 
                 // Also fetch trending anime (kept separate)
                 const trendingResults = await jikanAPI.getTrendingAnime(6);
@@ -258,7 +248,7 @@ const Homepage = () => {
                         allNews.push(...items.map(item => ({
                             title: item.title,
                             url: item.url,
-                            image: item.images?.webp?.image_url || item.images?.jpg?.image_url || null,
+                            image: item.images?.webp?.large_image_url || item.images?.jpg?.large_image_url || item.images?.webp?.image_url || null,
                             comments: item.comments || 0,
                             timeAgo: item.date ? getTimeAgo(item.date) : 'Recent',
                         })));
