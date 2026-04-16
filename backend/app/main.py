@@ -68,12 +68,12 @@ if settings.cors_allow_all and settings.debug:
     )
 else:
     # Log active CORS origins for debugging in production
-    logger.info("🔒 CORS: Allowing ALL origins (*) for connectivity stabilization")
+    logger.info("🔒 CORS: Allowing ALL origins (*) without credentials for stabilization")
     
     app.add_middleware(
         CORSMiddleware,
         allow_origins=["*"],
-        allow_credentials=True,
+        allow_credentials=False, # Wildcard origins cannot use credentials=True in modern browsers
         allow_methods=["*"],
         allow_headers=["*"],
         expose_headers=["*"],
