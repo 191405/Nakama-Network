@@ -27,9 +27,31 @@ async def lifespan(app: FastAPI):
     logger.info("🚀 Starting Nakama Network API...")
     await cache_service.connect()
     
-    # Auto-create any new tables (e.g. WebNovel, StoryChapter, StoryLore)
+    # Auto-create any new tables
     Base.metadata.create_all(bind=engine)
-    logger.info("📦 Database tables verified")
+    
+    # 🚨 EMERGENCY SCHEMA SYNC: Add missing columns if they don't exist
+    from sqlalchemy import text
+    try:
+        with engine.begin() as conn:
+            # Check for is_verified in User table
+            # (PostgreSQL syntax - Render uses Postgres)
+            columns_to_add = [
+                ("is_verified", "INTEGER DEFAULT 0"),
+                ("verification_token", "VARCHAR"),
+                ("reset_token", "VARCHAR")
+            ]
+            
+            for col_name, col_type in columns_to_add:
+                try:
+                    conn.execute(text(f'ALTER TABLE "User" ADD COLUMN IF NOT EXISTS {col_name} {col_type}'))
+                    logger.info(f"✅ Verified/Added column {col_name} to User table")
+                except Exception as col_err:
+                    logger.warning(f"Note: Column {col_name} check: {col_err}")
+                    
+        logger.info("📦 Database schema verified and updated")
+    except Exception as e:
+        logger.error(f"❌ Schema sync error: {e}")
     
     logger.info(f"📡 Running on {settings.host}:{settings.port}")
     logger.info(f"🔒 Production mode: {settings.is_production}")
