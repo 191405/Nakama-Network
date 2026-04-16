@@ -27,7 +27,7 @@ services:
           name: nakama-redis
           property: connectionString
       - key: CORS_ORIGINS
-        value: "https://nakama-network.vercel.app,http://localhost:5173"
+        value: "https://nk-network-project.web.app,https://nk-network-project.firebaseapp.com,https://nakama-network.vercel.app,http://localhost:5173"
       - key: JWT_SECRET_KEY
         generateValue: true
       - key: SMTP_HOST
