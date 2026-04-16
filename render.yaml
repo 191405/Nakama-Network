@@ -1,4 +1,10 @@
 services:
+  - type: redis
+    name: nakama-redis
+    region: oregon
+    plan: free
+    ipAllowList: []
+
   - type: web
     name: nakama-network-api
     env: python
@@ -16,7 +22,10 @@ services:
       - key: GEMINI_API_KEY
         sync: false
       - key: REDIS_URL
-        sync: false
+        fromService:
+          type: redis
+          name: nakama-redis
+          property: connectionString
       - key: CORS_ORIGINS
         value: "https://nakama-network.vercel.app,http://localhost:5173"
       - key: JWT_SECRET_KEY
