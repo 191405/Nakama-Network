@@ -19,7 +19,7 @@ services:
       - key: REDIS_URL
         sync: false
       - key: CORS_ORIGINS
-        value: https://nakama-network.vercel.app,http://localhost:5173
+        value: https://nakama-network.vercel.app,https://nk-network-project.web.app,http://localhost:5173
       - key: JWT_SECRET_KEY
         generateValue: true
       - key: SMTP_HOST
