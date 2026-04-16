@@ -66,14 +66,16 @@ if settings.cors_allow_all and settings.debug:
         allow_methods=["*"],
         allow_headers=["*"],
     )
-else:
+    # Log active CORS origins for debugging
+    logger.info(f"🔒 CORS Whitelist: {settings.cors_origins_list}")
+    
     app.add_middleware(
         CORSMiddleware,
         allow_origins=settings.cors_origins_list,
         allow_credentials=True,
-        allow_methods=["GET", "POST", "PUT", "DELETE", "PATCH", "OPTIONS"],
-        allow_headers=["Authorization", "Content-Type", "X-API-Key", "X-Request-ID"],
-        expose_headers=["X-RateLimit-Limit", "X-RateLimit-Remaining", "X-RateLimit-Reset", "X-Request-ID"],
+        allow_methods=["*"],
+        allow_headers=["*"],
+        expose_headers=["*"],
     )
 
 @app.exception_handler(Exception)
