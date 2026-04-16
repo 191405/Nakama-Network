@@ -4,6 +4,7 @@ from fastapi.middleware.cors import CORSMiddleware
 from fastapi.responses import JSONResponse
 from contextlib import asynccontextmanager
 import logging
+import os
 
 from fastapi.staticfiles import StaticFiles
 from app.config import settings
@@ -24,7 +25,7 @@ logger = logging.getLogger(__name__)
 
 @asynccontextmanager
 async def lifespan(app: FastAPI):
-    logger.info("🚀 Starting Nakama Network API v2.2.0...")
+    logger.info("🚀 Starting Nakama Network API v2.2.1...")
     # Safe logging of DB target (without using non-existent settings.db_url)
     db_target = os.getenv("DATABASE_URL", "SQLite").split("@")[-1] if "@" in os.getenv("DATABASE_URL", "") else "Local"
     logger.info(f"📍 Database Target: {db_target}")
@@ -154,7 +155,7 @@ async def root():
     return {
         "status": "online",
         "service": "Nakama Network API",
-        "version": "2.2.0"
+        "version": "2.2.1"
     }
 
 @app.get("/health", tags=["Health"])
@@ -163,7 +164,7 @@ async def health_check():
     
     return {
         "status": "healthy" if cache_status else "degraded",
-        "version": "2.2.0",
+        "version": "2.2.1",
         "environment": "development" if settings.debug else "production",
         "services": {
             "api": True,
