@@ -24,7 +24,8 @@ logger = logging.getLogger(__name__)
 
 @asynccontextmanager
 async def lifespan(app: FastAPI):
-    logger.info("🚀 Starting Nakama Network API...")
+    logger.info("🚀 Starting Nakama Network API v2.1.0...")
+    logger.info(f"📍 Database Target: {settings.db_url.split('@')[-1] if '@' in settings.db_url else 'LOCAL'}")
     await cache_service.connect()
     
     # Auto-create any new tables
@@ -151,7 +152,7 @@ async def root():
     return {
         "status": "online",
         "service": "Nakama Network API",
-        "version": "2.0.0"
+        "version": "2.1.0"
     }
 
 @app.get("/health", tags=["Health"])
@@ -160,7 +161,7 @@ async def health_check():
     
     return {
         "status": "healthy" if cache_status else "degraded",
-        "version": "2.0.0",
+        "version": "2.1.0",
         "environment": "development" if settings.debug else "production",
         "services": {
             "api": True,
