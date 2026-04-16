@@ -6,7 +6,7 @@ import { useAuth } from '../contexts/AuthContext';
 const LuxuryInput = ({ icon: Icon, rightIcon, onRightClick, ...props }) => (
   <div className="relative group">
     <Icon className="absolute left-4 top-1/2 -translate-y-1/2 transition-colors duration-300" size={16}
-      style={{ color: 'rgba(244,114,182,0.4)' }}
+      style={{ color: 'rgba(183, 110, 121, 0.4)' }}
     />
     <input
       {...props}
@@ -16,9 +16,9 @@ const LuxuryInput = ({ icon: Icon, rightIcon, onRightClick, ...props }) => (
         border: '1px solid rgba(255,255,255,0.07)',
       }}
       onFocus={(e) => {
-        e.target.style.background = 'rgba(244,63,94,0.05)';
-        e.target.style.border = '1px solid rgba(244,63,94,0.35)';
-        e.target.style.boxShadow = '0 0 0 4px rgba(244,63,94,0.06)';
+        e.target.style.background = 'rgba(183, 110, 121, 0.05)';
+        e.target.style.border = '1px solid rgba(183, 110, 121, 0.35)';
+        e.target.style.boxShadow = '0 0 0 4px rgba(183, 110, 121, 0.06)';
         props.onFocus?.(e);
       }}
       onBlur={(e) => {
@@ -29,7 +29,7 @@ const LuxuryInput = ({ icon: Icon, rightIcon, onRightClick, ...props }) => (
       }}
     />
     {rightIcon && (
-      <button type="button" onClick={onRightClick} className="absolute right-4 top-1/2 -translate-y-1/2 text-slate-500 hover:text-slate-300 transition-colors">
+      <button type="button" onClick={onRightClick} className="absolute right-4 top-1/2 -translate-y-1/2 text-slate-500 hover:text-slate-300 transition-colors cursor-pointer">
         {rightIcon}
       </button>
     )}
@@ -131,26 +131,13 @@ const AuthModal = () => {
     }
   };
 
-  const handleGoogleLogin = async () => {
-    try {
-      setLoading(true); setError('');
-      if (!auth) { initLocalDevAuth(); setTimeout(() => window.location.reload(), 300); return; }
-      await signInWithGoogle();
-      setLoading(false);
-      closeAuthModal();
-    } catch (err) {
-      setError('Google Login failed: ' + err.message);
-      setLoading(false);
-    }
-  };
-
   const tabBtn = (label, targetMode) => (
     <button type="button" onClick={() => { setMode(targetMode); setError(''); }}
-      className="flex-1 py-2.5 rounded-xl text-sm font-semibold transition-all duration-300"
+      className="flex-1 py-2.5 rounded-xl text-sm font-semibold transition-all duration-300 cursor-pointer"
       style={{
-        background: mode === targetMode ? 'linear-gradient(135deg, #f43f5e, #e11d48)' : 'transparent',
+        background: mode === targetMode ? 'linear-gradient(135deg, #b76e79, #8c3343)' : 'transparent',
         color: mode === targetMode ? '#fff' : '#64748b',
-        boxShadow: mode === targetMode ? '0 4px 15px rgba(244,63,94,0.35)' : 'none',
+        boxShadow: mode === targetMode ? '0 4px 15px rgba(183,110,121,0.35)' : 'none',
       }}
     >{label}</button>
   );
@@ -180,16 +167,16 @@ const AuthModal = () => {
           </button>
 
           {/* Top shimmer */}
-          <div className="absolute top-0 left-1/4 right-1/4 h-[1px] bg-gradient-to-r from-transparent via-rose-500/50 to-transparent" />
+          <div className="absolute top-0 left-1/4 right-1/4 h-[1px] bg-gradient-to-r from-transparent via-[#b76e79]/50 to-transparent" />
 
           {/* Header */}
           <div className="text-center mb-6">
             <div className="inline-flex items-center justify-center w-12 h-12 rounded-2xl mb-4"
-              style={{ background: 'linear-gradient(135deg, rgba(244,63,94,0.1), rgba(139,92,246,0.05))', border: '1px solid rgba(244,63,94,0.2)' }}
+              style={{ background: 'linear-gradient(135deg, rgba(183,110,121,0.1), rgba(183,110,121,0.05))', border: '1px solid rgba(183,110,121,0.2)' }}
             >
-              <Sparkles size={20} className="text-rose-500" />
+              <Sparkles size={20} style={{ color: '#b76e79' }} />
             </div>
-            {authModalMessage && <p className="text-rose-400 text-sm font-medium mb-2">{authModalMessage}</p>}
+            {authModalMessage && <p className="text-sm font-medium mb-2" style={{ color: '#b76e79' }}>{authModalMessage}</p>}
             <h2 className="text-xl font-black text-white" style={{ fontFamily: 'var(--font-display)' }}>
               Join the Network
             </h2>
@@ -227,14 +214,12 @@ const AuthModal = () => {
                   <LuxuryInput icon={Lock} type={showPassword ? 'text' : 'password'} placeholder="Password" value={password} onChange={e => setPassword(e.target.value)}
                     rightIcon={showPassword ? <EyeOff size={16} /> : <Eye size={16} />} onRightClick={() => setShowPassword(v => !v)} />
                   <div className="flex justify-end mt-1.5 px-2">
-                    <button type="button" onClick={() => { setMode('forgot-password'); setError(''); setResetSent(false); }} className="text-xs text-rose-400 hover:text-rose-300 transition-colors">
+                    <button type="button" onClick={() => { setMode('forgot-password'); setError(''); setResetSent(false); }} className="text-xs hover:text-white transition-colors cursor-pointer" style={{ color: '#b76e79' }}>
                       Forgot Password?
                     </button>
                   </div>
                 </div>
                 <PrimaryBtn loading={loading} disabled={loading}>Sign In</PrimaryBtn>
-                <Divider />
-                <GoogleBtn onClick={handleGoogleLogin} loading={loading} />
               </motion.form>
             )}
 
@@ -260,7 +245,7 @@ const AuthModal = () => {
                   </motion.div>
                 )}
                 
-                <button type="button" onClick={() => setMode('login')} className="w-full py-2 text-sm text-[#888] hover:text-white transition-colors flex items-center justify-center gap-2">
+                <button type="button" onClick={() => setMode('login')} className="w-full py-2 text-sm text-[#888] hover:text-white transition-colors flex items-center justify-center gap-2 cursor-pointer">
                   <ArrowRight className="rotate-180" size={14} /> Back to Sign In
                 </button>
               </motion.form>
@@ -283,13 +268,13 @@ const AuthModal = () => {
           </AnimatePresence>
 
           {error && (
-            <motion.div initial={{ opacity: 0, y: -8 }} animate={{ opacity: 1, y: 0 }} className="mt-4 p-3 rounded-2xl text-xs text-red-300 text-center"
-              style={{ background: 'rgba(244,63,94,0.08)', border: '1px solid rgba(244,63,94,0.2)' }}>
+            <motion.div initial={{ opacity: 0, y: -8 }} animate={{ opacity: 1, y: 0 }} className="mt-4 p-3 rounded-2xl text-xs text-center"
+              style={{ background: 'rgba(183,110,121,0.08)', border: '1px solid rgba(183,110,121,0.2)', color: '#e0bfb8' }}>
               {error}
             </motion.div>
           )}
 
-          <div className="absolute bottom-0 left-1/4 right-1/4 h-[1px] bg-gradient-to-r from-transparent via-rose-500/20 to-transparent" />
+          <div className="absolute bottom-0 left-1/4 right-1/4 h-[1px] bg-gradient-to-r from-transparent via-[#b76e79]/20 to-transparent" />
         </motion.div>
       </motion.div>
     </AnimatePresence>
@@ -298,24 +283,12 @@ const AuthModal = () => {
 
 const PrimaryBtn = ({ loading, disabled, children }) => (
   <button type="submit" disabled={disabled}
-    className="w-full py-3.5 rounded-2xl font-bold text-sm text-white flex items-center justify-center gap-2 transition-all duration-300 disabled:opacity-50"
-    style={{ background: 'linear-gradient(135deg, #f43f5e, #e11d48)', boxShadow: '0 4px 20px rgba(244,63,94,0.35)' }}
-    onMouseEnter={e => !disabled && (e.currentTarget.style.boxShadow = '0 8px 30px rgba(244,63,94,0.55)', e.currentTarget.style.transform = 'translateY(-1px)')}
-    onMouseLeave={e => (e.currentTarget.style.boxShadow = '0 4px 20px rgba(244,63,94,0.35)', e.currentTarget.style.transform = 'none')}
+    className="w-full py-3.5 rounded-2xl font-bold text-sm text-white flex items-center justify-center gap-2 transition-all duration-300 disabled:opacity-50 cursor-pointer"
+    style={{ background: 'linear-gradient(135deg, #b76e79, #8c3343)', boxShadow: '0 4px 20px rgba(183,110,121,0.35)' }}
+    onMouseEnter={e => !disabled && (e.currentTarget.style.boxShadow = '0 8px 30px rgba(183,110,121,0.55)', e.currentTarget.style.transform = 'translateY(-1px)')}
+    onMouseLeave={e => (e.currentTarget.style.boxShadow = '0 4px 20px rgba(183,110,121,0.35)', e.currentTarget.style.transform = 'none')}
   >
     {loading ? <Loader2 className="animate-spin" size={17} /> : children}
-  </button>
-);
-
-const GoogleBtn = ({ onClick, loading }) => (
-  <button type="button" onClick={onClick} disabled={loading}
-    className="w-full py-3.5 rounded-2xl font-semibold text-sm flex items-center justify-center gap-2 transition-all duration-300 disabled:opacity-50"
-    style={{ background: 'rgba(255,255,255,0.04)', border: '1px solid rgba(255,255,255,0.07)', color: '#94a3b8' }}
-    onMouseEnter={e => { e.currentTarget.style.background = 'rgba(255,255,255,0.07)'; e.currentTarget.style.color = '#e2e8f0'; }}
-    onMouseLeave={e => { e.currentTarget.style.background = 'rgba(255,255,255,0.04)'; e.currentTarget.style.color = '#94a3b8'; }}
-  >
-    <svg width="17" height="17" viewBox="0 0 24 24"><path fill="#EA4335" d="M5.26 9.77A7.2 7.2 0 0 1 12 4.8c1.74 0 3.3.63 4.52 1.64l3.36-3.36A12 12 0 0 0 0 12c0 1.98.48 3.84 1.33 5.48l3.93-3.05V9.77Z" /><path fill="#34A853" d="M12 24c3.08 0 5.86-1.05 8.06-2.8l-3.81-3.01a7.2 7.2 0 0 1-10.98-3.47L1.33 17.48A12 12 0 0 0 12 24Z" /><path fill="#4A90D9" d="M23.76 12.27c0-.77-.07-1.52-.2-2.27H12v4.52h6.6a5.71 5.71 0 0 1-2.44 3.68l3.81 3.01C21.8 19.26 23.76 16 23.76 12.27Z" /><path fill="#FBBC05" d="M5.26 14.23a7.2 7.2 0 0 1 0-4.46L1.33 6.72A12 12 0 0 0 0 12c0 1.85.43 3.6 1.2 5.16l4.06-2.93Z" /></svg>
-    Continue with Google
   </button>
 );
 

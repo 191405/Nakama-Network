@@ -43,11 +43,11 @@ def get_email_base_template(content: str, preheader: str = "") -> str:
             <tr>
                 <td align="center" style="padding: 40px 20px;">
                     <!-- Email card -->
-                    <table role="presentation" width="600" cellpadding="0" cellspacing="0" style="max-width: 600px; background-color: #0f0f14; border-radius: 16px; border: 1px solid rgba(202, 138, 4, 0.2); overflow: hidden;">
+                    <table role="presentation" width="600" cellpadding="0" cellspacing="0" style="max-width: 600px; background-color: #0d0d0d; border-radius: 16px; border: 1px solid rgba(183, 110, 121, 0.2); overflow: hidden;">
                         
                         <!-- Header with logo -->
                         <tr>
-                            <td style="background: linear-gradient(135deg, #ca8a04 0%, #a16207 100%); padding: 30px; text-align: center;">
+                            <td style="background: linear-gradient(135deg, #b76e79 0%, #8c3343 100%); padding: 30px; text-align: center;">
                                 <h1 style="margin: 0; color: #FFFFFF; font-size: 28px; text-transform: uppercase; letter-spacing: 3px; font-weight: 900;">
                                     ⚔️ NAKAMA NETWORK
                                 </h1>
@@ -74,7 +74,7 @@ def get_email_base_template(content: str, preheader: str = "") -> str:
                                     You're receiving this because you're a member of Nakama Network.
                                 </p>
                                 <p style="margin: 15px 0 0;">
-                                    <a href="{APP_URL}" style="color: #eab308; text-decoration: none; font-size: 12px;">Visit Nakama Network</a>
+                                    <a href="{APP_URL}" style="color: #b76e79; text-decoration: none; font-size: 12px;">Visit Nakama Network</a>
                                 </p>
                             </td>
                         </tr>
@@ -137,7 +137,7 @@ class EmailService:
     def send_welcome_email(self, email: str, display_name: str) -> bool:
         """Send welcome email to new users with dramatic anime-style greeting"""
         content = f"""
-        <h2 style="color: #eab308; margin-top: 0; font-size: 24px;">
+        <h2 style="color: #b76e79; margin-top: 0; font-size: 24px;">
             Welcome, {display_name}! 🔥
         </h2>
         
@@ -147,11 +147,11 @@ class EmailService:
         </p>
         
         <p style="font-size: 16px; line-height: 1.7; color: #cbd5e1;">
-            Your journey to become a <strong style="color: #eab308;">Net God</strong> begins now.
+            Your journey to become a <strong style="color: #b76e79;">Net God</strong> begins now.
         </p>
         
         <!-- Features box -->
-        <div style="background-color: rgba(255,255,255,0.03); padding: 25px; border-radius: 12px; margin: 30px 0; border-left: 4px solid #eab308;">
+        <div style="background-color: rgba(255,255,255,0.03); padding: 25px; border-radius: 12px; margin: 30px 0; border-left: 4px solid #b76e79;">
             <p style="margin: 0 0 15px; font-weight: bold; color: #fff; font-size: 16px;">
                 🎮 Your Powers Await:
             </p>
@@ -177,7 +177,7 @@ class EmailService:
         <!-- CTA Button -->
         <div style="text-align: center; margin: 35px 0;">
             <a href="{APP_URL}" 
-               style="background: linear-gradient(135deg, #eab308, #ca8a04);
+               style="background: linear-gradient(135deg, #b76e79, #8c3343);
                       color: white;
                       padding: 16px 40px; 
                       text-decoration: none; 
@@ -202,7 +202,7 @@ class EmailService:
     def send_verification_email(self, email: str, display_name: str, verification_url: str) -> bool:
         """Send email verification link"""
         content = f"""
-        <h2 style="color: #eab308; margin-top: 0; font-size: 24px;">
+        <h2 style="color: #b76e79; margin-top: 0; font-size: 24px;">
             Almost There, {display_name}! ⚡
         </h2>
         
@@ -212,10 +212,10 @@ class EmailService:
         </p>
         
         <!-- Verification code/link box -->
-        <div style="background-color: rgba(234,179,8,0.1); padding: 30px; border-radius: 12px; margin: 30px 0; text-align: center; border: 1px solid rgba(234,179,8,0.3);">
+        <div style="background-color: rgba(183,110,121,0.1); padding: 30px; border-radius: 12px; margin: 30px 0; text-align: center; border: 1px solid rgba(183,110,121,0.3);">
             <p style="margin: 0 0 20px; color: #94a3b8; font-size: 14px;">Click the button below to verify:</p>
             <a href="{verification_url}" 
-               style="background: linear-gradient(135deg, #eab308, #ca8a04);
+               style="background: linear-gradient(135deg, #b76e79, #8c3343);
                       color: white;
                       padding: 14px 35px; 
                       text-decoration: none; 
@@ -238,7 +238,7 @@ class EmailService:
     def send_password_reset_email(self, email: str, display_name: str, reset_url: str) -> bool:
         """Send password reset link"""
         content = f"""
-        <h2 style="color: #eab308; margin-top: 0; font-size: 24px;">
+        <h2 style="color: #b76e79; margin-top: 0; font-size: 24px;">
             Password Reset Request 🔒
         </h2>
         
@@ -250,7 +250,7 @@ class EmailService:
         <!-- Reset button -->
         <div style="text-align: center; margin: 35px 0;">
             <a href="{reset_url}" 
-               style="background: linear-gradient(135deg, #eab308, #ca8a04);
+               style="background: linear-gradient(135deg, #b76e79, #8c3343);
                       color: white;
                       padding: 16px 40px; 
                       text-decoration: none; 
@@ -281,13 +281,13 @@ email_service = EmailService()
 def send_feedback_received_email(user_email: str, feedback_text: str, display_name: str = "Nakama Member") -> bool:
     """Send a confirmation email when feedback is submitted."""
     content = f"""
-    <h2 style="color: #eab308; margin-top: 0; font-size: 24px;">
+    <h2 style="color: #b76e79; margin-top: 0; font-size: 24px;">
         Feedback Received! 📬
     </h2>
     <p style="font-size: 16px; line-height: 1.7; color: #e2e8f0;">
         Thank you, {display_name}! Your feedback has been received and our team will review it shortly.
     </p>
-    <div style="background-color: rgba(255,255,255,0.03); padding: 20px; border-radius: 12px; margin: 25px 0; border-left: 4px solid #eab308;">
+    <div style="background-color: rgba(255,255,255,0.03); padding: 20px; border-radius: 12px; margin: 25px 0; border-left: 4px solid #b76e79;">
         <p style="margin: 0; color: #94a3b8; font-size: 13px; font-style: italic;">
             "{feedback_text[:300]}{'...' if len(feedback_text) > 300 else ''}"
         </p>
@@ -303,14 +303,14 @@ def send_feedback_received_email(user_email: str, feedback_text: str, display_na
 def send_rank_promotion_email(user_email: str, display_name: str, new_rank: str) -> bool:
     """Send a congratulations email when a user ranks up."""
     content = f"""
-    <h2 style="color: #eab308; margin-top: 0; font-size: 24px;">
+    <h2 style="color: #b76e79; margin-top: 0; font-size: 24px;">
         Rank Up! 🎉
     </h2>
     <p style="font-size: 16px; line-height: 1.7; color: #e2e8f0;">
         Congratulations, {display_name}! You've achieved a new rank:
     </p>
-    <div style="text-align: center; padding: 30px; margin: 25px 0; background: linear-gradient(135deg, rgba(234,179,8,0.15), rgba(202,138,4,0.05)); border-radius: 12px; border: 1px solid rgba(234,179,8,0.3);">
-        <p style="margin: 0; font-size: 28px; font-weight: bold; color: #eab308;">
+    <div style="text-align: center; padding: 30px; margin: 25px 0; background: linear-gradient(135deg, rgba(183,110,121,0.15), rgba(140,51,67,0.05)); border-radius: 12px; border: 1px solid rgba(183,110,121,0.3);">
+        <p style="margin: 0; font-size: 28px; font-weight: bold; color: #b76e79;">
             {new_rank}
         </p>
     </div>

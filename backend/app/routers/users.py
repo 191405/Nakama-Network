@@ -1,18 +1,81 @@
-
-from fastapi import APIRouter, Depends, HTTPException, status
+from fastapi import APIRouter, Depends, HTTPException, status, File, UploadFile
 from sqlalchemy.orm import Session
 from pydantic import BaseModel, Field
 from typing import Optional, List
 from datetime import datetime, date
 import logging
+import os
+import uuid
 
 from app.database import get_db
-from app.models.sql import UserSettings, UserStreak, UserStats, calculate_rank
-from app.services.email_service import send_rank_promotion_email
+from app.models.sql import User, UserSettings, UserStreak, UserStats, calculate_rank
+from app.middleware import require_auth
+from app.api_gateway import api_response, error_response
 
 logger = logging.getLogger(__name__)
 
 router = APIRouter()
+
+class AvatarSelection(BaseModel):
+    avatar_url: str
+
+@router.put("/me/avatar/selection")
+async def select_anime_avatar(
+    selection: AvatarSelection,
+    user_id: str = Depends(require_auth),
+    db: Session = Depends(get_db)
+):
+    """Set an anime character as the user's avatar."""
+    user = db.query(User).filter(User.user_id == user_id).first()
+    if not user:
+        return error_response(message="User not found", code="NOT_FOUND")
+    
+    user.avatar_url = selection.avatar_url
+    db.commit()
+    
+    return api_response(
+        message="Avatar updated from anime selection",
+        data={"avatar_url": user.avatar_url}
+    )
+
+@router.post("/me/avatar/upload")
+async def upload_custom_avatar(
+    file: UploadFile = File(...),
+    user_id: str = Depends(require_auth),
+    db: Session = Depends(get_db)
+):
+    """Upload a custom image as the user's avatar."""
+    user = db.query(User).filter(User.user_id == user_id).first()
+    if not user:
+        return error_response(message="User not found", code="NOT_FOUND")
+    
+    # Validate file type
+    if not file.content_type.startswith("image/"):
+        return error_response(message="File must be an image", code="INVALID_FILE")
+    
+    # Generate unique filename
+    ext = os.path.splitext(file.filename)[1]
+    filename = f"{uuid.uuid4().hex}{ext}"
+    file_path = f"uploads/avatars/{filename}"
+    
+    # Save file
+    try:
+        with open(file_path, "wb") as buffer:
+            content = await file.read()
+            buffer.write(content)
+    except Exception as e:
+        logger.error(f"Failed to save avatar: {e}")
+        return error_response(message="Failed to save image", code="UPLOAD_ERROR")
+    
+    # Update user
+    avatar_url = f"/uploads/avatars/{filename}"
+    user.avatar_url = avatar_url
+    db.commit()
+    
+    return api_response(
+        message="Avatar uploaded successfully",
+        data={"avatar_url": avatar_url}
+    )
 
 class SettingsBase(BaseModel):
     dark_mode: Optional[int] = None
@@ -32,16 +95,6 @@ class SettingsBase(BaseModel):
     public_profile: Optional[int] = None
     activity_sharing: Optional[int] = None
 
-class SettingsResponse(BaseModel):
-    user_id: str
-    appearance: dict
-    preferences: dict
-    notifications: dict
-    privacy: dict
-    
-    class Config:
-        from_attributes = True
-
 class NotificationSettings(BaseModel):
     push_notifications: Optional[int] = None
     episode_alerts: Optional[int] = None
@@ -60,16 +113,6 @@ class ProfileUpdate(BaseModel):
     avatar_url: Optional[str] = None
     location: Optional[str] = Field(None, max_length=50)
     website: Optional[str] = Field(None, max_length=100)
-
-class ActivityEntry(BaseModel):
-    type: str
-    description: str
-    timestamp: datetime
-    metadata: Optional[dict] = None
-
-class StreakUpdate(BaseModel):
-    action: str
-    value: Optional[int] = None
 
 class ChakraUpdate(BaseModel):
     action: str
@@ -122,7 +165,7 @@ def format_settings_response(settings: UserSettings) -> dict:
 @router.get("/{user_id}/settings")
 def get_user_settings(user_id: str, db: Session = Depends(get_db)):
     settings = get_or_create_settings(db, user_id)
-    return format_settings_response(settings)
+    return api_response(data=format_settings_response(settings))
 
 @router.put("/{user_id}/settings")
 def update_user_settings(user_id: str, updates: SettingsBase, db: Session = Depends(get_db)):
@@ -137,7 +180,7 @@ def update_user_settings(user_id: str, updates: SettingsBase, db: Session = Depe
     db.commit()
     db.refresh(settings)
     
-    return format_settings_response(settings)
+    return api_response(message="Settings updated", data=format_settings_response(settings))
 
 @router.put("/{user_id}/notifications")
 def update_notification_settings(user_id: str, updates: NotificationSettings, db: Session = Depends(get_db)):
@@ -157,16 +200,18 @@ def update_notification_settings(user_id: str, updates: NotificationSettings, db
     db.commit()
     db.refresh(settings)
     
-    return {
-        "message": "Notification settings updated",
-        "notifications": {
-            "push": bool(settings.push_notifications),
-            "episodeAlerts": bool(settings.episode_alerts),
-            "clanMessages": bool(settings.clan_messages),
-            "dailyProphecy": bool(settings.daily_prophecy),
-            "weeklyDigest": bool(settings.weekly_digest)
+    return api_response(
+        message="Notification settings updated",
+        data={
+            "notifications": {
+                "push": bool(settings.push_notifications),
+                "episodeAlerts": bool(settings.episode_alerts),
+                "clanMessages": bool(settings.clan_messages),
+                "dailyProphecy": bool(settings.daily_prophecy),
+                "weeklyDigest": bool(settings.weekly_digest)
+            }
         }
-    }
+    )
 
 @router.put("/{user_id}/privacy")
 def update_privacy_settings(user_id: str, updates: PrivacySettings, db: Session = Depends(get_db)):
@@ -182,14 +227,16 @@ def update_privacy_settings(user_id: str, updates: PrivacySettings, db: Session 
     db.commit()
     db.refresh(settings)
     
-    return {
-        "message": "Privacy settings updated",
-        "privacy": {
-            "onlineStatus": bool(settings.online_status),
-            "publicProfile": bool(settings.public_profile),
-            "activitySharing": bool(settings.activity_sharing)
+    return api_response(
+        message="Privacy settings updated",
+        data={
+            "privacy": {
+                "onlineStatus": bool(settings.online_status),
+                "publicProfile": bool(settings.public_profile),
+                "activitySharing": bool(settings.activity_sharing)
+            }
         }
-    }
+    )
 
 @router.put("/{user_id}/profile")
 def update_user_profile(user_id: str, profile: ProfileUpdate, db: Session = Depends(get_db)):
@@ -204,36 +251,13 @@ def update_user_profile(user_id: str, profile: ProfileUpdate, db: Session = Depe
     db.commit()
     db.refresh(stats)
     
-    return {
-        "message": "Profile updated",
-        "user_id": user_id,
-        "display_name": stats.display_name
-    }
-
-LEVEL_THRESHOLDS = {
-    "Academy Student": 0,
-    "Genin": 500,
-    "Chunin": 2000,
-    "Tokubetsu Jonin": 4000,
-    "Jonin": 8000,
-    "Anbu": 15000,
-    "Anbu Captain": 25000,
-    "Sannin": 50000,
-    "Kage": 100000,
-    "Legendary Shinobi": 250000
-}
-
-RANK_THRESHOLDS = {
-    "Net Wanderer": 0,
-    "Net Citizen": 3,
-    "Net Disciple": 15,
-    "Net Adept": 30,
-    "Net Guardian": 60,
-    "Net Master": 90,
-    "Net Grandmaster": 180,
-    "Net Sage": 365,
-    "Net God": 730
-}
+    return api_response(
+        message="Profile updated",
+        data={
+            "user_id": user_id,
+            "display_name": stats.display_name
+        }
+    )
 
 CHAKRA_REWARDS = {
     "daily_login": 50,
@@ -305,9 +329,6 @@ def calculate_ninja_level(chakra: int) -> dict:
         "badge": badge
     }
 
-def calculate_rank_from_chakra(chakra: int) -> dict:
-    return calculate_ninja_level(chakra)
-
 def calculate_net_rank(streak_days: int) -> dict:
     current_rank = "Net Wanderer"
     next_rank = "Net Citizen"
@@ -378,21 +399,23 @@ def get_user_progress(user_id: str, db: Session = Depends(get_db)):
     chakra_level = calculate_ninja_level(stats.chakra or 0)
     net_rank = calculate_net_rank(streak.current_streak)
     
-    return {
-        "user_id": user_id,
-        "level": chakra_level,
-        "rank": net_rank,
-        "streak": {
-            "current": streak.current_streak,
-            "longest": streak.longest_streak,
-            "last_active": streak.last_active_date
-        },
-        "stats": {
-            "chakra": stats.chakra,
-            "episodes": streak.episodes_watched or 0,
-            "time_online": streak.total_time_minutes or 0
+    return api_response(
+        data={
+            "user_id": user_id,
+            "level": chakra_level,
+            "rank": net_rank,
+            "streak": {
+                "current": streak.current_streak,
+                "longest": streak.longest_streak,
+                "last_active": streak.last_active_date
+            },
+            "stats": {
+                "chakra": stats.chakra,
+                "episodes": streak.episodes_watched or 0,
+                "time_online": streak.total_time_minutes or 0
+            }
         }
-    }
+    )
 
 @router.post("/{user_id}/progress")
 def update_user_progress(user_id: str, update: ChakraUpdate, db: Session = Depends(get_db)):
@@ -440,12 +463,15 @@ def update_user_progress(user_id: str, update: ChakraUpdate, db: Session = Depen
     new_level = calculate_ninja_level(stats.chakra)
     new_rank = calculate_net_rank(streak.current_streak)
     
-    return {
-        "gained_chakra": chakra_gain,
-        "level": new_level,
-        "rank": new_rank,
-        "streak_updated": streak_updated
-    }
+    return api_response(
+        message="Progress updated",
+        data={
+            "gained_chakra": chakra_gain,
+            "level": new_level,
+            "rank": new_rank,
+            "streak_updated": streak_updated
+        }
+    )
 
 @router.get("/{user_id}/activity")
 def get_user_activity(user_id: str, limit: int = 20, db: Session = Depends(get_db)):
@@ -480,7 +506,9 @@ def get_user_activity(user_id: str, limit: int = 20, db: Session = Depends(get_d
             "metadata": {"rank": rank["name"], "color": rank["color"]}
         })
     
-    return {
-        "user_id": user_id,
-        "activities": activities[:limit]
-    }
+    return api_response(
+        data={
+            "user_id": user_id,
+            "activities": activities[:limit]
+        }
+    )

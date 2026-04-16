@@ -1,8 +1,6 @@
 import React, { createContext, useContext, useState, useEffect } from 'react';
 import authService from '../utils/authService';
 import { getLocalDevUser, isLocalDevMode, clearLocalDevAuth } from '../utils/localDevAuth';
-// Import firebase as optional for legacy compatibility if needed, but we'll focus on backend
-import * as firebaseUtils from '../utils/firebase'; 
 
 const AuthContext = createContext();
 
@@ -48,16 +46,17 @@ export const AuthProvider = ({ children }) => {
         }
       }
 
-      // 2. Try Backend Auth (Custom System)
+      // 2. Try Backend Auth
       const token = authService.getToken();
       if (token) {
         try {
-          const user = await authService.getMe();
-          if (user) {
+          const res = await authService.getMe();
+          // Adjust based on standard api_response
+          const user = res?.data || res;
+          
+          if (user && user.user_id) {
             setCurrentUser(user);
             setIsAuthenticated(true);
-            // In the new system, profile data will come from user stats API
-            // For now, we'll store basic info
             setUserProfile({
               ...user,
               id: user.user_id,
@@ -66,20 +65,13 @@ export const AuthProvider = ({ children }) => {
             });
             setLoading(false);
             return;
+          } else {
+             authService.logout();
           }
         } catch (err) {
           console.error('Backend auth init failed:', err);
           authService.logout();
         }
-      }
-
-      // 3. Fallback to Firebase (Legacy)
-      if (firebaseUtils.auth?.currentUser) {
-        const fbUser = firebaseUtils.auth.currentUser;
-        setCurrentUser(fbUser);
-        setIsAuthenticated(true);
-        const profile = await firebaseUtils.getUserProfile(fbUser.uid);
-        setUserProfile({ ...profile, canUseFeatures: true });
       }
 
       setLoading(false);
@@ -90,27 +82,35 @@ export const AuthProvider = ({ children }) => {
 
   const login = async (email, password) => {
     const data = await authService.login(email, password);
-    setCurrentUser(data.user);
-    setIsAuthenticated(true);
-    setUserProfile({
-      ...data.user,
-      id: data.user.user_id,
-      displayName: data.user.display_name,
-      canUseFeatures: true
-    });
+    const user = data.data?.user || data.user;
+    
+    if (user) {
+        setCurrentUser(user);
+        setIsAuthenticated(true);
+        setUserProfile({
+        ...user,
+        id: user.user_id,
+        displayName: user.display_name,
+        canUseFeatures: true
+        });
+    }
     return data;
   };
 
   const register = async (email, password, displayName) => {
     const data = await authService.register(email, password, displayName);
-    setCurrentUser(data.user);
-    setIsAuthenticated(true);
-    setUserProfile({
-      ...data.user,
-      id: data.user.user_id,
-      displayName: data.user.display_name,
-      canUseFeatures: true
-    });
+    const user = data.data?.user || data.user;
+    
+    if (user) {
+        setCurrentUser(user);
+        setIsAuthenticated(true);
+        setUserProfile({
+        ...user,
+        id: user.user_id,
+        displayName: user.display_name,
+        canUseFeatures: true
+        });
+    }
     return data;
   };
 
@@ -121,7 +121,6 @@ export const AuthProvider = ({ children }) => {
   const logout = async () => {
     authService.logout();
     clearLocalDevAuth();
-    if (firebaseUtils.auth) await firebaseUtils.logOut().catch(() => {});
     
     setCurrentUser(null);
     setUserProfile(null);
@@ -148,9 +147,15 @@ export const AuthProvider = ({ children }) => {
 
   const refreshUserProfile = async () => {
     if (isAuthenticated && !isGuest) {
-      const user = await authService.getMe();
-      if (user) {
-        setUserProfile(prev => ({ ...prev, ...user, displayName: user.display_name }));
+      try {
+        const res = await authService.getMe();
+        const user = res?.data || res;
+        
+        if (user && user.user_id) {
+            setUserProfile(prev => ({ ...prev, ...user, displayName: user.display_name }));
+        }
+      } catch (err) {
+          console.warn("Failed to refresh user profile", err);
       }
     }
   };

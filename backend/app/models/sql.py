@@ -213,6 +213,17 @@ class TriviaStats(Base):
     created_at = Column(DateTime, default=datetime.utcnow)
     updated_at = Column(DateTime, default=datetime.utcnow, onupdate=datetime.utcnow)
 
+class Notification(Base):
+    __tablename__ = "notifications"
+    id = Column(Integer, primary_key=True, index=True)
+    user_id = Column(String, index=True)
+    title = Column(String)
+    message = Column(String)
+    type = Column(String, default="system") # system, news, schedule, message, clan
+    link = Column(String, nullable=True) # Optional URL to click through
+    is_read = Column(Integer, default=0)
+    created_at = Column(DateTime, default=datetime.utcnow)
+
 # ─── AI Story Writer Models ───────────────────────────────────────────────────
 
 class WebNovel(Base):

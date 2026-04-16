@@ -1,18 +1,19 @@
 
-from fastapi import APIRouter, HTTPException, Depends, status
+from fastapi import APIRouter, HTTPException, Depends, status, Request
 from pydantic import BaseModel, EmailStr, Field
-from typing import Optional
+from typing import Optional, Dict, Any
 from datetime import datetime
 import logging
 import secrets
-
 import uuid
+
 from sqlalchemy.orm import Session
 from app.database import get_db
 from app.models.sql import User, UserStats, UserSettings
-from app.services.email_service import send_welcome_email
+from app.services.email_service import email_service
 from app.services.security import jwt_service, password_service
-from app.middleware import require_auth, optional_auth
+from app.middleware import require_auth
+from app.api_gateway import api_response, error_response
 
 router = APIRouter()
 logger = logging.getLogger(__name__)
@@ -30,34 +31,15 @@ class RegisterRequest(BaseModel):
     password: str = Field(..., min_length=8)
     display_name: str = Field(..., min_length=2, max_length=30)
 
-class TokenResponse(BaseModel):
-    access_token: str
-    refresh_token: str
-    token_type: str = "bearer"
-    expires_in: int
-
 class RefreshRequest(BaseModel):
     refresh_token: str
 
-class UserInfo(BaseModel):
-    user_id: str
-    email: Optional[str] = None
-    display_name: Optional[str] = None
-    avatar_url: Optional[str] = None
-
-class AuthResponse(BaseModel):
-    user: UserInfo
-    tokens: TokenResponse
-
-@router.post("/register", response_model=AuthResponse)
+@router.post("/register")
 async def register(request: RegisterRequest, db: Session = Depends(get_db)):
     # Check if email exists
     existing_user = db.query(User).filter(User.email == request.email).first()
     if existing_user:
-        raise HTTPException(
-            status_code=status.HTTP_400_BAD_REQUEST,
-            detail="Email already registered"
-        )
+        return error_response(message="Email already registered", code="ALREADY_EXISTS")
     
     # Create new user
     user_id = str(uuid.uuid4())
@@ -67,7 +49,8 @@ async def register(request: RegisterRequest, db: Session = Depends(get_db)):
         user_id=user_id,
         email=request.email,
         hashed_password=hashed_pw,
-        display_name=request.display_name
+        display_name=request.display_name,
+        is_verified=0
     )
     
     # Initialize stats and settings
@@ -90,92 +73,89 @@ async def register(request: RegisterRequest, db: Session = Depends(get_db)):
         new_user.verification_token = verification_token
         db.commit()
         
-        # Send verification email instead of direct welcome
+        # Send verification email asynchronously via background tasks or just try/except
         try:
-            # We'll need a frontend URL for verification
             from app.config import settings
             verify_url = f"{settings.app_url}/verify?token={verification_token}"
-            from app.services.email_service import email_service
             email_service.send_verification_email(request.email, request.display_name, verify_url)
         except Exception as e:
             logger.warning(f"Could not send verification email to {request.email}: {e}")
 
-        return AuthResponse(
-            user=UserInfo(
-                user_id=user_id,
-                email=new_user.email,
-                display_name=new_user.display_name
-            ),
-            tokens=TokenResponse(
-                access_token=access_token,
-                refresh_token=refresh_token,
-                expires_in=jwt_service.expiry_minutes * 60
-            )
+        return api_response(
+            message="User created successfully",
+            data={
+                "user": {
+                    "user_id": user_id,
+                    "email": new_user.email,
+                    "display_name": new_user.display_name,
+                    "is_verified": bool(new_user.is_verified)
+                },
+                "tokens": {
+                    "access_token": access_token,
+                    "refresh_token": refresh_token,
+                    "expires_in": jwt_service.expiry_minutes * 60
+                }
+            }
         )
     except Exception as e:
         db.rollback()
         logger.error(f"Registration error: {e}")
-        raise HTTPException(status_code=500, detail="Failed to create user")
+        return error_response(message="Failed to create user", code="INTERNAL_ERROR")
 
-@router.post("/login", response_model=AuthResponse)
+
+@router.post("/login")
 async def login(request: LoginRequest, db: Session = Depends(get_db)):
     user = db.query(User).filter(User.email == request.email).first()
     
-    if not user:
-        raise HTTPException(
-            status_code=status.HTTP_401_UNAUTHORIZED,
-            detail="Invalid email or password"
-        )
-    
-    if not password_service.verify_password(request.password, user.hashed_password):
-        raise HTTPException(
-            status_code=status.HTTP_401_UNAUTHORIZED,
-            detail="Invalid email or password"
-        )
+    if not user or not password_service.verify_password(request.password, user.hashed_password):
+        return error_response(message="Invalid email or password", code="UNAUTHORIZED")
     
     # Create tokens
     access_token = jwt_service.create_access_token(user_id=user.user_id)
     refresh_token = jwt_service.create_refresh_token(user_id=user.user_id)
     
-    return AuthResponse(
-        user=UserInfo(
-            user_id=user.user_id,
-            email=user.email,
-            display_name=user.display_name,
-            avatar_url=user.avatar_url
-        ),
-        tokens=TokenResponse(
-            access_token=access_token,
-            refresh_token=refresh_token,
-            expires_in=jwt_service.expiry_minutes * 60
-        )
+    return api_response(
+        message="Login successful",
+        data={
+            "user": {
+                "user_id": user.user_id,
+                "email": user.email,
+                "display_name": user.display_name,
+                "avatar_url": user.avatar_url,
+                "is_verified": bool(user.is_verified)
+            },
+            "tokens": {
+                "access_token": access_token,
+                "refresh_token": refresh_token,
+                "expires_in": jwt_service.expiry_minutes * 60
+            }
+        }
     )
 
 @router.get("/verify-email")
 async def verify_email(token: str, db: Session = Depends(get_db)):
     user = db.query(User).filter(User.verification_token == token).first()
     if not user:
-        raise HTTPException(status_code=400, detail="Invalid or expired verification token")
+        return error_response(message="Invalid or expired verification token", code="INVALID_INPUT")
     
     user.is_verified = 1
     user.verification_token = None
     db.commit()
     
-    # Now send the real welcome email as they are verified
+    # Send welcome email now that verified
     try:
-        from app.services.email_service import email_service
         email_service.send_welcome_email(user.email, user.display_name)
-    except Exception:
-        pass
+    except Exception as e:
+        logger.warning(f"Welcome email failed for {user.email}: {e}")
 
-    return {"message": "Email verified successfully"}
+    return api_response(message="Email verified successfully")
 
 @router.post("/forgot-password")
 async def forgot_password(email: str, db: Session = Depends(get_db)):
     user = db.query(User).filter(User.email == email).first()
     if not user:
-        # Don't reveal user existence in prod, but for now we follow request
-        return {"message": "If an account exists, a reset link has been sent"}
+        # Obscure whether account exists
+        return api_response(message="If an account exists, a reset link has been sent")
     
     reset_token = secrets.token_urlsafe(32)
     user.reset_token = reset_token
@@ -184,75 +164,75 @@ async def forgot_password(email: str, db: Session = Depends(get_db)):
     try:
         from app.config import settings
         reset_url = f"{settings.app_url}/reset-password?token={reset_token}"
-        from app.services.email_service import email_service
         email_service.send_password_reset_email(user.email, user.display_name, reset_url)
     except Exception as e:
         logger.error(f"Failed to send reset email: {e}")
-        raise HTTPException(status_code=500, detail="Failed to send reset email")
+        return error_response(message="Failed to send reset email", code="INTERNAL_ERROR")
         
-    return {"message": "Reset link sent"}
+    return api_response(message="Reset link sent")
 
 @router.post("/reset-password")
 async def reset_password(token: str, new_password: str, db: Session = Depends(get_db)):
     user = db.query(User).filter(User.reset_token == token).first()
     if not user:
-        raise HTTPException(status_code=400, detail="Invalid or expired reset token")
+        return error_response(message="Invalid or expired reset token", code="INVALID_INPUT")
     
     user.hashed_password = password_service.hash_password(new_password)
     user.reset_token = None
     db.commit()
     
-    return {"message": "Password updated successfully"}
+    return api_response(message="Password updated successfully")
 
-@router.get("/me", response_model=UserInfo)
+@router.get("/me")
 async def get_me(user_id: str = Depends(require_auth), db: Session = Depends(get_db)):
     user = db.query(User).filter(User.user_id == user_id).first()
     if not user:
-        raise HTTPException(status_code=404, detail="User not found")
+        return error_response(message="User not found", code="NOT_FOUND")
     
-    return UserInfo(
-        user_id=user.user_id,
-        email=user.email,
-        display_name=user.display_name,
-        avatar_url=user.avatar_url
+    return api_response(
+        data={
+            "user_id": user.user_id,
+            "email": user.email,
+            "display_name": user.display_name,
+            "avatar_url": user.avatar_url,
+            "is_verified": bool(user.is_verified)
+        }
     )
 
-@router.post("/refresh", response_model=TokenResponse)
-async def refresh_token(refresh_token: str, db: Session = Depends(get_db)):
-    payload = jwt_service.verify_token(refresh_token)
+@router.post("/refresh")
+async def refresh_token(request: RefreshRequest, db: Session = Depends(get_db)):
+    payload = jwt_service.verify_token(request.refresh_token)
     if not payload or payload.get("type") != "refresh":
-        raise HTTPException(status_code=401, detail="Invalid refresh token")
+        return error_response(message="Invalid refresh token", code="UNAUTHORIZED")
     
     user_id = payload.get("sub")
     user = db.query(User).filter(User.user_id == user_id).first()
     if not user:
-        raise HTTPException(status_code=404, detail="User not found")
+        return error_response(message="User not found", code="NOT_FOUND")
     
-    # Create new access token
     access_token = jwt_service.create_access_token(user_id=user_id)
     
-    return TokenResponse(
-        access_token=access_token,
-        refresh_token=refresh_token, # Reuse or rotate
-        expires_in=jwt_service.expiry_minutes * 60
+    return api_response(
+        data={
+            "access_token": access_token,
+            "refresh_token": request.refresh_token,
+            "expires_in": jwt_service.expiry_minutes * 60
+        }
     )
 
 @router.post("/logout")
 async def logout(user_id: str = Depends(require_auth)):
     logger.info(f"User {user_id} logged out")
-    return {
-        "message": "Logged out successfully",
-        "user_id": user_id
-    }
+    return api_response(message="Logged out successfully")
 
 @router.post("/welcome")
 async def send_welcome(request: WelcomeRequest):
     try:
-        success = send_welcome_email(request.email, request.display_name)
+        success = email_service.send_welcome_email(request.email, request.display_name)
         if not success:
             logger.warning(f"Failed to send welcome email to {request.email}")
-            return {"status": "queued", "message": "Email queued (mock)"}
-        return {"status": "sent", "message": "Welcome email sent"}
+            return api_response(message="Email queued (mock)", status="queued")
+        return api_response(message="Welcome email sent")
     except Exception as e:
         logger.error(f"Error in welcome email: {e}")
-        raise HTTPException(status_code=500, detail="Failed to send email")
+        return error_response(message="Failed to send email", code="INTERNAL_ERROR")

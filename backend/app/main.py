@@ -8,7 +8,7 @@ import os
 
 from fastapi.staticfiles import StaticFiles
 from app.config import settings
-from app.routers import anime, characters, ai, episodes, chat, interaction, reviews, clans, users, feedback, auth, trivia, achievements, manga, encoder, arcade, library, stories
+from app.routers import anime, characters, ai, episodes, chat, interaction, reviews, clans, users, feedback, auth, trivia, achievements, manga, encoder, arcade, library, stories, admin, notifications
 from app.services.cache import cache_service
 from app.database import engine, Base
 from app.middleware import (
@@ -33,6 +33,9 @@ async def lifespan(app: FastAPI):
     
     # Auto-create any new tables
     Base.metadata.create_all(bind=engine)
+    
+    # Create uploads directory
+    os.makedirs("uploads/avatars", exist_ok=True)
     
     # 🚨 EMERGENCY SCHEMA SYNC: Add missing columns if they don't exist
     from sqlalchemy import text
@@ -149,6 +152,10 @@ app.include_router(encoder.router, prefix=f"{API_PREFIX}/encoder", tags=["Encode
 app.include_router(arcade.router, prefix=f"{API_PREFIX}/arcade", tags=["Arcade"])
 app.include_router(library.router, prefix=f"{API_PREFIX}/library", tags=["Library"])
 app.include_router(stories.router, prefix=f"{API_PREFIX}/stories", tags=["Stories"])
+app.include_router(admin.router, prefix=f"{API_PREFIX}/admin", tags=["Admin"])
+app.include_router(notifications.router, prefix=f"{API_PREFIX}/notifications", tags=["Notifications"])
+
+app.mount("/uploads", StaticFiles(directory="uploads"), name="uploads")
 
 @app.get("/", tags=["Health"])
 async def root():

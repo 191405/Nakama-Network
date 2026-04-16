@@ -18,7 +18,9 @@ const authService = {
             });
 
             const data = await response.json();
-            if (!response.ok) throw new Error(data.detail || 'Registration failed');
+            if (!response.ok || data.status === 'error') {
+                throw new Error(data.message || data.detail || 'Registration failed');
+            }
 
             // Store tokens
             authService.saveAuthData(data);
@@ -41,7 +43,9 @@ const authService = {
             });
 
             const data = await response.json();
-            if (!response.ok) throw new Error(data.detail || 'Login failed');
+            if (!response.ok || data.status === 'error') {
+                throw new Error(data.message || data.detail || 'Login failed');
+            }
 
             // Store tokens
             authService.saveAuthData(data);
@@ -66,12 +70,15 @@ const authService = {
                 }
             });
 
-            if (!response.ok) {
-                if (response.status === 401) authService.logout();
+            const data = await response.json();
+            if (!response.ok || data.status === 'error') {
+                if (response.status === 401 || (data.error && data.error.code === 'UNAUTHORIZED')) {
+                    authService.logout();
+                }
                 return null;
             }
 
-            return await response.json();
+            return data;
         } catch (error) {
             console.error('Fetch me error:', error);
             return null;
@@ -91,14 +98,17 @@ const authService = {
      * Helper to save auth data
      */
     saveAuthData: (data) => {
-        if (data.tokens?.access_token) {
-            localStorage.setItem('nk_token', data.tokens.access_token);
+        // Handle standard api_response structure
+        const actualData = data.data || data;
+        
+        if (actualData.tokens?.access_token) {
+            localStorage.setItem('nk_token', actualData.tokens.access_token);
         }
-        if (data.tokens?.refresh_token) {
-            localStorage.setItem('nk_refresh_token', data.tokens.refresh_token);
+        if (actualData.tokens?.refresh_token) {
+            localStorage.setItem('nk_refresh_token', actualData.tokens.refresh_token);
         }
-        if (data.user) {
-            localStorage.setItem('nk_user', JSON.stringify(data.user));
+        if (actualData.user) {
+            localStorage.setItem('nk_user', JSON.stringify(actualData.user));
         }
     },
 
@@ -111,7 +121,9 @@ const authService = {
                 method: 'POST'
             });
             const data = await response.json();
-            if (!response.ok) throw new Error(data.detail || 'Failed to send reset email');
+            if (!response.ok || data.status === 'error') {
+                throw new Error(data.message || data.detail || 'Failed to send reset email');
+            }
             return data;
         } catch (error) {
             console.error('Forgot password error:', error);
@@ -128,7 +140,9 @@ const authService = {
                 method: 'POST'
             });
             const data = await response.json();
-            if (!response.ok) throw new Error(data.detail || 'Failed to reset password');
+            if (!response.ok || data.status === 'error') {
+                throw new Error(data.message || data.detail || 'Failed to reset password');
+            }
             return data;
         } catch (error) {
             console.error('Reset password error:', error);

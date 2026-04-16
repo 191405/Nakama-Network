@@ -4,7 +4,7 @@ import { Link, useLocation } from 'react-router-dom';
 import {
   Film, Users, Shield, Newspaper, BookOpen,
   Menu, X, LogOut, Compass, ShoppingBag,
-  Scroll, ChevronRight, Search, Feather
+  Scroll, ChevronRight, Search, Feather, Bell, MessageSquare
 } from 'lucide-react';
 import { useAuth } from '../contexts/AuthContext';
 import { auth } from '../utils/firebase';
@@ -53,6 +53,8 @@ const Navbar = () => {
   const [mobileMenuOpen, setMobileMenuOpen] = useState(false);
   const [searchOpen, setSearchOpen] = useState(false);
   const [scrolled, setScrolled] = useState(false);
+  const [notificationsOpen, setNotificationsOpen] = useState(false);
+  const [unreadCount, setUnreadCount] = useState(0);
   const location = useLocation();
 
   useEffect(() => {
@@ -128,9 +130,57 @@ const Navbar = () => {
                 className="hidden sm:flex items-center gap-2 px-3 py-1.5 rounded-lg text-[13px] text-[#666] hover:text-white bg-white/[0.03] border border-white/[0.06] hover:border-white/[0.1] transition-colors"
               >
                 <Search size={14} />
-                <span className="hidden lg:inline">Search</span>
                 <kbd className="hidden lg:inline ml-1 px-1.5 py-0.5 rounded bg-white/[0.06] text-[10px] text-[#555]">⌘K</kbd>
               </button>
+
+              {userProfile && (
+                <div className="relative">
+                  <button
+                    onClick={() => setNotificationsOpen(!notificationsOpen)}
+                    className="p-2 rounded-lg text-[#888] hover:text-white hover:bg-white/[0.06] transition-all relative"
+                  >
+                    <Bell size={18} />
+                    {unreadCount > 0 && (
+                      <span className="absolute top-1.5 right-1.5 w-2 h-2 rounded-full bg-[#b76e79] shadow-[0_0_10px_rgba(183,110,121,0.5)]" />
+                    )}
+                  </button>
+                  
+                  <AnimatePresence>
+                    {notificationsOpen && (
+                      <motion.div
+                        initial={{ opacity: 0, y: 10, scale: 0.95 }}
+                        animate={{ opacity: 1, y: 0, scale: 1 }}
+                        exit={{ opacity: 0, y: 10, scale: 0.95 }}
+                        className="absolute right-0 mt-3 w-80 rounded-2xl overflow-hidden z-[100]"
+                        style={{ 
+                          background: 'rgba(10, 10, 10, 0.95)',
+                          backdropFilter: 'blur(20px)',
+                          border: '1px solid rgba(255,255,255,0.08)',
+                          boxShadow: '0 20px 50px rgba(0,0,0,0.5)'
+                        }}
+                      >
+                        <div className="p-4 border-b border-white/[0.06] flex items-center justify-between">
+                          <h3 className="text-[11px] font-bold text-[#555] uppercase tracking-wider">Notifications</h3>
+                          {unreadCount > 0 && <span className="text-[10px] text-[#b76e79] font-bold">New Updates</span>}
+                        </div>
+                        <div className="max-h-96 overflow-y-auto">
+                          <div className="p-8 text-center">
+                            <MessageSquare size={32} className="mx-auto mb-3 opacity-10" />
+                            <p className="text-xs text-[#555]">All caught up with the network.</p>
+                          </div>
+                        </div>
+                        <Link 
+                          to="/activity" 
+                          onClick={() => setNotificationsOpen(false)}
+                          className="block p-3 text-center text-[11px] text-[#b76e79] font-medium hover:bg-white/[0.02] border-t border-white/[0.06] transition-colors"
+                        >
+                          View All Activity
+                        </Link>
+                      </motion.div>
+                    )}
+                  </AnimatePresence>
+                </div>
+              )}
               {userProfile ? (
                 <Link
                   to="/profile"
