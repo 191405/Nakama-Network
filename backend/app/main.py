@@ -44,8 +44,9 @@ async def lifespan(app: FastAPI):
             
             for col_name, col_type in columns_to_add:
                 try:
-                    conn.execute(text(f'ALTER TABLE "User" ADD COLUMN IF NOT EXISTS {col_name} {col_type}'))
-                    logger.info(f"✅ Verified/Added column {col_name} to User table")
+                    # The table name is "users" based on __tablename__ = "users"
+                    conn.execute(text(f'ALTER TABLE "users" ADD COLUMN IF NOT EXISTS {col_name} {col_type}'))
+                    logger.info(f"✅ Verified/Added column {col_name} to users table")
                 except Exception as col_err:
                     logger.warning(f"Note: Column {col_name} check: {col_err}")
                     
