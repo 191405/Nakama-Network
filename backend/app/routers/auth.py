@@ -182,7 +182,8 @@ async def forgot_password(email: str, db: Session = Depends(get_db)):
     db.commit()
     
     try:
-        reset_url = f"{APP_URL}/reset-password?token={reset_token}"
+        from app.config import settings
+        reset_url = f"{settings.app_url}/reset-password?token={reset_token}"
         from app.services.email_service import email_service
         email_service.send_password_reset_email(user.email, user.display_name, reset_url)
     except Exception as e:
