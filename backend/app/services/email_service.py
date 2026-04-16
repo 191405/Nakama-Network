@@ -88,18 +88,34 @@ def get_email_base_template(content: str, preheader: str = "") -> str:
 
 class EmailService:
     def __init__(self):
-        # Load from Environment Variables
-        self.smtp_host = os.getenv("SMTP_HOST", "smtp.gmail.com")
-        self.smtp_port = int(os.getenv("SMTP_PORT", "587"))
-        self.smtp_user = os.getenv("SMTP_USER", "")
-        self.smtp_password = os.getenv("SMTP_PASSWORD", "")
-        self.smtp_email = os.getenv("SMTP_EMAIL", "")
+        # Load from Settings object
+        self.smtp_host = settings.smtp_host
+        self.smtp_port = settings.smtp_port
+        self.smtp_user = settings.smtp_user
+        self.smtp_password = settings.smtp_password
+        self.smtp_email = settings.smtp_email
+        
+        self.is_configured = all([
+            self.smtp_user, 
+            self.smtp_password, 
+            self.smtp_email
+        ])
+        
+        if not self.is_configured:
+            logger.warning("🔔 SMTP not fully configured. Email service running in MOCK mode.")
 
     def send_email(self, to_email: str, subject: str, html_content: str) -> bool:
-        """Send an email via SMTP"""
+        """Send an email via SMTP with fallback to logging"""
+        if not self.is_configured:
+            logger.info(f"💌 [MOCK EMAIL] To: {to_email} | Subject: {subject}")
+            logger.debug(f"Content: {html_content[:100]}...")
+            return True
+
         try:
             msg = MIMEMultipart()
-            msg['From'] = f"{APP_NAME} <{self.smtp_email}>"
+            # Ensure the display name is clean or use the raw email
+            sender_display = f"{APP_NAME} <{self.smtp_email}>"
+            msg['From'] = sender_display
             msg['To'] = to_email
             msg['Subject'] = subject
 
@@ -112,10 +128,10 @@ class EmailService:
                 server.login(self.smtp_user, self.smtp_password)
                 server.send_message(msg)
             
-            logger.info(f"Email sent successfully to {to_email}")
+            logger.info(f"✅ Email sent successfully to {to_email}")
             return True
         except Exception as e:
-            logger.error(f"Failed to send email to {to_email}: {e}")
+            logger.error(f"❌ Failed to send email to {to_email}: {e}")
             return False
 
     def send_welcome_email(self, email: str, display_name: str) -> bool:

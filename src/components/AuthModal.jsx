@@ -1,8 +1,6 @@
 import React, { useState, useEffect } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
 import { UserCircle, Loader2, AlertCircle, Mail, Lock, User, Eye, EyeOff, ArrowRight, CheckCircle, Sparkles, X } from 'lucide-react';
-import { signInWithGoogle, auth, signUpWithEmail, signInWithEmail, isUsernameAvailable, setUsername, createUserProfile, resetUserPassword } from '../utils/firebase';
-import { initLocalDevAuth } from '../utils/localDevAuth';
 import { useAuth } from '../contexts/AuthContext';
 
 const LuxuryInput = ({ icon: Icon, rightIcon, onRightClick, ...props }) => (
@@ -65,23 +63,22 @@ const AuthModal = () => {
   if (!isAuthModalOpen) return null;
 
   const checkUsername = async (value) => {
-    if (value.length < 3) { setUsernameAvailable(null); return; }
-    const available = await isUsernameAvailable(value);
-    setUsernameAvailable(available);
+    // Backend username availability check could be implemented here
+    setUsernameAvailable(true); 
   };
 
+  const { login, register, forgotPassword, closeAuthModal: closeAuth, authModalMessage: authMessage } = useAuth();
+  
   const handleEmailLogin = async (e) => {
     e.preventDefault();
     if (!email || !password) { setError('Please fill in all fields'); return; }
     try {
       setLoading(true); setError('');
-      if (!auth) { initLocalDevAuth(); setTimeout(() => window.location.reload(), 300); return; }
-      await signInWithEmail(email, password);
+      await login(email, password);
       setLoading(false);
       closeAuthModal();
     } catch (err) {
-      const msgs = { 'auth/user-not-found': 'No account found with this email', 'auth/wrong-password': 'Incorrect password' };
-      setError(msgs[err.code] || 'Login failed. Please try again.');
+      setError(err.message || 'Login failed. Please try again.');
       setLoading(false);
     }
   };
@@ -90,16 +87,18 @@ const AuthModal = () => {
     e.preventDefault();
     if (!email || !password || !confirmPassword) { setError('Please fill in all fields'); return; }
     if (password !== confirmPassword) { setError('Passwords do not match'); return; }
-    if (password.length < 6) { setError('Password must be at least 6 characters'); return; }
+    if (password.length < 8) { setError('Password must be at least 8 characters'); return; }
+    
+    // For simplicity in the "username" step, we'll use a placeholder or derived one first
+    const defaultDisplayName = email.split('@')[0];
+    
     try {
       setLoading(true); setError('');
-      if (!auth) { initLocalDevAuth(); setTimeout(() => window.location.reload(), 300); return; }
-      const result = await signUpWithEmail(email, password);
-      setPendingUserId(result.user.uid);
-      await createUserProfile(result.user.uid, { email: result.user.email, createdAt: new Date(), isNewUser: true });
-      setMode('username'); setLoading(false);
+      await register(email, password, defaultDisplayName);
+      setLoading(false);
+      closeAuthModal();
     } catch (err) {
-      setError(err.code === 'auth/email-already-in-use' ? 'Email already in use. Try logging in instead.' : 'Signup failed. Please try again.');
+      setError(err.message || 'Signup failed. Please try again.');
       setLoading(false);
     }
   };
@@ -123,12 +122,11 @@ const AuthModal = () => {
     if (!email) { setError('Please enter your email address'); return; }
     try {
       setLoading(true); setError('');
-      if (!auth) { initLocalDevAuth(); setTimeout(() => setResetSent(true), 300); return; }
-      await resetUserPassword(email);
+      await forgotPassword(email);
       setResetSent(true);
       setLoading(false);
     } catch (err) {
-      setError(err.code === 'auth/user-not-found' ? 'No account found with this email' : 'Failed to send reset email. Please try again.');
+      setError(err.message || 'Failed to send reset email. Please try again.');
       setLoading(false);
     }
   };

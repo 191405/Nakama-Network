@@ -1,9 +1,8 @@
-
 import React, { createContext, useContext, useState, useEffect } from 'react';
-import { auth, createUserProfile, getUserProfile, updateUserProfile, subscribeToUserProfile } from '../utils/firebase';
-import { onAuthStateChanged } from 'firebase/auth';
+import authService from '../utils/authService';
 import { getLocalDevUser, isLocalDevMode, clearLocalDevAuth } from '../utils/localDevAuth';
-import { sendWelcomeEmail } from '../utils/emailService';
+// Import firebase as optional for legacy compatibility if needed, but we'll focus on backend
+import * as firebaseUtils from '../utils/firebase'; 
 
 const AuthContext = createContext();
 
@@ -24,107 +23,112 @@ export const AuthProvider = ({ children }) => {
   const [isAuthModalOpen, setIsAuthModalOpen] = useState(false);
   const [authModalMessage, setAuthModalMessage] = useState('');
 
+  // Initialize auth state
   useEffect(() => {
-
-    localStorage.removeItem('nakama_guest_mode');
-
-    if (isLocalDevMode()) {
-
-      console.log('Restoring local dev auth session');
-      const devUser = getLocalDevUser();
-      setCurrentUser(devUser);
-      setIsGuest(false);
-      setIsAuthenticated(true);
-      setUserProfile({
-        id: devUser.uid,
-        email: devUser.email,
-        displayName: devUser.displayName,
-        chakra: 0,
-        rank: 'Mere User',
-        clan: null,
-        clanMotto: null,
-        isPremium: false,
-        totalWins: 0,
-        totalLosses: 0,
-        streak: 0,
-        isLocalDev: true,
-        canUseFeatures: true,
-      });
-      setLoading(false);
-      return;
-    }
-
-    if (!auth) {
+    const initAuth = async () => {
+      setLoading(true);
       
-      console.log('No active session, user needs to log in');
-      setCurrentUser(null);
-      setUserProfile(null);
-      setIsAuthenticated(false);
-      setLoading(false);
-      return;
-    }
-
-    let profileUnsub = null;
-    let isMounted = true;
-
-    const unsubscribe = onAuthStateChanged(auth, async (user) => {
-      if (!isMounted) return;
-
-      if (profileUnsub) {
-        profileUnsub();
-        profileUnsub = null;
-      }
-
-      try {
-        if (user) {
-          
-          setCurrentUser(user);
-          setIsGuest(false);
+      // 1. Try Local Dev Mode first
+      if (isLocalDevMode()) {
+        const devUser = getLocalDevUser();
+        if (devUser) {
+          setCurrentUser(devUser);
           setIsAuthenticated(true);
-
-          profileUnsub = subscribeToUserProfile(user.uid, async (profileData) => {
-            if (!isMounted) return;
-
-            if (profileData) {
-              
-              setUserProfile({ ...profileData, canUseFeatures: true });
-
-            } else {
-              
-              console.log('Creating new user profile...');
-              await createUserProfile(user.uid, {
-                email: user.email || `anon_${user.uid.substring(0, 8)}@nk.network`,
-                displayName: user.displayName || `Shinobi_${user.uid.substring(0, 6)}`,
-              });
-
-              sendWelcomeEmail(user).catch(err => console.error('Failed to send welcome email:', err));
-              
-            }
+          setUserProfile({
+            id: devUser.uid || 'dev-user',
+            user_id: devUser.uid || 'dev-user',
+            displayName: devUser.displayName || 'Dev Master',
+            email: devUser.email,
+            chakra: 1000,
+            rank: 'Elite Developer',
+            canUseFeatures: true
           });
-
-        } else {
-          
-          setCurrentUser(null);
-          setUserProfile(null);
-          setIsAuthenticated(false);
+          setLoading(false);
+          return;
         }
-
-        setLoading(false);
-      } catch (err) {
-        console.error('Auth error:', err);
-        setCurrentUser(null);
-        setUserProfile(null);
-        setIsAuthenticated(false);
-        setLoading(false);
       }
-    });
 
-    return () => {
-      isMounted = false;
-      if (typeof unsubscribe === 'function') unsubscribe();
-      if (typeof profileUnsub === 'function') profileUnsub();
+      // 2. Try Backend Auth (Custom System)
+      const token = authService.getToken();
+      if (token) {
+        try {
+          const user = await authService.getMe();
+          if (user) {
+            setCurrentUser(user);
+            setIsAuthenticated(true);
+            // In the new system, profile data will come from user stats API
+            // For now, we'll store basic info
+            setUserProfile({
+              ...user,
+              id: user.user_id,
+              displayName: user.display_name,
+              canUseFeatures: true
+            });
+            setLoading(false);
+            return;
+          }
+        } catch (err) {
+          console.error('Backend auth init failed:', err);
+          authService.logout();
+        }
+      }
+
+      // 3. Fallback to Firebase (Legacy)
+      if (firebaseUtils.auth?.currentUser) {
+        const fbUser = firebaseUtils.auth.currentUser;
+        setCurrentUser(fbUser);
+        setIsAuthenticated(true);
+        const profile = await firebaseUtils.getUserProfile(fbUser.uid);
+        setUserProfile({ ...profile, canUseFeatures: true });
+      }
+
+      setLoading(false);
     };
+
+    initAuth();
   }, []);
+
+  const login = async (email, password) => {
+    const data = await authService.login(email, password);
+    setCurrentUser(data.user);
+    setIsAuthenticated(true);
+    setUserProfile({
+      ...data.user,
+      id: data.user.user_id,
+      displayName: data.user.display_name,
+      canUseFeatures: true
+    });
+    return data;
+  };
+
+  const register = async (email, password, displayName) => {
+    const data = await authService.register(email, password, displayName);
+    setCurrentUser(data.user);
+    setIsAuthenticated(true);
+    setUserProfile({
+      ...data.user,
+      id: data.user.user_id,
+      displayName: data.user.display_name,
+      canUseFeatures: true
+    });
+    return data;
+  };
+
+  const forgotPassword = async (email) => {
+    return await authService.forgotPassword(email);
+  };
+
+  const logout = async () => {
+    authService.logout();
+    clearLocalDevAuth();
+    if (firebaseUtils.auth) await firebaseUtils.logOut().catch(() => {});
+    
+    setCurrentUser(null);
+    setUserProfile(null);
+    setIsGuest(false);
+    setIsAuthenticated(false);
+    localStorage.removeItem('nakama_guest_mode');
+  };
 
   const loginAsGuest = () => {
     localStorage.setItem('nakama_guest_mode', 'true');
@@ -142,38 +146,13 @@ export const AuthProvider = ({ children }) => {
     });
   };
 
-  const logout = async () => {
-    
-    localStorage.removeItem('nakama_guest_mode');
-    localStorage.removeItem('localDevUser');
-    clearLocalDevAuth();
-
-    if (auth) {
-      try {
-        await auth.signOut();
-      } catch (e) { console.error(e); }
-    }
-
-    setCurrentUser(null);
-    setUserProfile(null);
-    setIsGuest(false);
-    setIsAuthenticated(false);
-    
-  };
-
   const refreshUserProfile = async () => {
-    if (currentUser && !isGuest && (auth || isLocalDevMode())) {
-      
-      if (auth) {
-        const profile = await getUserProfile(currentUser.uid);
-        setUserProfile({ ...profile, canUseFeatures: true });
+    if (isAuthenticated && !isGuest) {
+      const user = await authService.getMe();
+      if (user) {
+        setUserProfile(prev => ({ ...prev, ...user, displayName: user.display_name }));
       }
     }
-  };
-
-  const canUseFeature = () => {
-    if (!isAuthenticated) return false;
-    return true;
   };
 
   const requireAuth = (actionCallback, message = 'Log in to continue') => {
@@ -204,16 +183,17 @@ export const AuthProvider = ({ children }) => {
     loading,
     isGuest,
     isAuthenticated,
+    login,
+    register,
+    forgotPassword,
     loginAsGuest,
     logout,
     refreshUserProfile,
-    canUseFeature,
     requireAuth,
     isAuthModalOpen,
     authModalMessage,
     openAuthModal,
     closeAuthModal,
-    updateProfile: (data) => updateUserProfile(currentUser?.uid, data),
   };
 
   return (

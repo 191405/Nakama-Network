@@ -34,6 +34,26 @@ class Episode(Base):
     # Relationship
     anime = relationship("Anime", back_populates="episodes")
 
+class User(Base):
+    __tablename__ = "users"
+    id = Column(Integer, primary_key=True, index=True)
+    user_id = Column(String, unique=True, index=True) # Public unique identifier (UUID)
+    email = Column(String, unique=True, index=True)
+    hashed_password = Column(String)
+    display_name = Column(String, nullable=True)
+    avatar_url = Column(String, nullable=True)
+    is_active = Column(Integer, default=1)
+    is_admin = Column(Integer, default=0)
+    is_verified = Column(Integer, default=0)
+    verification_token = Column(String, nullable=True)
+    reset_token = Column(String, nullable=True)
+    created_at = Column(DateTime, default=datetime.utcnow)
+    updated_at = Column(DateTime, default=datetime.utcnow, onupdate=datetime.utcnow)
+    
+    # Relationships
+    stats = relationship("UserStats", back_populates="user", uselist=False)
+    settings = relationship("UserSettings", back_populates="user", uselist=False)
+
 class UserStats(Base):
     __tablename__ = "user_stats"
     id = Column(Integer, primary_key=True, index=True)
@@ -43,8 +63,11 @@ class UserStats(Base):
     level = Column(Integer, default=1)
     rank_title = Column(String, default="Academy Student")
     rank_color = Column(String, default="#94a3b8")
-    chakra = Column(Integer, default=0)
+     chakra = Column(Integer, default=0)
     achievements = Column(String, nullable=True)
+    
+    # Relationship
+    user = relationship("User", back_populates="stats")
 
 class Achievement(Base):
     __tablename__ = "achievements"
@@ -123,6 +146,9 @@ class UserSettings(Base):
     activity_sharing = Column(Integer, default=1)
     
     updated_at = Column(DateTime, default=datetime.utcnow, onupdate=datetime.utcnow)
+    
+    # Relationship
+    user = relationship("User", back_populates="settings")
 
 class UserStreak(Base):
     __tablename__ = "user_streaks"

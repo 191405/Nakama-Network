@@ -1,42 +1,30 @@
 version: '3.8'
 
 services:
-  db:
-    image: postgres:15-alpine
-    container_name: nakama_postgres
-    restart: always
-    environment:
-      POSTGRES_USER: nakama_user
-      POSTGRES_PASSWORD: nakama_password
-      POSTGRES_DB: nakama_db
-    ports:
-      - "5432:5432"
-    volumes:
-      - postgres_data:/var/lib/postgresql/data
-    networks:
-      - nakama_network
-
   api:
     build: .
-    container_name: nakama_backend
-    volumes:
-      # - ./sql_app.db:/app/sql_app.db # Left commented as fallback for local sqlite
-      - ./.env:/app/.env
     ports:
       - "8000:8000"
     environment:
-      - DATABASE_URL=postgresql://nakama_user:nakama_password@db:5432/nakama_db
-    env_file:
-      - .env
+      - DEBUG=true
+      - HOST=0.0.0.0
+      - PORT=8000
+      - GEMINI_API_KEY=${GEMINI_API_KEY}
+      - REDIS_URL=redis://redis:6379
+      - CORS_ORIGINS=http://localhost:5173,http://localhost:3000
     depends_on:
-      - db
+      - redis
+    volumes:
+      - ./app:/app/app
     restart: unless-stopped
-    networks:
-      - nakama_network
 
-networks:
-  nakama_network:
-    driver: bridge
+  redis:
+    image: redis:7-alpine
+    ports:
+      - "6379:6379"
+    volumes:
+      - redis_data:/data
+    restart: unless-stopped
 
 volumes:
-  postgres_data:
+  redis_data:
