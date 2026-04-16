@@ -198,7 +198,7 @@ class WebNovel(Base):
     genre = Column(String, nullable=True)          # e.g. "Fantasy, Romance"
     cover_image = Column(String, nullable=True)
     status = Column(String, default="ongoing")      # ongoing, completed, hiatus
-    ai_model = Column(String, default="gemini-1.5-flash")
+    ai_model = Column(String, default="gemini-1.5-flash-latest")
     world_rules = Column(String, nullable=True)     # User-defined static rules for the AI
     tone = Column(String, default="dramatic")       # dramatic, comedic, dark, literary
     chapter_count = Column(Integer, default=0)

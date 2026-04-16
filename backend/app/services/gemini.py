@@ -15,7 +15,7 @@ class GeminiService:
     def __init__(self):
         self._configured = False
         self._client = None
-        self._model_id = 'gemini-1.5-flash'
+        self._model_id = 'gemini-1.5-flash-latest'
     
     def _ensure_configured(self):
         if not self._configured and settings.gemini_api_key:
