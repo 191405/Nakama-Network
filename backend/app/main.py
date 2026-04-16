@@ -66,7 +66,8 @@ if settings.cors_allow_all and settings.debug:
         allow_methods=["*"],
         allow_headers=["*"],
     )
-    # Log active CORS origins for debugging
+else:
+    # Log active CORS origins for debugging in production
     logger.info(f"🔒 CORS Whitelist: {settings.cors_origins_list}")
     
     app.add_middleware(
