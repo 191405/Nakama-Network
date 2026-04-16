@@ -63,7 +63,7 @@ class UserStats(Base):
     level = Column(Integer, default=1)
     rank_title = Column(String, default="Academy Student")
     rank_color = Column(String, default="#94a3b8")
-     chakra = Column(Integer, default=0)
+    chakra = Column(Integer, default=0)
     achievements = Column(String, nullable=True)
     
     # Relationship

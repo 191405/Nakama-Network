@@ -6,8 +6,11 @@ from typing import Optional
 from app.database import get_db
 from app.database import get_db
 from app.models.sql import UserStats, UserStreak, calculate_rank
-from app.routers.users import calculate_rank_from_chakra
-
+def calculate_rank_from_chakra(chakra: int) -> dict:
+    if chakra >= 1000: return {"badge": "✨"}
+    if chakra >= 500: return {"badge": "🔱"}
+    if chakra >= 100: return {"badge": "⚔️"}
+    return {"badge": "🔰"}
 router = APIRouter()
 
 ACHIEVEMENTS = [
