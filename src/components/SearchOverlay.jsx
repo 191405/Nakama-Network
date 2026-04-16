@@ -107,7 +107,7 @@ const SearchOverlay = ({ isOpen, onClose }) => {
                             className="flex-1 bg-transparent text-white text-[15px] placeholder-[#444] focus:outline-none"
                             autoComplete="off"
                         />
-                        {loading && <Loader2 size={18} className="animate-spin text-[#e5484d]" />}
+                        {loading && <Loader2 size={18} className="animate-spin text-[#b76e79]" />}
                         <button onClick={onClose} className="text-[#555] hover:text-white transition-colors p-1">
                             <X size={18} />
                         </button>
@@ -134,7 +134,7 @@ const SearchOverlay = ({ isOpen, onClose }) => {
                                             onError={(e) => handleImageError(e, PLACEHOLDERS.anime)}
                                         />
                                         <div className="flex-1 min-w-0">
-                                            <h4 className="text-white text-sm font-medium truncate group-hover:text-[#e5484d] transition-colors">
+                                            <h4 className="text-white text-sm font-medium truncate group-hover:text-[#b76e79] transition-colors">
                                                 {anime.title}
                                             </h4>
                                             <div className="flex items-center gap-3 mt-0.5">

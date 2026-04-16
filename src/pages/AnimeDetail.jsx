@@ -70,7 +70,7 @@ const AI_ASSISTANT_PANEL = ({ anime, isOpen, onClose }) => {
             className="fixed bottom-24 right-4 md:bottom-6 md:right-6 w-[350px] max-w-[calc(100vw-32px)] bg-[#0a0a0a] border border-white/[0.08] rounded-2xl shadow-2xl z-50 flex flex-col overflow-hidden"
             style={{ height: '500px', maxHeight: 'calc(100vh - 120px)' }}
         >
-            <div className="p-4 bg-gradient-to-r from-[#e5484d] to-[#111] flex justify-between items-center">
+            <div className="p-4 bg-gradient-to-r from-[#b76e79] to-[#111] flex justify-between items-center">
                 <div className="flex items-center gap-2 text-white">
                     <Bot size={18} />
                     <span className="font-bold text-sm" style={{ fontFamily: 'var(--font-display)' }}>Data Oracle</span>
@@ -83,7 +83,7 @@ const AI_ASSISTANT_PANEL = ({ anime, isOpen, onClose }) => {
                     <div key={msg.id} className={`flex ${msg.type === 'user' ? 'justify-end' : 'justify-start'}`}>
                         <div className={`max-w-[85%] rounded-xl p-3 text-[13px] leading-relaxed ${
                             msg.type === 'user' 
-                                ? 'bg-[#e5484d] text-white rounded-tr-sm' 
+                                ? 'bg-[#b76e79] text-white rounded-tr-sm' 
                                 : 'bg-white/[0.05] text-[#ccc] border border-white/[0.05] rounded-tl-sm'
                         }`}>
                             {msg.text}
@@ -107,7 +107,7 @@ const AI_ASSISTANT_PANEL = ({ anime, isOpen, onClose }) => {
                         className="w-full bg-white/[0.03] border border-white/[0.08] rounded-xl pl-4 pr-10 py-2.5 text-sm text-white placeholder-[#555] focus:outline-none focus:border-white/[0.15]"
                     />
                     <button type="submit" disabled={!input || loading}
-                        className="absolute right-2 top-1/2 -translate-y-1/2 text-[#e5484d] disabled:opacity-40 hover:text-white transition-colors">
+                        className="absolute right-2 top-1/2 -translate-y-1/2 text-[#b76e79] disabled:opacity-40 hover:text-white transition-colors">
                         <Send size={16} />
                     </button>
                 </div>
@@ -158,7 +158,7 @@ const AnimeDetail = () => {
     if (loading) {
         return (
             <div className="min-h-screen bg-[#050505] flex items-center justify-center">
-                <Loader2 size={40} className="animate-spin text-[#e5484d]" />
+                <Loader2 size={40} className="animate-spin text-[#b76e79]" />
             </div>
         );
     }
@@ -166,7 +166,7 @@ const AnimeDetail = () => {
     if (error || !anime) {
         return (
             <div className="min-h-screen bg-[#050505] flex flex-col items-center justify-center text-center p-4">
-                <AlertCircle size={48} className="text-[#e5484d] mb-4" />
+                <AlertCircle size={48} className="text-[#b76e79] mb-4" />
                 <h1 className="text-2xl font-bold text-white mb-2">Data Fragment Corrupted</h1>
                 <p className="text-[#666] mb-6">{error || 'Anime not found'}</p>
                 <button onClick={() => navigate('/library')} className="px-6 py-2 rounded-xl bg-white/[0.05] text-white hover:bg-white/[0.1] transition-colors">
@@ -252,7 +252,7 @@ const AnimeDetail = () => {
                     {/* Stats Row */}
                     <div className="flex flex-wrap items-center gap-4 mb-8">
                         {anime.score && (
-                            <div className="flex items-center gap-1.5 px-3 py-1.5 rounded-lg bg-[#e5484d]/10 border border-[#e5484d]/20 text-[#e5484d] font-bold">
+                            <div className="flex items-center gap-1.5 px-3 py-1.5 rounded-lg bg-[#b76e79]/10 border border-[#b76e79]/20 text-[#b76e79] font-bold">
                                 <Star size={16} fill="currentColor" /> {anime.score}
                             </div>
                         )}
@@ -287,7 +287,7 @@ const AnimeDetail = () => {
                             )}
                         </div>
                         {anime.synopsis?.length > 300 && (
-                            <button onClick={() => setExpandedSynopsis(!expandedSynopsis)} className="mt-2 text-[#e5484d] text-sm font-semibold hover:text-[#f26065] transition-colors flex items-center gap-1">
+                            <button onClick={() => setExpandedSynopsis(!expandedSynopsis)} className="mt-2 text-[#b76e79] text-sm font-semibold hover:text-[#f26065] transition-colors flex items-center gap-1">
                                 {expandedSynopsis ? 'Read Less' : 'Read More'} {expandedSynopsis ? <ChevronUp size={14} /> : <ChevronDown size={14} />}
                             </button>
                         )}
@@ -326,7 +326,7 @@ const AnimeDetail = () => {
                             <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
                                 {anime.relations.slice(0, 6).map((relation, idx) => (
                                     <div key={idx} className="p-3 rounded-xl bg-white/[0.02] border border-white/[0.05]">
-                                        <p className="text-[#e5484d] text-xs font-bold mb-1 uppercase tracking-wider">{relation.relation}</p>
+                                        <p className="text-[#b76e79] text-xs font-bold mb-1 uppercase tracking-wider">{relation.relation}</p>
                                         <div className="flex flex-col gap-1">
                                             {relation.entry?.map(e => (
                                                 <span key={e.mal_id} className="text-[#ccc] text-sm">{e.name} <span className="text-[#555] text-xs">({e.type})</span></span>
@@ -348,7 +348,7 @@ const AnimeDetail = () => {
                     whileHover={{ scale: 1.05 }}
                     whileTap={{ scale: 0.95 }}
                     onClick={() => setAiPanelOpen(true)}
-                    className="fixed bottom-6 right-6 z-40 bg-[#e5484d] text-white p-4 rounded-full shadow-[0_8px_30px_rgba(229,72,77,0.3)] flex items-center gap-3 border border-white/10"
+                    className="fixed bottom-6 right-6 z-40 bg-[#b76e79] text-white p-4 rounded-full shadow-[0_8px_30px_rgba(229,72,77,0.3)] flex items-center gap-3 border border-white/10"
                 >
                     <Bot size={24} />
                     <span className="font-bold pr-2 hidden md:block">Ask Oracle</span>

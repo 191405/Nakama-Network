@@ -52,32 +52,6 @@ function AppContent() {
   const { notifications, removeNotification } = useNotification();
   const location = useLocation();
   const isOraclePage = location.pathname === '/oracle';
-  const [showEntry, setShowEntry] = useState(true);
-  const [entryComplete, setEntryComplete] = useState(false);
-
-  useEffect(() => {
-    const hasSeenEntry = sessionStorage.getItem('postLoginEntryAnimationSeen');
-    if (hasSeenEntry) {
-      setShowEntry(false);
-      setEntryComplete(true);
-    }
-  }, []);
-
-  const handleEntryComplete = useCallback(() => {
-    sessionStorage.setItem('postLoginEntryAnimationSeen', 'true');
-    setShowEntry(false);
-    setTimeout(() => setEntryComplete(true), 100);
-  }, []);
-
-  if (showEntry) {
-    return <EntryAnimation onComplete={handleEntryComplete} />;
-  }
-
-  if (!entryComplete) {
-    return (
-      <div className="min-h-screen flex items-center justify-center bg-[#050505]" />
-    );
-  }
 
   return (
     <div className="min-h-screen relative overflow-x-hidden bg-[#050505]">

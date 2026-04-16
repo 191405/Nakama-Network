@@ -262,13 +262,13 @@ const AnimeLibrary = () => {
                             onClick={() => setShowFilters(!showFilters)}
                             className={`flex items-center gap-2 px-4 py-2.5 rounded-xl text-sm font-medium transition-colors border ${
                                 showFilters || activeGenre
-                                    ? 'bg-[#e5484d]/10 border-[#e5484d]/30 text-[#e5484d]'
+                                    ? 'bg-[#b76e79]/10 border-[#b76e79]/30 text-[#b76e79]'
                                     : 'bg-white/[0.03] border-white/[0.06] text-[#888]'
                             }`}
                         >
                             <Filter size={16} />
                             Filters
-                            {activeGenre && <span className="w-1.5 h-1.5 rounded-full bg-[#e5484d]" />}
+                            {activeGenre && <span className="w-1.5 h-1.5 rounded-full bg-[#b76e79]" />}
                         </button>
 
                         <div className="flex rounded-xl overflow-hidden border border-white/[0.06]">
@@ -328,7 +328,7 @@ const AnimeLibrary = () => {
                                                 onClick={() => setActiveGenre(activeGenre === genre.id ? null : genre.id)}
                                                 className={`px-3 py-1.5 rounded-lg text-xs font-medium transition-colors ${
                                                     activeGenre === genre.id
-                                                        ? 'bg-[#e5484d] text-white'
+                                                        ? 'bg-[#b76e79] text-white'
                                                         : 'bg-white/[0.03] text-[#666] hover:text-white hover:bg-white/[0.06]'
                                                 }`}
                                             >
@@ -343,7 +343,7 @@ const AnimeLibrary = () => {
                                     <div className="mt-4 pt-4 border-t border-white/[0.04] flex items-center gap-2">
                                         <span className="text-[11px] text-[#444]">Active:</span>
                                         {activeGenre && (
-                                            <span className="flex items-center gap-1 px-2 py-0.5 rounded-md text-[11px] bg-[#e5484d]/10 text-[#e5484d]">
+                                            <span className="flex items-center gap-1 px-2 py-0.5 rounded-md text-[11px] bg-[#b76e79]/10 text-[#b76e79]">
                                                 {GENRES.find(g => g.id === activeGenre)?.name}
                                                 <X size={10} className="cursor-pointer" onClick={() => setActiveGenre(null)} />
                                             </span>

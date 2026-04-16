@@ -202,7 +202,7 @@ const Navbar = () => {
               ) : (
                 <button
                   onClick={() => openAuthModal()}
-                  className="hidden sm:flex px-4 py-2 rounded-lg text-[13px] font-semibold text-white bg-[#e5484d] hover:bg-[#f26065] transition-colors"
+                  className="hidden sm:flex px-4 py-2 rounded-lg text-[13px] font-semibold text-white bg-[#b76e79] hover:bg-[#c48b9f] border border-[#b76e79]/20 hover:border-[#b76e79]/30 transition-all shadow-[0_0_15px_rgba(183,110,121,0.15)] hover:shadow-[0_0_20px_rgba(183,110,121,0.25)]"
                 >
                   Sign In
                 </button>
@@ -294,7 +294,7 @@ const Navbar = () => {
                   ) : (
                     <button
                       onClick={() => { setMobileMenuOpen(false); openAuthModal(); }}
-                      className="w-full py-3 rounded-xl text-sm font-semibold text-white bg-[#e5484d] hover:bg-[#f26065] transition-colors"
+                      className="w-full py-3 rounded-xl text-sm font-semibold text-white bg-[#b76e79] hover:bg-[#f26065] transition-colors"
                     >
                       Sign In
                     </button>

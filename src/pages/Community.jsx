@@ -32,7 +32,7 @@ const ClaimedMemberCard = ({ claim }) => (
                 <h4 className="text-white font-bold text-[13px] line-clamp-1">{claim.characterName}</h4>
                 <p className="text-white/30 text-[11px] line-clamp-1">{claim.animeName}</p>
                 <div className="mt-1.5 flex items-center gap-1.5">
-                    <div className="w-4 h-4 rounded-full bg-[#e5484d] flex items-center justify-center text-[8px] text-white font-bold">
+                    <div className="w-4 h-4 rounded-full bg-[#b76e79] flex items-center justify-center text-[8px] text-white font-bold">
                         {claim.claimedByName?.[0]?.toUpperCase() || 'U'}
                     </div>
                     <span className="text-[10px] text-white/50 truncate">{claim.claimedByName}</span>
@@ -79,7 +79,7 @@ const SearchCharacterCard = ({ character, onClaim, claimStatus, loading }) => {
                 <button
                     onClick={() => onClaim(character)}
                     disabled={loading}
-                    className="w-full py-2.5 text-[11px] font-semibold text-white bg-[#e5484d] hover:bg-[#f26065] transition-colors disabled:opacity-40 flex items-center justify-center gap-1"
+                    className="w-full py-2.5 text-[11px] font-semibold text-white bg-[#b76e79] hover:bg-[#f26065] transition-colors disabled:opacity-40 flex items-center justify-center gap-1"
                 >
                     {loading ? <Loader2 size={12} className="animate-spin" /> : <><Check size={12} /> Claim Identity</>}
                 </button>
@@ -92,7 +92,7 @@ const SearchCharacterCard = ({ character, onClaim, claimStatus, loading }) => {
 const DiscussionThread = ({ thread, onLike }) => (
     <div className="p-4 rounded-xl border border-white/[0.04] hover:border-white/[0.08] bg-[#0a0a0a] transition-all">
         <div className="flex gap-3">
-            <div className="w-9 h-9 rounded-lg flex items-center justify-center text-sm font-bold flex-shrink-0 bg-[#e5484d] text-white">
+            <div className="w-9 h-9 rounded-lg flex items-center justify-center text-sm font-bold flex-shrink-0 bg-[#b76e79] text-white">
                 {thread.author?.charAt(0)?.toUpperCase() || 'U'}
             </div>
             <div className="flex-1 min-w-0">
@@ -104,7 +104,7 @@ const DiscussionThread = ({ thread, onLike }) => (
                 <div className="flex items-center gap-4 mt-2">
                     <span className="flex items-center gap-1 text-xs text-[#444]"><MessageCircle size={12} />{thread.replies} replies</span>
                     <button onClick={e => { e.stopPropagation(); onLike?.(thread.id); }}
-                        className="flex items-center gap-1 text-xs text-[#444] hover:text-[#e5484d] transition-colors">
+                        className="flex items-center gap-1 text-xs text-[#444] hover:text-[#b76e79] transition-colors">
                         <Heart size={12} />{thread.likes}
                     </button>
                     <span className="flex items-center gap-1 text-xs text-[#444]"><Eye size={12} />{thread.views}</span>
@@ -156,7 +156,7 @@ const CreatePostModal = ({ onClose, userProfile }) => {
                     <input type="text" value={tags} onChange={e => setTags(e.target.value)} placeholder="Tags (comma-separated)"
                         className="w-full px-4 py-3 rounded-xl text-sm text-white placeholder-[#444] bg-white/[0.03] border border-white/[0.06] focus:border-white/[0.12] focus:outline-none" />
                     <button type="submit" disabled={loading || !title.trim() || !content.trim()}
-                        className="w-full py-3 rounded-xl font-semibold text-sm text-white bg-[#e5484d] hover:bg-[#f26065] disabled:opacity-40 transition-colors flex items-center justify-center gap-2">
+                        className="w-full py-3 rounded-xl font-semibold text-sm text-white bg-[#b76e79] hover:bg-[#f26065] disabled:opacity-40 transition-colors flex items-center justify-center gap-2">
                         {loading ? <Loader2 className="animate-spin" size={16} /> : 'Post Discussion'}
                     </button>
                 </form>
@@ -272,7 +272,7 @@ const Community = () => {
                 {/* Header */}
                 <div className="mb-8">
                     <h1 className="text-3xl md:text-4xl font-bold text-white mb-2" style={{ fontFamily: 'var(--font-display)' }}>
-                        Community <span className="text-[#e5484d]">Hub</span>
+                        Community <span className="text-[#b76e79]">Hub</span>
                     </h1>
                     <p className="text-[#555] text-sm mb-6">Claim your anime identity, join discussions, and connect with fans.</p>
 
@@ -355,7 +355,7 @@ const Community = () => {
                                         />
                                     </div>
                                     <button onClick={searchCharacters} disabled={loading}
-                                        className="px-5 py-2.5 rounded-xl text-sm font-semibold text-white bg-[#e5484d] hover:bg-[#f26065] transition-colors disabled:opacity-40">
+                                        className="px-5 py-2.5 rounded-xl text-sm font-semibold text-white bg-[#b76e79] hover:bg-[#f26065] transition-colors disabled:opacity-40">
                                         {loading ? <Loader2 size={16} className="animate-spin" /> : 'Search'}
                                     </button>
                                 </div>
@@ -393,7 +393,7 @@ const Community = () => {
                                 <User size={32} className="mx-auto mb-3 text-[#333]" />
                                 <p className="text-[#888] text-sm mb-3">Sign in to claim your anime identity</p>
                                 <button onClick={() => openAuthModal('Sign in to claim a character')}
-                                    className="px-5 py-2.5 rounded-xl text-sm font-semibold text-white bg-[#e5484d] hover:bg-[#f26065] transition-colors">
+                                    className="px-5 py-2.5 rounded-xl text-sm font-semibold text-white bg-[#b76e79] hover:bg-[#f26065] transition-colors">
                                     Sign In
                                 </button>
                             </div>
@@ -431,7 +431,7 @@ const Community = () => {
                             <h3 className="text-white font-bold">Latest Discussions</h3>
                             <button
                                 onClick={() => userProfile ? setIsCreateModalOpen(true) : openAuthModal('Sign in to post')}
-                                className="px-4 py-2 rounded-xl text-sm font-semibold text-white bg-[#e5484d] hover:bg-[#f26065] transition-colors">
+                                className="px-4 py-2 rounded-xl text-sm font-semibold text-white bg-[#b76e79] hover:bg-[#f26065] transition-colors">
                                 + New Thread
                             </button>
                         </div>
@@ -469,12 +469,12 @@ const Community = () => {
                                     ? <div className="flex flex-col items-center justify-center h-full text-[#333]"><MessageCircle size={40} className="mb-2" /><p className="text-sm">Start the conversation!</p></div>
                                     : chatMessages.map(msg => (
                                         <motion.div key={msg.id} initial={{ opacity: 0, y: 8 }} animate={{ opacity: 1, y: 0 }} className="flex gap-3">
-                                            <div className="w-8 h-8 rounded-lg flex items-center justify-center font-bold text-xs flex-shrink-0 bg-[#e5484d] text-white">
+                                            <div className="w-8 h-8 rounded-lg flex items-center justify-center font-bold text-xs flex-shrink-0 bg-[#b76e79] text-white">
                                                 {msg.userName?.charAt(0)?.toUpperCase() || 'U'}
                                             </div>
                                             <div className="flex-1 min-w-0">
                                                 <div className="flex items-center gap-2 mb-0.5">
-                                                    <span className="font-semibold text-sm text-[#e5484d]">{msg.userName}</span>
+                                                    <span className="font-semibold text-sm text-[#b76e79]">{msg.userName}</span>
                                                     <span className="text-[10px] px-1.5 py-0.5 rounded bg-white/[0.04] text-[#555]">{msg.userRank}</span>
                                                     <span className="text-[10px] text-[#333]">{msg.timestamp?.toDate?.()?.toLocaleTimeString?.() || 'now'}</span>
                                                 </div>
@@ -491,7 +491,7 @@ const Community = () => {
                                         placeholder="Type a message..."
                                         className="flex-1 rounded-xl px-4 py-2.5 text-white placeholder-[#444] text-sm bg-white/[0.03] border border-white/[0.06] focus:border-white/[0.12] focus:outline-none" />
                                     <button type="submit" disabled={!chatInput.trim()}
-                                        className="px-4 py-2.5 rounded-xl text-white bg-[#e5484d] hover:bg-[#f26065] transition-colors disabled:opacity-40">
+                                        className="px-4 py-2.5 rounded-xl text-white bg-[#b76e79] hover:bg-[#f26065] transition-colors disabled:opacity-40">
                                         <Send size={16} />
                                     </button>
                                 </div>

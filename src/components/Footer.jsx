@@ -51,7 +51,7 @@ const Footer = () => {
                                 placeholder="your@email.com"
                                 className="w-full px-4 py-2.5 rounded-lg text-white placeholder-[#444] pr-10 text-sm bg-white/[0.03] border border-white/[0.06] focus:border-white/[0.12] focus:outline-none transition-colors"
                             />
-                            <button className="absolute right-1.5 top-1/2 -translate-y-1/2 p-1.5 rounded-md bg-[#e5484d] text-white hover:bg-[#f26065] transition-colors">
+                            <button className="absolute right-1.5 top-1/2 -translate-y-1/2 p-1.5 rounded-md bg-[#b76e79] text-white hover:bg-[#f26065] transition-colors">
                                 <ArrowRight size={14} />
                             </button>
                         </div>
@@ -66,7 +66,7 @@ const Footer = () => {
                         <Link to="#" className="hover:text-[#555] transition-colors">Privacy</Link>
                         <Link to="#" className="hover:text-[#555] transition-colors">Terms</Link>
                         <span className="flex items-center gap-1">
-                            Made with <Heart size={9} className="text-[#e5484d]" fill="currentColor" /> for fans
+                            Made with <Heart size={9} className="text-[#b76e79]" fill="currentColor" /> for fans
                         </span>
                     </div>
                 </div>

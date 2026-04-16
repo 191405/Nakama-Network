@@ -338,7 +338,7 @@ const StoryEditor = () => {
                                     className="group relative p-5 rounded-2xl border border-white/[0.06] hover:border-white/[0.1] bg-[#0a0a0a] hover:bg-[#0e0e0e] transition-all duration-300 cursor-pointer"
                                     onClick={() => openNovel(novel)}>
                                     <button onClick={(e) => { e.stopPropagation(); handleDelete(novel.id); }}
-                                        className="absolute top-3 right-3 p-1.5 rounded-lg text-transparent group-hover:text-[#444] hover:!text-[#e5484d] hover:bg-white/[0.04] transition-colors">
+                                        className="absolute top-3 right-3 p-1.5 rounded-lg text-transparent group-hover:text-[#444] hover:!text-[#b76e79] hover:bg-white/[0.04] transition-colors">
                                         <Trash2 size={13} />
                                     </button>
                                     <div className="flex items-start mb-3">
@@ -407,7 +407,7 @@ const StoryEditor = () => {
                                     </div>
                                     <div className="flex gap-3 mt-6">
                                         <button onClick={() => setShowCreate(false)} className="flex-1 py-2.5 rounded-xl text-sm font-medium text-[#888] bg-white/[0.04] hover:bg-white/[0.06] border border-white/[0.06] transition-colors">Cancel</button>
-                                        <button onClick={handleCreate} disabled={!newTitle.trim()} className="flex-1 py-2.5 rounded-xl text-sm font-semibold text-white bg-[#e5484d] hover:bg-[#f26065] disabled:opacity-40 transition-colors">Create</button>
+                                        <button onClick={handleCreate} disabled={!newTitle.trim()} className="flex-1 py-2.5 rounded-xl text-sm font-semibold text-white bg-[#b76e79] hover:bg-[#f26065] disabled:opacity-40 transition-colors">Create</button>
                                     </div>
                                 </div>
                             </motion.div>
@@ -448,7 +448,7 @@ const StoryEditor = () => {
                         <Wand2 size={13} /> Assist
                     </button>
                     <button onClick={handleSave} disabled={saving}
-                        className="flex items-center gap-1.5 px-3.5 py-1.5 rounded-lg text-[12px] font-semibold text-white bg-[#e5484d] hover:bg-[#f26065] disabled:opacity-60 transition-colors ml-1">
+                        className="flex items-center gap-1.5 px-3.5 py-1.5 rounded-lg text-[12px] font-semibold text-white bg-[#b76e79] hover:bg-[#f26065] disabled:opacity-60 transition-colors ml-1">
                         {saving ? <Loader2 size={13} className="animate-spin" /> : <Save size={13} />} Save
                     </button>
                 </div>
@@ -525,7 +525,7 @@ const StoryEditor = () => {
                                     </div>
 
                                     <button onClick={handleGenerate} disabled={generating || !prompt.trim()}
-                                        className="w-full py-2.5 rounded-xl text-[13px] font-semibold text-white bg-[#e5484d] hover:bg-[#f26065] disabled:opacity-40 flex items-center justify-center gap-2 transition-colors mb-6">
+                                        className="w-full py-2.5 rounded-xl text-[13px] font-semibold text-white bg-[#b76e79] hover:bg-[#f26065] disabled:opacity-40 flex items-center justify-center gap-2 transition-colors mb-6">
                                         {generating ? (
                                             <><Loader2 size={14} className="animate-spin" /> Writing…</>
                                         ) : (

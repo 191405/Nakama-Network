@@ -468,7 +468,7 @@ const TieringSystem = () => {
                     className="text-center mb-12 pt-6"
                 >
                     <h1 className="font-bold text-white mb-3" style={{ fontFamily: 'var(--font-display)', fontSize: 'clamp(2rem, 5vw, 3.5rem)' }}>
-                        Power <span className="text-[#e5484d]">Rankings</span>
+                        Power <span className="text-[#b76e79]">Rankings</span>
                     </h1>
                     <p className="text-[#555] text-sm max-w-2xl mx-auto">
                         The complete framework for categorizing fictional characters based on destructive capacity,
