@@ -68,11 +68,11 @@ if settings.cors_allow_all and settings.debug:
     )
 else:
     # Log active CORS origins for debugging in production
-    logger.info(f"🔒 CORS Whitelist: {settings.cors_origins_list}")
+    logger.info("🔒 CORS: Allowing ALL origins (*) for connectivity stabilization")
     
     app.add_middleware(
         CORSMiddleware,
-        allow_origins=settings.cors_origins_list,
+        allow_origins=["*"],
         allow_credentials=True,
         allow_methods=["*"],
         allow_headers=["*"],
