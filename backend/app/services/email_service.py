@@ -4,6 +4,7 @@ from email.mime.text import MIMEText
 from email.mime.multipart import MIMEMultipart
 from typing import Optional
 import logging
+import json
 import os
 from datetime import datetime
 
@@ -95,43 +96,99 @@ class EmailService:
         self.smtp_password = settings.smtp_password
         self.smtp_email = settings.smtp_email
         
-        self.is_configured = all([
-            self.smtp_user, 
-            self.smtp_password, 
-            self.smtp_email
-        ])
+        # Resend API (fallback if SMTP not configured)
+        self.resend_api_key = os.getenv("RESEND_API_KEY", "")
+        self.resend_from = os.getenv("RESEND_FROM_EMAIL", "Nakama Network <noreply@nakama-network.com>")
         
-        if not self.is_configured:
-            logger.warning("🔔 SMTP not fully configured. Email service running in MOCK mode.")
+        self.smtp_configured = all([self.smtp_user, self.smtp_password, self.smtp_email])
+        self.resend_configured = bool(self.resend_api_key)
+        self.is_configured = self.smtp_configured or self.resend_configured
+        
+        if self.smtp_configured:
+            logger.info("📧 Email service running via SMTP")
+        elif self.resend_configured:
+            logger.info("📧 Email service running via Resend API")
+        else:
+            logger.warning("🔔 No email provider configured. Email service running in MOCK mode.")
+            logger.warning("   Set SMTP_USER/SMTP_PASSWORD/SMTP_EMAIL for Gmail SMTP")
+            logger.warning("   Or set RESEND_API_KEY for Resend API")
 
     def send_email(self, to_email: str, subject: str, html_content: str) -> bool:
-        """Send an email via SMTP with fallback to logging"""
+        """Send an email via SMTP, Resend API, or mock logging"""
         if not self.is_configured:
             logger.info(f"💌 [MOCK EMAIL] To: {to_email} | Subject: {subject}")
             logger.debug(f"Content: {html_content[:100]}...")
             return True
 
+        # Try SMTP first
+        if self.smtp_configured:
+            return self._send_via_smtp(to_email, subject, html_content)
+        
+        # Fallback to Resend
+        if self.resend_configured:
+            return self._send_via_resend(to_email, subject, html_content)
+        
+        return False
+
+    def _send_via_smtp(self, to_email: str, subject: str, html_content: str) -> bool:
+        """Send email via traditional SMTP (Gmail, Outlook, etc.)"""
         try:
             msg = MIMEMultipart()
-            # Ensure the display name is clean or use the raw email
             sender_display = f"{APP_NAME} <{self.smtp_email}>"
             msg['From'] = sender_display
             msg['To'] = to_email
             msg['Subject'] = subject
-
-            # Attach HTML content
             msg.attach(MIMEText(html_content, 'html'))
 
-            # Connect to SMTP server
             with smtplib.SMTP(self.smtp_host, self.smtp_port) as server:
                 server.starttls()
                 server.login(self.smtp_user, self.smtp_password)
                 server.send_message(msg)
             
-            logger.info(f"✅ Email sent successfully to {to_email}")
+            logger.info(f"✅ Email sent via SMTP to {to_email}")
             return True
         except Exception as e:
-            logger.error(f"❌ Failed to send email to {to_email}: {e}")
+            logger.error(f"❌ SMTP send failed to {to_email}: {e}")
+            # Try Resend as fallback
+            if self.resend_configured:
+                logger.info("🔄 Falling back to Resend API...")
+                return self._send_via_resend(to_email, subject, html_content)
+            return False
+
+    def _send_via_resend(self, to_email: str, subject: str, html_content: str) -> bool:
+        """Send email via Resend API (https://resend.com)"""
+        import urllib.request
+        import urllib.error
+        
+        try:
+            payload = json.dumps({
+                "from": self.resend_from,
+                "to": [to_email],
+                "subject": subject,
+                "html": html_content
+            })
+            
+            req = urllib.request.Request(
+                "https://api.resend.com/emails",
+                data=payload.encode("utf-8"),
+                headers={
+                    "Authorization": f"Bearer {self.resend_api_key}",
+                    "Content-Type": "application/json"
+                },
+                method="POST"
+            )
+            
+            with urllib.request.urlopen(req, timeout=15) as resp:
+                result = json.loads(resp.read().decode())
+                logger.info(f"✅ Email sent via Resend to {to_email} (id: {result.get('id', 'N/A')})")
+                return True
+                
+        except urllib.error.HTTPError as e:
+            body = e.read().decode() if e.fp else ""
+            logger.error(f"❌ Resend API error ({e.code}): {body}")
+            return False
+        except Exception as e:
+            logger.error(f"❌ Resend send failed to {to_email}: {e}")
             return False
 
     def send_welcome_email(self, email: str, display_name: str) -> bool:

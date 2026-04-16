@@ -1,4 +1,5 @@
-import React, { useState, useEffect, useRef } from 'react';
+import React, { useState, useEffect, useRef, useCallback } from 'react';
+import { useWebSocketChat } from '../hooks/useWebSocketChat';
 import { motion, AnimatePresence } from 'framer-motion';
 import {
     Users, Search, MessageCircle, Heart, BookOpen,
@@ -210,16 +211,28 @@ const Community = () => {
         }
     }, [userProfile?.id, claimSuccess]);
 
-    // Chat subscription
+    // WebSocket chat connection
+    const wsChat = useWebSocketChat(chatRoom, userProfile?.displayName || 'Guest', {
+        enabled: activeTab === 'chat' && !!userProfile,
+    });
+
+    // Firebase fallback chat subscription (used when WS is disconnected)
     useEffect(() => {
-        if (activeTab === 'chat') {
+        if (activeTab === 'chat' && !wsChat.connected) {
             const unsub = subscribeToChatMessages(chatRoom, msgs => {
                 setChatMessages(msgs);
                 setTimeout(() => chatEndRef.current?.scrollIntoView({ behavior: 'smooth' }), 100);
             });
             return () => unsub();
         }
-    }, [activeTab, chatRoom]);
+    }, [activeTab, chatRoom, wsChat.connected]);
+
+    // Auto-scroll on new WS messages
+    useEffect(() => {
+        if (wsChat.messages.length > 0) {
+            setTimeout(() => chatEndRef.current?.scrollIntoView({ behavior: 'smooth' }), 100);
+        }
+    }, [wsChat.messages.length]);
 
     // Discussions subscription
     useEffect(() => {
@@ -261,7 +274,13 @@ const Community = () => {
     const handleSendMessage = async (e) => {
         e.preventDefault();
         if (!chatInput.trim() || !userProfile) return;
-        await sendChatMessage(userProfile.id || 'anonymous', userProfile.displayName || 'Anonymous', userProfile.rank || 'User', chatInput.trim(), chatRoom);
+        
+        // Try WebSocket first, fallback to Firebase
+        if (wsChat.connected) {
+            wsChat.sendMessage(chatInput.trim());
+        } else {
+            await sendChatMessage(userProfile.id || 'anonymous', userProfile.displayName || 'Anonymous', userProfile.rank || 'User', chatInput.trim(), chatRoom);
+        }
         setChatInput('');
     };
 
@@ -452,6 +471,7 @@ const Community = () => {
                 {/* ══ LIVE CHAT TAB ══ */}
                 {activeTab === 'chat' && (
                     <div className="max-w-3xl mx-auto">
+                        {/* Room Selector */}
                         <div className="flex gap-2 mb-4 justify-center">
                             {[{id:'general', desc:'Open chat'}, {id:'powerscaling', desc:'Battleboard'}, {id:'recommendations', desc:'What to watch'}].map(room => (
                                 <button key={room.id} onClick={() => setChatRoom(room.id)}
@@ -463,35 +483,101 @@ const Community = () => {
                                 </button>
                             ))}
                         </div>
+
+                        {/* Connection Status Bar */}
+                        <div className="flex items-center justify-between mb-3 px-1">
+                            <div className="flex items-center gap-2">
+                                <span className={`w-2 h-2 rounded-full ${
+                                    wsChat.connected ? 'bg-emerald-400 shadow-[0_0_6px_rgba(52,211,153,0.5)]'
+                                    : wsChat.connecting ? 'bg-yellow-400 animate-pulse'
+                                    : 'bg-[#333]'
+                                }`} />
+                                <span className="text-[11px] text-[#555]">
+                                    {wsChat.connected ? 'Live' : wsChat.connecting ? 'Connecting...' : 'Offline'}
+                                </span>
+                            </div>
+                            {wsChat.onlineUsers.length > 0 && (
+                                <span className="text-[11px] text-[#444]">
+                                    <Users size={11} className="inline mr-1" />
+                                    {wsChat.onlineUsers.length} online
+                                </span>
+                            )}
+                        </div>
+
                         <div className="rounded-xl overflow-hidden bg-[#0a0a0a] border border-white/[0.06]">
                             <div className="h-[400px] overflow-y-auto p-4 space-y-4">
-                                {chatMessages.length === 0
-                                    ? <div className="flex flex-col items-center justify-center h-full text-[#333]"><MessageCircle size={40} className="mb-2" /><p className="text-sm">Start the conversation!</p></div>
-                                    : chatMessages.map(msg => (
-                                        <motion.div key={msg.id} initial={{ opacity: 0, y: 8 }} animate={{ opacity: 1, y: 0 }} className="flex gap-3">
-                                            <div className="w-8 h-8 rounded-lg flex items-center justify-center font-bold text-xs flex-shrink-0 bg-[#b76e79] text-white">
-                                                {msg.userName?.charAt(0)?.toUpperCase() || 'U'}
+                                {(() => {
+                                    // Prefer WS messages when connected, otherwise Firebase
+                                    const msgs = wsChat.connected && wsChat.messages.length > 0 ? wsChat.messages : chatMessages;
+                                    if (msgs.length === 0) {
+                                        return (
+                                            <div className="flex flex-col items-center justify-center h-full text-[#333]">
+                                                <MessageCircle size={40} className="mb-2" />
+                                                <p className="text-sm">Start the conversation!</p>
                                             </div>
-                                            <div className="flex-1 min-w-0">
-                                                <div className="flex items-center gap-2 mb-0.5">
-                                                    <span className="font-semibold text-sm text-[#b76e79]">{msg.userName}</span>
-                                                    <span className="text-[10px] px-1.5 py-0.5 rounded bg-white/[0.04] text-[#555]">{msg.userRank}</span>
-                                                    <span className="text-[10px] text-[#333]">{msg.timestamp?.toDate?.()?.toLocaleTimeString?.() || 'now'}</span>
+                                        );
+                                    }
+                                    return msgs.map((msg, idx) => {
+                                        // Normalize field names (WS uses 'user'/'text', Firebase uses 'userName'/'message')
+                                        const name = msg.user || msg.userName || 'Anonymous';
+                                        const text = msg.text || msg.message || '';
+                                        const rank = msg.userRank || '';
+                                        const time = msg.timestamp?.toDate?.()?.toLocaleTimeString?.() || (typeof msg.timestamp === 'string' ? new Date(msg.timestamp).toLocaleTimeString() : 'now');
+                                        const isSystem = msg.isSystem || msg.type === 'system';
+
+                                        if (isSystem) {
+                                            return (
+                                                <div key={msg.id || idx} className="text-center text-[11px] text-[#444] py-1">
+                                                    {text || msg.message}
                                                 </div>
-                                                <p className="text-[#999] text-sm">{msg.message}</p>
-                                            </div>
-                                        </motion.div>
-                                    ))
-                                }
+                                            );
+                                        }
+
+                                        return (
+                                            <motion.div key={msg.id || idx} initial={{ opacity: 0, y: 8 }} animate={{ opacity: 1, y: 0 }} className="flex gap-3">
+                                                <div className="w-8 h-8 rounded-lg flex items-center justify-center font-bold text-xs flex-shrink-0 bg-[#b76e79] text-white">
+                                                    {name.charAt(0)?.toUpperCase() || 'U'}
+                                                </div>
+                                                <div className="flex-1 min-w-0">
+                                                    <div className="flex items-center gap-2 mb-0.5">
+                                                        <span className="font-semibold text-sm text-[#b76e79]">{name}</span>
+                                                        {rank && <span className="text-[10px] px-1.5 py-0.5 rounded bg-white/[0.04] text-[#555]">{rank}</span>}
+                                                        <span className="text-[10px] text-[#333]">{time}</span>
+                                                    </div>
+                                                    <p className="text-[#999] text-sm">{text}</p>
+                                                </div>
+                                            </motion.div>
+                                        );
+                                    });
+                                })()}
                                 <div ref={chatEndRef} />
                             </div>
+
+                            {/* Typing indicator */}
+                            {wsChat.typingUsers.length > 0 && (
+                                <div className="px-4 py-1.5 border-t border-white/[0.03]">
+                                    <span className="text-[11px] text-[#444] italic">
+                                        {wsChat.typingUsers.join(', ')} {wsChat.typingUsers.length === 1 ? 'is' : 'are'} typing...
+                                    </span>
+                                </div>
+                            )}
+
+                            {/* Error banner */}
+                            {wsChat.error && (
+                                <div className="px-4 py-2 bg-[#b76e79]/10 border-t border-[#b76e79]/20">
+                                    <p className="text-[12px] text-[#b76e79]">{wsChat.error}</p>
+                                </div>
+                            )}
+
                             <form onSubmit={handleSendMessage} className="p-3 border-t border-white/[0.04]">
                                 <div className="flex gap-2">
-                                    <input type="text" value={chatInput} onChange={e => setChatInput(e.target.value)}
-                                        placeholder="Type a message..."
-                                        className="flex-1 rounded-xl px-4 py-2.5 text-white placeholder-[#444] text-sm bg-white/[0.03] border border-white/[0.06] focus:border-white/[0.12] focus:outline-none" />
-                                    <button type="submit" disabled={!chatInput.trim()}
-                                        className="px-4 py-2.5 rounded-xl text-white bg-[#b76e79] hover:bg-[#f26065] transition-colors disabled:opacity-40">
+                                    <input type="text" value={chatInput}
+                                        onChange={e => { setChatInput(e.target.value); wsChat.sendTyping(); }}
+                                        placeholder={userProfile ? 'Type a message...' : 'Sign in to chat'}
+                                        disabled={!userProfile}
+                                        className="flex-1 rounded-xl px-4 py-2.5 text-white placeholder-[#444] text-sm bg-white/[0.03] border border-white/[0.06] focus:border-white/[0.12] focus:outline-none disabled:opacity-40" />
+                                    <button type="submit" disabled={!chatInput.trim() || !userProfile}
+                                        className="px-4 py-2.5 rounded-xl text-white bg-[#b76e79] hover:bg-[#c48b9f] transition-colors disabled:opacity-40">
                                         <Send size={16} />
                                     </button>
                                 </div>
