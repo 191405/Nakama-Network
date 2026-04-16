@@ -40,3 +40,15 @@ services:
         sync: false
       - key: SMTP_EMAIL
         sync: false
+      - key: SFTP_HOST
+        value: access960253636.webspace-data.io
+      - key: SFTP_PORT
+        value: "22"
+      - key: SFTP_USERNAME
+        value: u112036877
+      - key: SFTP_PASSWORD
+        sync: false
+      - key: SFTP_BASE_PATH
+        value: /videos
+      - key: SFTP_PUBLIC_URL
+        value: https://platkelvconcept.net
