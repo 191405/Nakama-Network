@@ -186,6 +186,7 @@ const Community = () => {
     const [activeTab, setActiveTab] = useState('identities');
     const [characters, setCharacters] = useState([]);
     const [searchQuery, setSearchQuery] = useState('');
+    const [debouncedQuery, setDebouncedQuery] = useState('');
     const [loading, setLoading] = useState(false);
     const [claimLoading, setClaimLoading] = useState(false);
     const [claimError, setClaimError] = useState('');
@@ -254,16 +255,31 @@ const Community = () => {
         }
     }, [activeTab]);
 
-    const searchCharacters = async () => {
-        if (!searchQuery.trim()) return;
-        try {
-            setLoading(true);
-            setClaimError('');
-            const data = await jikanAPI.searchCharacters(searchQuery);
-            setCharacters(data || []);
-        } catch (err) { console.error(err); }
-        finally { setLoading(false); }
-    };
+    useEffect(() => {
+        const handler = setTimeout(() => {
+            setDebouncedQuery(searchQuery);
+        }, 500);
+        return () => clearTimeout(handler);
+    }, [searchQuery]);
+
+    useEffect(() => {
+        if (!debouncedQuery.trim()) {
+            setCharacters([]);
+            return;
+        }
+        const fetchChars = async () => {
+            try {
+                setLoading(true);
+                setClaimError('');
+                const data = await jikanAPI.searchCharacters(debouncedQuery);
+                setCharacters(data || []);
+            } catch (err) { console.error(err); }
+            finally { setLoading(false); }
+        };
+        fetchChars();
+    }, [debouncedQuery]);
+
+    const searchCharacters = () => { /* Now handled by debounced effect */ };
 
     const handleClaim = async (character) => {
         if (!userProfile) { openAuthModal('Sign in to claim a character identity'); return; }
@@ -382,17 +398,24 @@ const Community = () => {
 
                                 <div className="flex gap-2 mb-4">
                                     <div className="flex-1 relative">
-                                        <Search className="absolute left-3 top-1/2 -translate-y-1/2 text-[#444]" size={16} />
+                                        <Search className="absolute left-3 top-1/2 -translate-y-1/2 text-[#444]" size={16} zIndex={20}/>
+                                        <div className="absolute left-9 top-1/2 -translate-y-1/2 text-sm text-[#444] pointer-events-none truncate select-none z-0">
+                                            {searchQuery && characters.length > 0 && characters[0].name.toLowerCase().startsWith(searchQuery.toLowerCase())
+                                                ? searchQuery + characters[0].name.slice(searchQuery.length)
+                                                : ''}
+                                        </div>
                                         <input type="text" placeholder="Search characters (e.g. Gojo, Naruto, Levi)..."
                                             value={searchQuery} onChange={e => setSearchQuery(e.target.value)}
-                                            onKeyDown={e => e.key === 'Enter' && searchCharacters()}
-                                            className="w-full pl-9 pr-4 py-2.5 rounded-xl text-sm text-white placeholder-[#444] bg-white/[0.03] border border-white/[0.06] focus:border-white/[0.12] focus:outline-none"
+                                            onKeyDown={e => {
+                                                if (e.key === 'Tab' && characters.length > 0 && characters[0].name.toLowerCase().startsWith(searchQuery.toLowerCase())) {
+                                                    e.preventDefault();
+                                                    setSearchQuery(characters[0].name);
+                                                }
+                                            }}
+                                            className="w-full relative z-10 pl-9 pr-4 py-2.5 rounded-xl text-sm text-white bg-transparent border border-white/[0.06] focus:border-white/[0.12] focus:outline-none placeholder-[#444]"
                                         />
+                                        <div className="absolute inset-0 bg-white/[0.03] rounded-xl pointer-events-none z-0"></div>
                                     </div>
-                                    <button onClick={searchCharacters} disabled={loading}
-                                        className="px-5 py-2.5 rounded-xl text-sm font-semibold text-white bg-[#b76e79] hover:bg-[#f26065] transition-colors disabled:opacity-40">
-                                        {loading ? <Loader2 size={16} className="animate-spin" /> : 'Search'}
-                                    </button>
                                 </div>
 
                                 {claimError && (

@@ -72,7 +72,10 @@ const safeFetch = async (url, options = {}, retries = 2, delay = 1000) => {
       }
       return json;
     } catch (error) {
-      if (i === retries) throw error;
+      if (i === retries) {
+        console.warn('Max retries reached. Failing gracefully.', error.message);
+        return { data: null }; // Return generic empty JSON shape to prevent crash
+      }
       const waitTime = delay * Math.pow(2, i);
       console.warn(`Fetch error. Retrying in ${waitTime}ms...`, error.message);
       await new Promise(resolve => setTimeout(resolve, waitTime));

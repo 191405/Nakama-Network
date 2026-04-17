@@ -51,10 +51,13 @@ const PageWrapper = ({ children }) => {
 function AppContent() {
   const { notifications, removeNotification } = useNotification();
   const location = useLocation();
+  const [showEntry, setShowEntry] = useState(true);
   const isOraclePage = location.pathname === '/oracle';
 
   return (
     <div className="min-h-screen relative overflow-x-hidden bg-[#050505]">
+      {showEntry && <EntryAnimation onComplete={() => setShowEntry(false)} />}
+      
       {/* Backgrounds removed for minimal, high-end style */}
       <Navbar />
       <AuthModal />

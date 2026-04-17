@@ -1,10 +1,9 @@
 import React, { useState, useEffect } from 'react';
 import { motion } from 'framer-motion';
-import { Trophy, Zap, Users, TrendingUp, Star, Award, Sparkles, BookOpen, Heart, Newspaper, Film, MessageCircle } from 'lucide-react';
+import { Trophy, Zap, Users, TrendingUp, Star, Award, Sparkles, BookOpen, Heart, Newspaper, Film, MessageCircle, Sword, Target } from 'lucide-react';
 import { useAuth } from '../contexts/AuthContext';
 import { getLeaderboard, getAnnouncements } from '../utils/firebase';
 import Pagination from '../components/Pagination';
-import TabBar from '../components/TabBar';
 import Breadcrumb from '../components/Breadcrumb';
 import ProgressBar from '../components/ProgressBar';
 import Tag, { TagGroup } from '../components/Tag';
@@ -115,18 +114,43 @@ const Hub = () => {
           </p>
         </div>
 
-        { }
-        <TabBar
-          tabs={[
-            { id: 'overview', label: '⚡ Overview' },
-            { id: 'stats', label: '📊 Detailed Stats' },
-            { id: 'achievements', label: '🏆 Achievements' },
-            { id: 'settings', label: '⚙️ Preferences' },
-          ]}
-          activeTab={activeTab}
-          onTabChange={setActiveTab}
-          variant="default"
-        />
+        {/* Premium Inline Tab Switcher */}
+        <div style={{
+          display: 'flex', gap: '8px', padding: '6px', borderRadius: '20px', marginBottom: '2.5rem',
+          background: 'rgba(0,0,0,0.4)', border: '1px solid rgba(255,255,255,0.05)',
+          boxShadow: 'inset 0 2px 10px rgba(0,0,0,0.5)', overflowX: 'auto', scrollbarWidth: 'none'
+        }}>
+          {[
+            { id: 'overview', label: 'Overview', icon: Zap },
+            { id: 'stats', label: 'Detailed Stats', icon: TrendingUp },
+            { id: 'achievements', label: 'Achievements', icon: Award },
+            { id: 'settings', label: 'Preferences', icon: Sword },
+          ].map((tab) => {
+            const isActive = activeTab === tab.id;
+            return (
+              <button
+                key={tab.id}
+                onClick={() => setActiveTab(tab.id)}
+                style={{
+                  flex: '1', display: 'flex', alignItems: 'center', justifyContent: 'center', gap: '8px',
+                  padding: '12px 20px', borderRadius: '14px', fontSize: '14px', fontWeight: 600,
+                  whiteSpace: 'nowrap', cursor: 'pointer', transition: 'all 0.3s cubic-bezier(0.4, 0, 0.2, 1)',
+                  border: isActive ? '1px solid rgba(183,110,121,0.25)' : '1px solid transparent',
+                  background: isActive 
+                    ? 'linear-gradient(180deg, rgba(30,30,30,0.8) 0%, rgba(15,15,15,0.95) 100%)' 
+                    : 'transparent',
+                  color: isActive ? '#fff' : '#64748b',
+                  boxShadow: isActive ? '0 10px 25px -5px rgba(0,0,0,0.4), inset 0 1px 0 rgba(255,255,255,0.05)' : 'none',
+                }}
+                onMouseEnter={(e) => { if(!isActive) e.currentTarget.style.color = '#fff'; }}
+                onMouseLeave={(e) => { if(!isActive) e.currentTarget.style.color = '#64748b'; }}
+              >
+                <tab.icon size={16} style={{ color: isActive ? '#b76e79' : 'inherit' }} />
+                {tab.label}
+              </button>
+            );
+          })}
+        </div>
 
         { }
         {activeTab === 'overview' && (

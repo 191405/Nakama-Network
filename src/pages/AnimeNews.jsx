@@ -37,7 +37,7 @@ const fetchNewsPage = async (pageIndex, usedIds) => {
                     title: item.title,
                     excerpt: item.excerpt || item.title,
                     url: item.url,
-                    image: item.images?.webp?.large_image_url || item.images?.jpg?.large_image_url || item.images?.webp?.image_url || `https://via.placeholder.com/600x400/100714/f43f5e?text=Nakama+News`,
+                    image: item.images?.webp?.large_image_url || item.images?.jpg?.large_image_url || item.images?.webp?.image_url || `https://images.unsplash.com/photo-1578632767115-351597cf2477?q=80&w=600&auto=format&fit=crop`,
                     date: item.date,
                     author: item.author_username || 'MAL News',
                     source: 'MyAnimeList',
@@ -50,9 +50,13 @@ const fetchNewsPage = async (pageIndex, usedIds) => {
         }
     }
 
-    // Deduplicate by mal_id
-    const unique = allNews.filter((item, idx, self) =>
-        idx === self.findIndex(t => t.mal_id === item.mal_id)
+    const THREE_DAYS_MS = 3 * 24 * 60 * 60 * 1000;
+    const now = Date.now();
+
+    // Deduplicate by mal_id and filter by exactly 3 days
+    let unique = allNews.filter((item, idx, self) =>
+        idx === self.findIndex(t => t.mal_id === item.mal_id) && 
+        (now - new Date(item.date).getTime() <= THREE_DAYS_MS)
     );
     unique.sort((a, b) => new Date(b.date) - new Date(a.date));
 

@@ -79,6 +79,12 @@ const SearchOverlay = ({ isOpen, onClose }) => {
 
     if (!isOpen) return null;
 
+    const predictiveHint = query && results.length > 0
+        ? results[0].title.toLowerCase().startsWith(query.toLowerCase())
+            ? query + results[0].title.slice(query.length)
+            : ''
+        : '';
+
     return (
         <AnimatePresence>
             <motion.div
@@ -96,19 +102,32 @@ const SearchOverlay = ({ isOpen, onClose }) => {
                     onClick={e => e.stopPropagation()}
                 >
                     {/* Search Input */}
-                    <div className="flex items-center gap-3 px-5 py-4 border-b border-white/[0.06]">
-                        <Search size={20} className="text-[#555] flex-shrink-0" />
-                        <input
-                            ref={inputRef}
-                            type="text"
-                            value={query}
-                            onChange={handleInputChange}
-                            placeholder="Search anime titles..."
-                            className="flex-1 bg-transparent text-white text-[15px] placeholder-[#444] focus:outline-none"
-                            autoComplete="off"
-                        />
-                        {loading && <Loader2 size={18} className="animate-spin text-[#b76e79]" />}
-                        <button onClick={onClose} className="text-[#555] hover:text-white transition-colors p-1">
+                    <div className="flex items-center gap-3 px-5 py-4 border-b border-white/[0.06] relative">
+                        <Search size={20} className="text-[#555] flex-shrink-0 z-10" />
+                        <div className="flex-1 relative">
+                            <div className="absolute inset-y-0 left-0 flex items-center text-[15px] text-[#444] pointer-events-none truncate select-none z-0">
+                                {predictiveHint}
+                            </div>
+                            <input
+                                ref={inputRef}
+                                type="text"
+                                value={query}
+                                onChange={handleInputChange}
+                                placeholder="Search anime titles..."
+                                onKeyDown={(e) => {
+                                    if (e.key === 'Tab' && predictiveHint) {
+                                        e.preventDefault();
+                                        setQuery(predictiveHint);
+                                        clearTimeout(debounceTimer.current);
+                                        debounceTimer.current = setTimeout(() => searchAnime(predictiveHint), Math.max(100, DEBOUNCE_MS/2));
+                                    }
+                                }}
+                                className="w-full bg-transparent text-white text-[15px] placeholder-[#444] focus:outline-none relative z-10"
+                                autoComplete="off"
+                            />
+                        </div>
+                        {loading && <Loader2 size={18} className="animate-spin text-[#b76e79] z-10" />}
+                        <button onClick={onClose} className="text-[#555] hover:text-white transition-colors p-1 z-10">
                             <X size={18} />
                         </button>
                     </div>

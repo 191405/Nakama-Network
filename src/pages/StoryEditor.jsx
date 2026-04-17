@@ -8,7 +8,7 @@ import {
     Bold, Italic, Underline as UnderlineIcon, Heading1, Heading2,
     List, ListOrdered, Quote, Minus, RotateCcw, RotateCw, Type,
     AlignLeft, AlignCenter, AlignRight, Highlighter, Palette,
-    FileText, Wand2, Trash2, Clock, Hash
+    FileText, Wand2, Trash2, Clock, Hash, Search
 } from 'lucide-react';
 
 // TipTap — Advanced Editor
@@ -144,8 +144,9 @@ const EditorToolbar = ({ editor }) => {
 
 // ═════════════════════════════════════════════════════════════════════════════
 const StoryEditor = () => {
-    const { user } = useAuth();
+    const { user, openAuthModal } = useAuth();
     const userId = user?.uid || 'guest';
+    const [searchQuery, setSearchQuery] = useState('');
 
     const [view, setView] = useState('library');
     const [novels, setNovels] = useState([]);
@@ -228,6 +229,10 @@ const StoryEditor = () => {
     };
 
     const handleCreate = async () => {
+        if (!user || userId === 'guest') {
+            openAuthModal();
+            return;
+        }
         if (!newTitle.trim()) return;
         const toastId = toast.loading('Creating novel…');
         try {
@@ -298,7 +303,14 @@ const StoryEditor = () => {
 
     const readingTime = Math.max(1, Math.round(wordCount / 200));
 
-
+    // Filter novels natively with grey suggestion prediction
+    const filteredNovels = novels.filter(n => n.title.toLowerCase().includes(searchQuery.toLowerCase()));
+    const predictiveHint = searchQuery && filteredNovels.length > 0
+        ? filteredNovels[0].title.toLowerCase().startsWith(searchQuery.toLowerCase())
+            ? searchQuery + filteredNovels[0].title.slice(searchQuery.length)
+            : ''
+        : '';
+        
     // ═════════════════════════════════════════════════════════════════════════
     //  LIBRARY
     // ═════════════════════════════════════════════════════════════════════════
@@ -315,10 +327,37 @@ const StoryEditor = () => {
                                 <p className="text-[11px] text-[#444]">Write and publish web novels with continuity tracking</p>
                             </div>
                         </div>
-                        <button onClick={() => setShowCreate(true)}
-                            className="flex items-center gap-2 px-5 py-2.5 rounded-xl bg-white text-black font-semibold text-sm hover:bg-white/90 transition-colors">
-                            <Plus size={16} /> New Novel
-                        </button>
+                        <div className="flex items-center gap-4">
+                            <div className="relative hidden sm:flex items-center w-64 bg-[#0a0a0a] rounded-xl border border-white/[0.06]">
+                                <Search size={14} className="text-[#555] absolute left-3" />
+                                <div className="absolute left-9 text-sm text-[#444] pointer-events-none truncate select-none">
+                                    {predictiveHint}
+                                </div>
+                                <input
+                                    type="text"
+                                    value={searchQuery}
+                                    onChange={(e) => setSearchQuery(e.target.value)}
+                                    placeholder="Search stories..."
+                                    onKeyDown={(e) => {
+                                        if (e.key === 'Tab' && predictiveHint) {
+                                            e.preventDefault();
+                                            setSearchQuery(predictiveHint);
+                                        }
+                                    }}
+                                    className="w-full bg-transparent text-white text-sm py-2 pl-9 pr-3 focus:outline-none relative z-10 placeholder-[#555]"
+                                />
+                            </div>
+                            <button onClick={() => {
+                                if (!user || userId === 'guest') {
+                                    openAuthModal();
+                                } else {
+                                    setShowCreate(true);
+                                }
+                            }}
+                                className="flex items-center gap-2 px-5 py-2.5 rounded-xl bg-[#b76e79] hover:bg-[#f26065] shadow-[0_0_15px_rgba(183,110,121,0.15)] text-white font-semibold text-sm transition-colors">
+                                <Plus size={16} /> New Novel
+                            </button>
+                        </div>
                     </div>
 
                     {loading ? (
@@ -331,7 +370,7 @@ const StoryEditor = () => {
                         </div>
                     ) : (
                         <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-4">
-                            {novels.map((novel, i) => (
+                            {filteredNovels.map((novel, i) => (
                                 <motion.div key={novel.id}
                                     initial={{ opacity: 0, y: 12 }}
                                     animate={{ opacity: 1, y: 0, transition: { delay: i * 0.05 } }}

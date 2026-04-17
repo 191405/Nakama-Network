@@ -14,6 +14,7 @@ const UpgradePrompt = ({ feature, onClose, onAuthClick }) => {
         'trivia': { icon: Gamepad2, title: 'Millionaire Trivia', desc: 'Challenge your intellect and acquire Chakra' },
         'oracle': { icon: Sparkles, title: 'The Oracle', desc: 'Harness AI-driven intelligence for tailored recommendations' },
         'games': { icon: Gamepad2, title: 'Mini Games', desc: 'Engage in exclusive experiences tailored for members' },
+        'marketplace': { icon: ShoppingBag, title: 'Marketplace', desc: 'Trade premium anime collectibles & merchandise with the elite' },
         'settings': { icon: Shield, title: 'Settings', desc: 'Configure your privacy and system preferences' },
         'default': { icon: Lock, title: 'Premium Access', desc: 'Authorize your identity to access this exclusive sector' }
     };
