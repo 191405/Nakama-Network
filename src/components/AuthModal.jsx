@@ -25,8 +25,6 @@ const AuthModal = () => {
     }
   }, [isAuthModalOpen]);
 
-  if (!isAuthModalOpen) return null;
-
   const handleLogin = async (e) => {
     e.preventDefault();
     if (!email || !password) { setError('Please fill in all fields'); return; }
@@ -72,218 +70,285 @@ const AuthModal = () => {
     }
   };
 
+  // Apple-style segmented control logic for tabs
   const tabStyle = (active) => ({
-    background: active ? 'linear-gradient(135deg, #b76e79, #8c3343)' : 'transparent',
+    background: active ? 'linear-gradient(180deg, rgba(30,30,30,0.8) 0%, rgba(15,15,15,0.95) 100%)' : 'transparent',
     color: active ? '#fff' : '#64748b',
-    boxShadow: active ? '0 4px 15px rgba(183,110,121,0.35)' : 'none',
+    boxShadow: active ? '0 4px 15px rgba(0,0,0,0.3), inset 0 1px 0 rgba(255,255,255,0.05)' : 'none',
+    border: active ? '1px solid rgba(255,255,255,0.06)' : '1px solid transparent',
   });
 
   return (
-    <div
-      onClick={closeAuthModal}
-      style={{
-        position: 'fixed',
-        inset: 0,
-        zIndex: 99999,
-        display: 'flex',
-        alignItems: 'center',
-        justifyContent: 'center',
-        padding: '1rem',
-        background: 'rgba(5,5,5,0.85)',
-        backdropFilter: 'blur(12px)',
-      }}
-    >
-      <div
-        onClick={(e) => e.stopPropagation()}
-        style={{
-          position: 'relative',
-          width: '100%',
-          maxWidth: '380px',
-          borderRadius: '24px',
-          padding: '2rem',
-          background: 'rgba(10, 10, 10, 0.95)',
-          border: '1px solid rgba(255,255,255,0.08)',
-          boxShadow: '0 30px 80px rgba(0,0,0,0.9)',
-        }}
-      >
-        {/* Close */}
-        <button
+    <AnimatePresence>
+      {isAuthModalOpen && (
+        <motion.div
+          initial={{ opacity: 0 }}
+          animate={{ opacity: 1 }}
+          exit={{ opacity: 0 }}
+          transition={{ duration: 0.4, ease: [0.22, 1, 0.36, 1] }}
           onClick={closeAuthModal}
           style={{
-            position: 'absolute', top: '1rem', right: '1rem',
-            background: 'rgba(255,255,255,0.05)', border: 'none',
-            borderRadius: '50%', padding: '8px', cursor: 'pointer',
-            color: '#999', zIndex: 50,
+            position: 'fixed', inset: 0, zIndex: 99999, display: 'flex',
+            alignItems: 'center', justifyContent: 'center', padding: '1rem',
+            background: 'rgba(2,2,2,0.7)', backdropFilter: 'blur(16px)',
           }}
         >
-          <X size={16} />
-        </button>
+          <motion.div
+            initial={{ scale: 0.95, y: 20, opacity: 0 }}
+            animate={{ scale: 1, y: 0, opacity: 1 }}
+            exit={{ scale: 0.95, y: 20, opacity: 0 }}
+            transition={{ type: 'spring', damping: 25, stiffness: 300, mass: 0.8 }}
+            onClick={(e) => e.stopPropagation()}
+            style={{
+              position: 'relative', width: '100%', maxWidth: '400px',
+              borderRadius: '28px', padding: '2.5rem 2rem',
+              background: 'linear-gradient(180deg, rgba(20,20,22,0.95) 0%, rgba(10,10,12,0.98) 100%)',
+              border: '1px solid rgba(255,255,255,0.05)',
+              boxShadow: '0 40px 100px -10px rgba(0,0,0,1), 0 0 0 1px rgba(183,110,121,0.05)',
+              overflow: 'hidden'
+            }}
+          >
+            {/* Absolute Ambient Rose Gold Glow behind content */}
+            <div style={{
+              position: 'absolute', top: '-15%', left: '50%', transform: 'translateX(-50%)',
+              width: '80%', height: '40%', background: 'radial-gradient(ellipse at top, rgba(183,110,121,0.15), transparent 70%)',
+              pointerEvents: 'none', zIndex: 0
+            }} />
 
-        {/* Shimmer */}
-        <div style={{
-          position: 'absolute', top: 0, left: '25%', right: '25%', height: '1px',
-          background: 'linear-gradient(to right, transparent, rgba(183,110,121,0.5), transparent)',
-        }} />
-
-        {/* Header */}
-        <div style={{ textAlign: 'center', marginBottom: '1.5rem' }}>
-          <div style={{
-            display: 'inline-flex', alignItems: 'center', justifyContent: 'center',
-            width: '48px', height: '48px', borderRadius: '16px', marginBottom: '1rem',
-            background: 'linear-gradient(135deg, rgba(183,110,121,0.1), rgba(183,110,121,0.05))',
-            border: '1px solid rgba(183,110,121,0.2)',
-          }}>
-            <Sparkles size={20} style={{ color: '#b76e79' }} />
-          </div>
-          {authModalMessage && (
-            <p style={{ color: '#b76e79', fontSize: '14px', fontWeight: 500, marginBottom: '8px' }}>
-              {authModalMessage}
-            </p>
-          )}
-          <h2 style={{ color: '#fff', fontSize: '20px', fontWeight: 900, fontFamily: 'var(--font-display)' }}>
-            Join the Network
-          </h2>
-        </div>
-
-        {/* Tab bar for login/signup */}
-        {(mode === 'login' || mode === 'signup') && (
-          <div style={{
-            display: 'flex', padding: '4px', borderRadius: '16px', marginBottom: '1rem',
-            background: 'rgba(255,255,255,0.03)', border: '1px solid rgba(255,255,255,0.05)',
-          }}>
-            <button type="button" onClick={() => { setMode('login'); setError(''); }}
-              style={{ flex: 1, padding: '10px', borderRadius: '12px', fontSize: '14px', fontWeight: 600, border: 'none', cursor: 'pointer', transition: 'all 0.3s', ...tabStyle(mode === 'login') }}>
-              Sign In
+            {/* Close Button */}
+            <button onClick={closeAuthModal} style={{
+              position: 'absolute', top: '1.25rem', right: '1.25rem',
+              background: 'rgba(255,255,255,0.03)', border: '1px solid rgba(255,255,255,0.05)',
+              borderRadius: '50%', padding: '8px', cursor: 'pointer',
+              color: '#888', zIndex: 50, transition: 'all 0.2s ease',
+            }}
+              onMouseEnter={(e) => { e.currentTarget.style.background = 'rgba(255,255,255,0.08)'; e.currentTarget.style.color = '#fff'; }}
+              onMouseLeave={(e) => { e.currentTarget.style.background = 'rgba(255,255,255,0.03)'; e.currentTarget.style.color = '#888'; }}
+            >
+              <X size={14} />
             </button>
-            <button type="button" onClick={() => { setMode('signup'); setError(''); }}
-              style={{ flex: 1, padding: '10px', borderRadius: '12px', fontSize: '14px', fontWeight: 600, border: 'none', cursor: 'pointer', transition: 'all 0.3s', ...tabStyle(mode === 'signup') }}>
-              Create Account
-            </button>
-          </div>
-        )}
 
-        {/* Login Form */}
-        {mode === 'login' && (
-          <form onSubmit={handleLogin} style={{ display: 'flex', flexDirection: 'column', gap: '12px' }}>
-            <InputField icon={<Mail size={16} />} type="email" placeholder="Email address" value={email} onChange={(e) => setEmail(e.target.value)} />
-            <div>
-              <InputField icon={<Lock size={16} />} type={showPassword ? 'text' : 'password'} placeholder="Password" value={password} onChange={(e) => setPassword(e.target.value)}
-                rightIcon={showPassword ? <EyeOff size={16} /> : <Eye size={16} />} onRightClick={() => setShowPassword(v => !v)} />
-              <div style={{ display: 'flex', justifyContent: 'flex-end', marginTop: '6px', paddingRight: '8px' }}>
-                <button type="button" onClick={() => { setMode('forgot'); setError(''); setResetSent(false); }}
-                  style={{ background: 'none', border: 'none', color: '#b76e79', fontSize: '12px', cursor: 'pointer' }}>
-                  Forgot Password?
-                </button>
+            {/* Content Container (elevated above ambient glow) */}
+            <div style={{ position: 'relative', zIndex: 10 }}>
+              
+              {/* Header */}
+              <div style={{ textAlign: 'center', marginBottom: '2rem' }}>
+                <div style={{
+                  display: 'inline-flex', alignItems: 'center', justifyContent: 'center',
+                  width: '56px', height: '56px', borderRadius: '18px', marginBottom: '1.25rem',
+                  background: 'linear-gradient(135deg, rgba(183,110,121,0.15), rgba(183,110,121,0.05))',
+                  border: '1px solid rgba(183,110,121,0.25)',
+                  boxShadow: '0 8px 32px rgba(183,110,121,0.1)'
+                }}>
+                  <Sparkles size={24} style={{ color: '#e5b6bc' }} />
+                </div>
+                {authModalMessage && (
+                  <motion.p initial={{ opacity: 0, y: -5 }} animate={{ opacity: 1, y: 0 }}
+                    style={{ color: '#b76e79', fontSize: '13px', fontWeight: 600, marginBottom: '12px', letterSpacing: '0.02em', textTransform: 'uppercase' }}>
+                    {authModalMessage}
+                  </motion.p>
+                )}
+                <h2 style={{ 
+                  fontSize: '24px', fontWeight: 800, fontFamily: 'var(--font-display)', 
+                  letterSpacing: '-0.02em', margin: 0,
+                  background: 'linear-gradient(180deg, #FFFFFF 0%, #A0A0A0 100%)',
+                  WebkitBackgroundClip: 'text', WebkitTextFillColor: 'transparent',
+                }}>
+                  Join the Network
+                </h2>
               </div>
+
+              {/* Segmented Controller Tab Bar */}
+              {(mode === 'login' || mode === 'signup') && (
+                <div style={{
+                  display: 'flex', padding: '4px', borderRadius: '16px', marginBottom: '1.5rem',
+                  background: 'rgba(0,0,0,0.4)', border: '1px solid rgba(255,255,255,0.04)',
+                  boxShadow: 'inset 0 2px 4px rgba(0,0,0,0.5)'
+                }}>
+                  <button type="button" onClick={() => { setMode('login'); setError(''); }}
+                    style={{ flex: 1, padding: '10px', borderRadius: '12px', fontSize: '13px', fontWeight: 600, cursor: 'pointer', transition: 'all 0.3s cubic-bezier(0.4, 0, 0.2, 1)', ...tabStyle(mode === 'login') }}>
+                    Sign In
+                  </button>
+                  <button type="button" onClick={() => { setMode('signup'); setError(''); }}
+                    style={{ flex: 1, padding: '10px', borderRadius: '12px', fontSize: '13px', fontWeight: 600, cursor: 'pointer', transition: 'all 0.3s cubic-bezier(0.4, 0, 0.2, 1)', ...tabStyle(mode === 'signup') }}>
+                    Create Account
+                  </button>
+                </div>
+              )}
+
+              {/* Form Container with Layout Animations */}
+              <AnimatePresence mode="wait">
+                <motion.div
+                  key={mode}
+                  initial={{ opacity: 0, x: 10 }}
+                  animate={{ opacity: 1, x: 0 }}
+                  exit={{ opacity: 0, x: -10 }}
+                  transition={{ duration: 0.25, ease: "easeOut" }}
+                >
+                  {/* Login Form */}
+                  {mode === 'login' && (
+                    <form onSubmit={handleLogin} style={{ display: 'flex', flexDirection: 'column', gap: '14px' }}>
+                      <InputField icon={<Mail size={16} />} type="email" placeholder="Email address" value={email} onChange={(e) => setEmail(e.target.value)} />
+                      <div>
+                        <InputField icon={<Lock size={16} />} type={showPassword ? 'text' : 'password'} placeholder="Password" value={password} onChange={(e) => setPassword(e.target.value)}
+                          rightIcon={showPassword ? <EyeOff size={16} /> : <Eye size={16} />} onRightClick={() => setShowPassword(v => !v)} />
+                        <div style={{ display: 'flex', justifyContent: 'flex-end', marginTop: '8px', paddingRight: '4px' }}>
+                          <button type="button" onClick={() => { setMode('forgot'); setError(''); setResetSent(false); }}
+                            style={{ background: 'none', border: 'none', color: '#888', fontSize: '12px', cursor: 'pointer', fontWeight: 500, transition: 'color 0.2s' }}
+                            onMouseEnter={e => e.currentTarget.style.color = '#b76e79'}
+                            onMouseLeave={e => e.currentTarget.style.color = '#888'}
+                          >
+                            Forgot Password?
+                          </button>
+                        </div>
+                      </div>
+                      <SubmitBtn loading={loading} style={{ marginTop: '4px' }}>Sign In</SubmitBtn>
+                    </form>
+                  )}
+
+                  {/* Signup Form */}
+                  {mode === 'signup' && (
+                    <form onSubmit={handleSignup} style={{ display: 'flex', flexDirection: 'column', gap: '14px' }}>
+                      <InputField icon={<Mail size={16} />} type="email" placeholder="Email address" value={email} onChange={(e) => setEmail(e.target.value)} />
+                      <InputField icon={<Lock size={16} />} type={showPassword ? 'text' : 'password'} placeholder="Password" value={password} onChange={(e) => setPassword(e.target.value)}
+                        rightIcon={showPassword ? <EyeOff size={16} /> : <Eye size={16} />} onRightClick={() => setShowPassword(v => !v)} />
+                      <InputField icon={<Lock size={16} />} type={showPassword ? 'text' : 'password'} placeholder="Confirm password" value={confirmPassword} onChange={(e) => setConfirmPassword(e.target.value)} />
+                      <SubmitBtn loading={loading} style={{ marginTop: '4px' }}>Create Account <ArrowRight size={16} /></SubmitBtn>
+                    </form>
+                  )}
+
+                  {/* Forgot Password */}
+                  {mode === 'forgot' && (
+                    <form onSubmit={handleForgot} style={{ display: 'flex', flexDirection: 'column', gap: '14px' }}>
+                      <p style={{ color: '#888', fontSize: '13px', textAlign: 'center', lineHeight: 1.6, padding: '0 10px', marginBottom: '4px' }}>
+                        Enter your email and we'll send you a highly secure reset link.
+                      </p>
+                      {!resetSent ? (
+                        <>
+                          <InputField icon={<Mail size={16} />} type="email" placeholder="Email address" value={email} onChange={(e) => setEmail(e.target.value)} />
+                          <SubmitBtn loading={loading} disabled={!email} style={{ marginTop: '4px' }}>Send Reset Link</SubmitBtn>
+                        </>
+                      ) : (
+                        <motion.div initial={{ scale: 0.95, opacity: 0 }} animate={{ scale: 1, opacity: 1 }}
+                          style={{ padding: '20px', borderRadius: '16px', border: '1px solid rgba(34,197,94,0.15)', background: 'linear-gradient(135deg, rgba(34,197,94,0.05), rgba(34,197,94,0.02))', textAlign: 'center', boxShadow: '0 10px 30px rgba(34,197,94,0.05)' }}>
+                          <CheckCircle size={28} style={{ color: '#4ade80', margin: '0 auto 12px', filter: 'drop-shadow(0 0 10px rgba(74,222,128,0.4))' }} />
+                          <h4 style={{ color: '#fff', fontWeight: 700, fontSize: '15px', marginBottom: '4px' }}>Check Your Inbox</h4>
+                          <p style={{ color: '#888', fontSize: '13px' }}>Reset link sent to <br/><strong style={{ color: '#fff', fontWeight: 600 }}>{email}</strong></p>
+                        </motion.div>
+                      )}
+                      <button type="button" onClick={() => setMode('login')}
+                        style={{ background: 'none', border: 'none', color: '#666', fontSize: '13px', cursor: 'pointer', display: 'flex', alignItems: 'center', justifyContent: 'center', gap: '6px', padding: '12px', fontWeight: 500, transition: 'all 0.2s', marginTop: '4px' }}
+                        onMouseEnter={e => e.currentTarget.style.color = '#fff'}
+                        onMouseLeave={e => e.currentTarget.style.color = '#666'}
+                      >
+                        <ArrowRight size={14} style={{ transform: 'rotate(180deg)' }} /> Back to Sign In
+                      </button>
+                    </form>
+                  )}
+                </motion.div>
+              </AnimatePresence>
+
+              {/* Error */}
+              <AnimatePresence>
+                {error && (
+                  <motion.div initial={{ opacity: 0, height: 0, marginTop: 0 }} animate={{ opacity: 1, height: 'auto', marginTop: 16 }} exit={{ opacity: 0, height: 0, marginTop: 0 }} style={{ overflow: 'hidden' }}>
+                    <div style={{
+                      padding: '12px 16px', borderRadius: '12px', fontSize: '13px', textAlign: 'center',
+                      background: 'rgba(183,110,121,0.06)', border: '1px solid rgba(183,110,121,0.15)', color: '#e5b6bc',
+                      fontWeight: 500
+                    }}>
+                      {error}
+                    </div>
+                  </motion.div>
+                )}
+              </AnimatePresence>
+              
             </div>
-            <SubmitBtn loading={loading}>Sign In</SubmitBtn>
-          </form>
-        )}
-
-        {/* Signup Form */}
-        {mode === 'signup' && (
-          <form onSubmit={handleSignup} style={{ display: 'flex', flexDirection: 'column', gap: '12px' }}>
-            <InputField icon={<Mail size={16} />} type="email" placeholder="Email address" value={email} onChange={(e) => setEmail(e.target.value)} />
-            <InputField icon={<Lock size={16} />} type={showPassword ? 'text' : 'password'} placeholder="Password" value={password} onChange={(e) => setPassword(e.target.value)}
-              rightIcon={showPassword ? <EyeOff size={16} /> : <Eye size={16} />} onRightClick={() => setShowPassword(v => !v)} />
-            <InputField icon={<Lock size={16} />} type={showPassword ? 'text' : 'password'} placeholder="Confirm password" value={confirmPassword} onChange={(e) => setConfirmPassword(e.target.value)} />
-            <SubmitBtn loading={loading}>Create Account <ArrowRight size={16} /></SubmitBtn>
-          </form>
-        )}
-
-        {/* Forgot Password */}
-        {mode === 'forgot' && (
-          <form onSubmit={handleForgot} style={{ display: 'flex', flexDirection: 'column', gap: '12px' }}>
-            <p style={{ color: '#888', fontSize: '14px', textAlign: 'center', lineHeight: 1.6 }}>
-              Enter your email and we'll send you a reset link.
-            </p>
-            {!resetSent ? (
-              <>
-                <InputField icon={<Mail size={16} />} type="email" placeholder="Email address" value={email} onChange={(e) => setEmail(e.target.value)} />
-                <SubmitBtn loading={loading} disabled={!email}>Send Reset Link</SubmitBtn>
-              </>
-            ) : (
-              <div style={{ padding: '16px', borderRadius: '12px', border: '1px solid rgba(34,197,94,0.2)', background: 'rgba(34,197,94,0.05)', textAlign: 'center' }}>
-                <CheckCircle size={24} style={{ color: '#4ade80', margin: '0 auto 8px' }} />
-                <h4 style={{ color: '#fff', fontWeight: 700, fontSize: '14px' }}>Check Your Inbox</h4>
-                <p style={{ color: '#888', fontSize: '12px' }}>Reset link sent to <strong style={{ color: '#4ade80' }}>{email}</strong></p>
-              </div>
-            )}
-            <button type="button" onClick={() => setMode('login')}
-              style={{ background: 'none', border: 'none', color: '#888', fontSize: '14px', cursor: 'pointer', display: 'flex', alignItems: 'center', justifyContent: 'center', gap: '8px', padding: '8px' }}>
-              <ArrowRight size={14} style={{ transform: 'rotate(180deg)' }} /> Back to Sign In
-            </button>
-          </form>
-        )}
-
-        {/* Error */}
-        {error && (
-          <div style={{
-            marginTop: '16px', padding: '12px', borderRadius: '16px', fontSize: '12px', textAlign: 'center',
-            background: 'rgba(183,110,121,0.08)', border: '1px solid rgba(183,110,121,0.2)', color: '#e0bfb8',
-          }}>
-            {error}
-          </div>
-        )}
-
-        {/* Bottom shimmer */}
-        <div style={{
-          position: 'absolute', bottom: 0, left: '25%', right: '25%', height: '1px',
-          background: 'linear-gradient(to right, transparent, rgba(183,110,121,0.2), transparent)',
-        }} />
-      </div>
-    </div>
+          </motion.div>
+        </motion.div>
+      )}
+    </AnimatePresence>
   );
 };
 
 /* ── Reusable sub-components ── */
 
-const InputField = ({ icon, rightIcon, onRightClick, ...props }) => (
-  <div style={{ position: 'relative' }}>
-    <span style={{ position: 'absolute', left: '16px', top: '50%', transform: 'translateY(-50%)', color: 'rgba(183,110,121,0.4)' }}>
-      {icon}
-    </span>
-    <input
-      {...props}
-      style={{
-        width: '100%', paddingLeft: '44px', paddingRight: rightIcon ? '44px' : '16px',
-        paddingTop: '14px', paddingBottom: '14px', borderRadius: '16px',
-        color: '#fff', fontSize: '14px', outline: 'none',
-        background: 'rgba(255,255,255,0.03)', border: '1px solid rgba(255,255,255,0.07)',
-        boxSizing: 'border-box',
-      }}
-      onFocus={(e) => {
-        e.target.style.background = 'rgba(183,110,121,0.05)';
-        e.target.style.border = '1px solid rgba(183,110,121,0.35)';
-        e.target.style.boxShadow = '0 0 0 4px rgba(183,110,121,0.06)';
-      }}
-      onBlur={(e) => {
-        e.target.style.background = 'rgba(255,255,255,0.03)';
-        e.target.style.border = '1px solid rgba(255,255,255,0.07)';
-        e.target.style.boxShadow = 'none';
-      }}
-    />
-    {rightIcon && (
-      <button type="button" onClick={onRightClick}
-        style={{ position: 'absolute', right: '16px', top: '50%', transform: 'translateY(-50%)', background: 'none', border: 'none', color: '#555', cursor: 'pointer' }}>
-        {rightIcon}
-      </button>
-    )}
-  </div>
-);
+const InputField = ({ icon, rightIcon, onRightClick, ...props }) => {
+  const [isFocused, setIsFocused] = useState(false);
+  
+  return (
+    <div style={{ position: 'relative' }}>
+      <span style={{ 
+        position: 'absolute', left: '16px', top: '50%', transform: 'translateY(-50%)', 
+        color: isFocused ? '#b76e79' : 'rgba(255,255,255,0.2)', transition: 'color 0.3s ease'
+      }}>
+        {icon}
+      </span>
+      <input
+        {...props}
+        style={{
+          width: '100%', paddingLeft: '44px', paddingRight: rightIcon ? '44px' : '16px',
+          paddingTop: '16px', paddingBottom: '16px', borderRadius: '16px',
+          color: '#fff', fontSize: '14px', outline: 'none', fontWeight: 500,
+          background: 'rgba(0,0,0,0.3)', border: '1px solid rgba(255,255,255,0.06)',
+          boxShadow: 'inset 0 2px 4px rgba(0,0,0,0.5)', boxSizing: 'border-box',
+          transition: 'all 0.3s cubic-bezier(0.4, 0, 0.2, 1)'
+        }}
+        onFocus={(e) => {
+          setIsFocused(true);
+          e.target.style.background = 'rgba(183,110,121,0.03)';
+          e.target.style.border = '1px solid rgba(183,110,121,0.4)';
+          e.target.style.boxShadow = '0 0 0 4px rgba(183,110,121,0.05), inset 0 2px 4px rgba(0,0,0,0.2)';
+        }}
+        onBlur={(e) => {
+          setIsFocused(false);
+          e.target.style.background = 'rgba(0,0,0,0.3)';
+          e.target.style.border = '1px solid rgba(255,255,255,0.06)';
+          e.target.style.boxShadow = 'inset 0 2px 4px rgba(0,0,0,0.5)';
+        }}
+      />
+      {rightIcon && (
+        <button type="button" onClick={onRightClick}
+          style={{ 
+            position: 'absolute', right: '16px', top: '50%', transform: 'translateY(-50%)', 
+            background: 'none', border: 'none', color: '#555', cursor: 'pointer', transition: 'color 0.2s'
+          }}
+          onMouseEnter={e => e.currentTarget.style.color = '#fff'}
+          onMouseLeave={e => e.currentTarget.style.color = '#555'}
+        >
+          {rightIcon}
+        </button>
+      )}
+    </div>
+  );
+};
 
-const SubmitBtn = ({ loading, disabled, children }) => (
-  <button type="submit" disabled={disabled || loading}
-    style={{
-      width: '100%', padding: '14px', borderRadius: '16px', fontWeight: 700, fontSize: '14px',
-      color: '#fff', border: 'none', cursor: loading || disabled ? 'not-allowed' : 'pointer',
-      opacity: loading || disabled ? 0.5 : 1,
-      background: 'linear-gradient(135deg, #b76e79, #8c3343)',
-      boxShadow: '0 4px 20px rgba(183,110,121,0.35)',
-      display: 'flex', alignItems: 'center', justifyContent: 'center', gap: '8px',
-    }}>
-    {loading ? <Loader2 size={17} style={{ animation: 'spin 1s linear infinite' }} /> : children}
-  </button>
-);
+const SubmitBtn = ({ loading, disabled, children, style = {} }) => {
+  const [isHovered, setIsHovered] = useState(false);
+  
+  return (
+    <button type="submit" disabled={disabled || loading}
+      onMouseEnter={() => setIsHovered(true)}
+      onMouseLeave={() => setIsHovered(false)}
+      style={{
+        width: '100%', padding: '16px', borderRadius: '16px', fontWeight: 700, fontSize: '14px',
+        color: '#fff', border: 'none', cursor: loading || disabled ? 'not-allowed' : 'pointer',
+        opacity: loading || disabled ? 0.6 : 1,
+        background: isHovered && !loading && !disabled 
+          ? 'linear-gradient(135deg, #c27b87, #9e394b)' 
+          : 'linear-gradient(135deg, #b76e79, #8c3343)',
+        boxShadow: isHovered && !loading && !disabled 
+          ? '0 8px 25px rgba(183,110,121,0.4)' 
+          : '0 4px 15px rgba(183,110,121,0.25)',
+        display: 'flex', alignItems: 'center', justifyContent: 'center', gap: '10px',
+        transition: 'all 0.3s cubic-bezier(0.4, 0, 0.2, 1)',
+        transform: isHovered && !loading && !disabled ? 'translateY(-1px)' : 'translateY(0)',
+        ...style
+      }}>
+      {loading ? <Loader2 size={18} style={{ animation: 'spin 1s linear infinite' }} /> : children}
+    </button>
+  );
+};
 
 export default AuthModal;
+
