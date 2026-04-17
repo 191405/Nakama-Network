@@ -23,6 +23,9 @@ import AdminPanel from './pages/AdminPanel';
 import UserProfile from './pages/UserProfile';
 import AnimeLibrary from './pages/AnimeLibrary';
 import StoryEditor from './pages/StoryEditor';
+import MangaDashboard from './pages/MangaDashboard';
+import MangaUploader from './pages/MangaUploader';
+import MangaReader from './pages/MangaReader';
 
 const pageVariants = {
   initial: { opacity: 0, y: 15 },
@@ -83,6 +86,11 @@ function AppContent() {
 
           <Route path="/library" element={<AnimeLibrary />} />
           <Route path="/story-writer" element={<StoryEditor />} />
+
+          <Route path="/manga" element={<MangaDashboard />} />
+          <Route path="/manga/:id" element={<MangaReader />} />
+          <Route path="/manga/:id/upload" element={<MangaUploader />} />
+          <Route path="/manga/read/:id/:chapterId" element={<MangaReader />} />
 
           <Route path="*" element={<Navigate to="/" replace />} />
         </Routes>

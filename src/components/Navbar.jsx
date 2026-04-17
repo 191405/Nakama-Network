@@ -15,6 +15,7 @@ import SearchOverlay from './SearchOverlay';
 
 const NAV_LINKS = [
   { path: '/library', label: 'Library' },
+  { path: '/manga', label: 'Manga' },
   { path: '/community', label: 'Community' },
   { path: '/clan', label: 'Clans' },
   { path: '/news', label: 'News' },
@@ -26,6 +27,7 @@ const MOBILE_SECTIONS = [
     title: 'Browse',
     links: [
       { path: '/library', label: 'Anime Library', icon: Film },
+      { path: '/manga', label: 'Manga Hub', icon: BookOpen },
       { path: '/story-writer', label: 'Story Writer', icon: Feather },
       { path: '/news', label: 'News', icon: Newspaper },
       { path: '/tiering', label: 'Power Rankings', icon: BookOpen },
