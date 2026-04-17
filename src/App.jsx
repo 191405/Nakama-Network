@@ -80,12 +80,10 @@ function AppContent() {
           <Route path="/anime/:id" element={<AnimeDetail />} />
           <Route path="/anime/:id/:source" element={<AnimeDetail />} />
           <Route path="/profile" element={<UserProfile />} />
-          <Route path="/admin-panel" element={<AdminPanel />} />
+
           <Route path="/library" element={<AnimeLibrary />} />
           <Route path="/story-writer" element={<StoryEditor />} />
-          <Route path="/arena" element={<Navigate to="/" replace />} />
-          <Route path="/clan-wars" element={<Navigate to="/clan" replace />} />
-          <Route path="/millionaire" element={<Navigate to="/" replace />} />
+
           <Route path="*" element={<Navigate to="/" replace />} />
         </Routes>
       </PageWrapper>

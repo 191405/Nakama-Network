@@ -155,7 +155,6 @@ app.include_router(stories.router, prefix=f"{API_PREFIX}/stories", tags=["Storie
 app.include_router(admin.router, prefix=f"{API_PREFIX}/admin", tags=["Admin"])
 app.include_router(notifications.router, prefix=f"{API_PREFIX}/notifications", tags=["Notifications"])
 
-import os
 os.makedirs("uploads", exist_ok=True)
 app.mount("/uploads", StaticFiles(directory="uploads"), name="uploads")
 

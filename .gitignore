@@ -51,3 +51,7 @@ venv/
 # Coverage & test output
 coverage/
 .nyc_output/
+
+# Backend artifacts
+backend/error.log
+backend/sql_app.db
