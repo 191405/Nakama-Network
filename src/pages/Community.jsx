@@ -14,10 +14,22 @@ import {
     claimCharacter, getUserClaim, subscribeToCharacterClaims
 } from '../utils/firebase';
 
+const staggerContainer = {
+    hidden: { opacity: 0 },
+    show: {
+        opacity: 1,
+        transition: { staggerChildren: 0.05 }
+    }
+};
+
+const itemVariant = {
+    hidden: { opacity: 0, y: 15 },
+    show: { opacity: 1, y: 0, transition: { type: "spring", stiffness: 300, damping: 24 } }
+};
+
 /* ── Character Claim Card (shows a claimed identity) ── */
 const ClaimedMemberCard = ({ claim }) => (
-    <motion.div
-        initial={{ opacity: 0, y: 10 }} animate={{ opacity: 1, y: 0 }}
+    <motion.div variants={itemVariant}
         className="relative rounded-xl overflow-hidden group bg-[#0a0a0a] border border-white/[0.06] hover:border-white/[0.12] transition-all"
     >
         <div className="aspect-[3/4] relative">
@@ -50,7 +62,7 @@ const SearchCharacterCard = ({ character, onClaim, claimStatus, loading }) => {
     const isClaimed = claimStatus === 'claimed';
 
     return (
-        <div className={`rounded-xl overflow-hidden border transition-all ${
+        <motion.div variants={itemVariant} className={`rounded-xl overflow-hidden border transition-all ${
             isClaimed ? 'border-white/[0.04] opacity-50' : 'border-white/[0.06] hover:border-white/[0.12]'
         } bg-[#0a0a0a]`}>
             <div className="aspect-[3/4] relative">
@@ -85,13 +97,13 @@ const SearchCharacterCard = ({ character, onClaim, claimStatus, loading }) => {
                     {loading ? <Loader2 size={12} className="animate-spin" /> : <><Check size={12} /> Claim Identity</>}
                 </button>
             )}
-        </div>
+        </motion.div>
     );
 };
 
 /* ── Discussion Thread ── */
 const DiscussionThread = ({ thread, onLike }) => (
-    <div className="p-4 rounded-xl border border-white/[0.04] hover:border-white/[0.08] bg-[#0a0a0a] transition-all">
+    <motion.div variants={itemVariant} className="p-4 rounded-xl border border-white/[0.04] hover:border-white/[0.08] bg-[#0a0a0a] transition-all">
         <div className="flex gap-3">
             <div className="w-9 h-9 rounded-lg flex items-center justify-center text-sm font-bold flex-shrink-0 bg-[#b76e79] text-white">
                 {thread.author?.charAt(0)?.toUpperCase() || 'U'}
@@ -119,7 +131,7 @@ const DiscussionThread = ({ thread, onLike }) => (
                 )}
             </div>
         </div>
-    </div>
+    </motion.div>
 );
 
 /* ── Create Post Modal ── */
@@ -351,9 +363,13 @@ const Community = () => {
                     ))}
                 </div>
 
+                <AnimatePresence mode="wait">
                 {/* ══ IDENTITIES TAB ══ */}
                 {activeTab === 'identities' && (
-                    <div>
+                    <motion.div
+                        key="identities"
+                        initial={{ opacity: 0, y: 10 }} animate={{ opacity: 1, y: 0 }} exit={{ opacity: 0, y: -10 }} transition={{ duration: 0.2 }}
+                    >
                         {/* Claim Flow */}
                         {(!userClaim || showClaimFlow) && (
                             <div className="mb-8 p-6 rounded-xl border border-white/[0.06] bg-[#0a0a0a]">
@@ -391,7 +407,7 @@ const Community = () => {
                                 )}
 
                                 {characters.length > 0 && (
-                                    <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-5 gap-3">
+                                    <motion.div variants={staggerContainer} initial="hidden" animate="show" className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-5 gap-3">
                                         {characters.map(char => (
                                             <SearchCharacterCard
                                                 key={char.mal_id}
@@ -401,7 +417,7 @@ const Community = () => {
                                                 loading={claimLoading}
                                             />
                                         ))}
-                                    </div>
+                                    </motion.div>
                                 )}
                             </div>
                         )}
@@ -433,19 +449,22 @@ const Community = () => {
                                     <p className="text-[#555] text-sm">No identities claimed yet. Be the first!</p>
                                 </div>
                             ) : (
-                                <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-5 xl:grid-cols-6 gap-3">
+                                <motion.div variants={staggerContainer} initial="hidden" animate="show" className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-5 xl:grid-cols-6 gap-3">
                                     {allClaims.map(claim => (
                                         <ClaimedMemberCard key={claim.id} claim={claim} />
                                     ))}
-                                </div>
+                                </motion.div>
                             )}
                         </div>
-                    </div>
+                    </motion.div>
                 )}
 
                 {/* ══ DISCUSSIONS TAB ══ */}
                 {activeTab === 'discussions' && (
-                    <div>
+                    <motion.div
+                        key="discussions"
+                        initial={{ opacity: 0, y: 10 }} animate={{ opacity: 1, y: 0 }} exit={{ opacity: 0, y: -10 }} transition={{ duration: 0.2 }}
+                    >
                         <div className="flex justify-between items-center mb-5">
                             <h3 className="text-white font-bold">Latest Discussions</h3>
                             <button
@@ -454,23 +473,27 @@ const Community = () => {
                                 + New Thread
                             </button>
                         </div>
-                        <div className="space-y-2">
+                        <motion.div variants={staggerContainer} initial="hidden" animate="show" className="space-y-2">
                             {discussions.length === 0
                                 ? <div className="text-center py-16"><MessageCircle size={40} className="mx-auto mb-3 text-[#222]" /><p className="text-[#555] text-sm">No discussions yet. Start one!</p></div>
                                 : discussions.map(thread => (
                                     <DiscussionThread key={thread.id} thread={thread} onLike={id => likeCommunityPost(id, userProfile?.id)} />
                                 ))
                             }
-                        </div>
+                        </motion.div>
                         <AnimatePresence>
                             {isCreateModalOpen && <CreatePostModal onClose={() => setIsCreateModalOpen(false)} userProfile={userProfile} />}
                         </AnimatePresence>
-                    </div>
+                    </motion.div>
                 )}
 
                 {/* ══ LIVE CHAT TAB ══ */}
                 {activeTab === 'chat' && (
-                    <div className="max-w-3xl mx-auto">
+                    <motion.div
+                        key="chat"
+                        initial={{ opacity: 0, y: 10 }} animate={{ opacity: 1, y: 0 }} exit={{ opacity: 0, y: -10 }} transition={{ duration: 0.2 }}
+                        className="max-w-3xl mx-auto"
+                    >
                         {/* Room Selector */}
                         <div className="flex gap-2 mb-4 justify-center">
                             {[{id:'general', desc:'Open chat'}, {id:'powerscaling', desc:'Battleboard'}, {id:'recommendations', desc:'What to watch'}].map(room => (
@@ -583,8 +606,9 @@ const Community = () => {
                                 </div>
                             </form>
                         </div>
-                    </div>
+                    </motion.div>
                 )}
+                </AnimatePresence>
             </div>
         </div>
     );

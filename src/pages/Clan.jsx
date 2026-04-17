@@ -236,7 +236,8 @@ const Clan = () => {
   };
 
   const filteredClans = clans.filter(c =>
-    c.name?.toLowerCase().includes(searchQuery.toLowerCase()) || c.tag?.toLowerCase().includes(searchQuery.toLowerCase())
+    (c.name || '').toLowerCase().includes((searchQuery || '').toLowerCase()) || 
+    (c.tag || '').toLowerCase().includes((searchQuery || '').toLowerCase())
   );
 
   const glass = { background: 'rgba(10,7,20,0.85)', border: '1px solid rgba(244,63,94,0.12)' };

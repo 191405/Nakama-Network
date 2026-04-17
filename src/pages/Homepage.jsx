@@ -8,6 +8,19 @@ import { getAnimeImage, PLACEHOLDERS, handleImageError } from '../utils/imageUti
 import Skeleton, { AnimeCardSkeleton } from '../components/Skeleton';
 import OracleTileModal from '../components/OracleTileModal';
 
+const staggerContainer = {
+    hidden: { opacity: 0 },
+    show: {
+        opacity: 1,
+        transition: { staggerChildren: 0.05 }
+    }
+};
+
+const itemVariant = {
+    hidden: { opacity: 0, y: 20 },
+    show: { opacity: 1, y: 0, transition: { type: "spring", stiffness: 300, damping: 24 } }
+};
+
 /* ── Hero background images — Premium High-Resolution Landscape Banners ── */
 const HERO_IMAGES = [
     'https://s4.anilist.co/file/anilistcdn/media/anime/banner/180745-Iicz1F6Kuj4e.jpg',
@@ -34,11 +47,12 @@ const TrendingCard = ({ anime, rank, onAskOracle }) => {
     const synopsis = anime?.synopsis?.slice(0, 100);
 
     return (
-        <div
-            className="w-full block relative rounded-xl overflow-hidden group aspect-[3/4]"
-            onMouseEnter={() => setHovered(true)}
-            onMouseLeave={() => setHovered(false)}
-        >
+        <motion.div variants={itemVariant} className="h-full">
+            <div
+                className="w-full h-full block relative rounded-xl overflow-hidden group aspect-[3/4]"
+                onMouseEnter={() => setHovered(true)}
+                onMouseLeave={() => setHovered(false)}
+            >
             <Link to={`/anime/${anime?.mal_id}`} className="block w-full h-full">
                 <img
                     src={imageUrl}
@@ -126,7 +140,8 @@ const TrendingCard = ({ anime, rank, onAskOracle }) => {
                     </motion.div>
                 )}
             </AnimatePresence>
-        </div>
+            </div>
+        </motion.div>
     );
 };
 
@@ -151,12 +166,13 @@ const FeatureCard = ({ to, icon: Icon, title, desc, delay = 0 }) => (
 
 /* ── News Preview Card (for homepage) ── */
 const NewsPreviewCard = ({ article }) => (
-    <a href={article.url} target="_blank" rel="noopener noreferrer"
-        className="group block p-4 rounded-xl border border-white/[0.05] hover:border-white/[0.1] bg-[#0a0a0a] transition-all">
-        <div className="flex gap-3">
-            {article.image && (
-                <img src={article.image} alt="" className="w-16 h-16 rounded-lg object-cover flex-shrink-0 opacity-80 group-hover:opacity-100 transition-opacity" />
-            )}
+    <motion.div variants={itemVariant}>
+        <a href={article.url} target="_blank" rel="noopener noreferrer"
+            className="group block p-4 rounded-xl border border-white/[0.05] hover:border-white/[0.1] bg-[#0a0a0a] transition-all">
+            <div className="flex gap-3">
+                {article.image && (
+                    <img src={article.image} alt="" className="w-16 h-16 rounded-lg object-cover flex-shrink-0 opacity-80 group-hover:opacity-100 transition-opacity" />
+                )}
             <div className="flex-1 min-w-0">
                 <h4 className="text-[13px] font-semibold text-white line-clamp-2 mb-1 group-hover:text-white/80">{article.title}</h4>
                 <div className="flex items-center gap-2 text-[10px] text-[#555]">
@@ -172,6 +188,7 @@ const NewsPreviewCard = ({ article }) => (
             </div>
         </div>
     </a>
+</motion.div>
 );
 
 const Homepage = () => {
@@ -395,11 +412,13 @@ const Homepage = () => {
                         ))}
                     </div>
                 ) : springAnime.length > 0 ? (
-                        <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-6 gap-3 sm:gap-4">
+                        <motion.div 
+                            variants={staggerContainer} initial="hidden" animate="show"
+                            className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-6 gap-3 sm:gap-4">
                             {springAnime.slice(0, 12).map((anime, idx) => (
                                 <TrendingCard key={anime.mal_id} anime={anime} rank={idx + 1} onAskOracle={setOracleAnime} />
                             ))}
-                        </div>
+                        </motion.div>
                 ) : (
                     <div className="text-center py-20 bg-white/[0.02] rounded-3xl border border-white/[0.05]">
                         <p className="text-white/40 text-sm">No transmissions found in this sector.</p>
@@ -421,11 +440,13 @@ const Homepage = () => {
                             </div>
                         </div>
                     </div>
-                    <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-6 gap-3 sm:gap-4">
+                    <motion.div 
+                        variants={staggerContainer} initial="hidden" whileInView="show" viewport={{ once: true, margin: "-50px" }}
+                        className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-6 gap-3 sm:gap-4">
                         {trendingAnime.slice(0, 6).map((anime, idx) => (
                             <TrendingCard key={anime.mal_id} anime={anime} rank={`#${idx + 1}`} onAskOracle={setOracleAnime} />
                         ))}
-                    </div>
+                    </motion.div>
                 </section>
             )}
 
@@ -453,11 +474,13 @@ const Homepage = () => {
                         ))}
                     </div>
                 ) : newsPreview.length > 0 ? (
-                    <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
+                    <motion.div 
+                        variants={staggerContainer} initial="hidden" whileInView="show" viewport={{ once: true }}
+                        className="grid grid-cols-1 sm:grid-cols-2 gap-3">
                         {newsPreview.map((article, idx) => (
                             <NewsPreviewCard key={idx} article={article} />
                         ))}
-                    </div>
+                    </motion.div>
                 ) : (
                     <div className="text-center py-10 bg-white/[0.02] rounded-xl border border-white/[0.05]">
                         <p className="text-white/30 text-sm">No news available right now.</p>
