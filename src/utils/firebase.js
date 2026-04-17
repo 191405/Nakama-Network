@@ -107,6 +107,7 @@ export const getUserProfile = async (userId) => {
 };
 
 export const updateUserProfile = async (userId, data) => {
+  if (userId === 'guest') return;
   if (!db) {
     console.warn('Firestore not initialized, skipping updateUserProfile');
     return;
@@ -131,6 +132,7 @@ export const subscribeToUserProfile = (userId, callback) => {
 };
 
 export const addChakra = async (userId, amount) => {
+  if (userId === 'guest') return;
   const userRef = doc(db, 'users', userId);
   await updateDoc(userRef, {
     chakra: increment(amount),
@@ -181,6 +183,7 @@ export const getLeaderboard = async (limitNum = 10) => {
 };
 
 export const updateClan = async (userId, clanName, clanMotto) => {
+  if (userId === 'guest') return;
   const userRef = doc(db, 'users', userId);
   await updateDoc(userRef, {
     clan: clanName,
@@ -190,6 +193,7 @@ export const updateClan = async (userId, clanName, clanMotto) => {
 };
 
 export const recordBattleResult = async (userId, won) => {
+  if (userId === 'guest') return;
   const userRef = doc(db, 'users', userId);
   const updates = {
     lastActive: serverTimestamp()
@@ -275,13 +279,13 @@ export const voteOnBattle = async (battleId, choice, userId = null) => {
     updates['char2.votes'] = increment(1);
   }
 
-  if (userId) {
+  if (userId && userId !== 'guest') {
     updates.voters = [...(battleData.voters || []), { userId, choice, votedAt: new Date().toISOString() }];
   }
 
   await updateDoc(battleRef, updates);
 
-  if (userId) {
+  if (userId && userId !== 'guest') {
     try {
       const userRef = doc(db, 'users', userId);
       await updateDoc(userRef, {

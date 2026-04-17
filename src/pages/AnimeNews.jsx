@@ -158,7 +158,7 @@ const NewsCard = ({ article, idx }) => (
             <img
                 src={article.image} alt={article.title}
                 className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-500 opacity-90 group-hover:opacity-100"
-                onError={e => { e.target.src = 'https://via.placeholder.com/600x400/100714/f43f5e?text=News'; }}
+                onError={e => { e.target.src = 'https://images.unsplash.com/photo-1578632767115-351597cf2477?q=80&w=600&auto=format&fit=crop'; }}
             />
             <div className="absolute inset-0 bg-gradient-to-t from-black via-transparent to-transparent" />
             <div className="absolute top-3 right-3 p-1.5 rounded-lg bg-black/60 backdrop-blur-md text-slate-300 group-hover:text-rose-400 transition-colors">

@@ -105,42 +105,51 @@ async def register(request: RegisterRequest, db: Session = Depends(get_db)):
 
 @router.post("/login")
 async def login(request: LoginRequest, db: Session = Depends(get_db)):
-    user = db.query(User).filter(User.email == request.email).first()
-    
-    if not user or not password_service.verify_password(request.password, user.hashed_password):
-        return error_response(message="Invalid email or password", code="UNAUTHORIZED")
-    
-    # Create tokens
-    access_token = jwt_service.create_access_token(user_id=user.user_id)
-    refresh_token = jwt_service.create_refresh_token(user_id=user.user_id)
-    
-    return api_response(
-        message="Login successful",
-        data={
-            "user": {
-                "user_id": user.user_id,
-                "email": user.email,
-                "display_name": user.display_name,
-                "avatar_url": user.avatar_url,
-                "is_verified": bool(user.is_verified)
-            },
-            "tokens": {
-                "access_token": access_token,
-                "refresh_token": refresh_token,
-                "expires_in": jwt_service.expiry_minutes * 60
+    try:
+        user = db.query(User).filter(User.email == request.email).first()
+        
+        if not user or not password_service.verify_password(request.password, user.hashed_password):
+            return error_response(message="Invalid email or password", code="UNAUTHORIZED")
+        
+        # Create tokens
+        access_token = jwt_service.create_access_token(user_id=user.user_id)
+        refresh_token = jwt_service.create_refresh_token(user_id=user.user_id)
+        
+        return api_response(
+            message="Login successful",
+            data={
+                "user": {
+                    "user_id": user.user_id,
+                    "email": user.email,
+                    "display_name": user.display_name,
+                    "avatar_url": user.avatar_url,
+                    "is_verified": bool(user.is_verified)
+                },
+                "tokens": {
+                    "access_token": access_token,
+                    "refresh_token": refresh_token,
+                    "expires_in": jwt_service.expiry_minutes * 60
+                }
             }
-        }
-    )
+        )
+    except Exception as e:
+        logger.error(f"Login error: {e}")
+        return error_response(message="Authentication service unavailable. Please try again.", code="INTERNAL_ERROR")
 
 @router.get("/verify-email")
 async def verify_email(token: str, db: Session = Depends(get_db)):
-    user = db.query(User).filter(User.verification_token == token).first()
-    if not user:
-        return error_response(message="Invalid or expired verification token", code="INVALID_INPUT")
-    
-    user.is_verified = 1
-    user.verification_token = None
-    db.commit()
+    try:
+        user = db.query(User).filter(User.verification_token == token).first()
+        if not user:
+            return error_response(message="Invalid or expired verification token", code="INVALID_INPUT")
+        
+        user.is_verified = 1
+        user.verification_token = None
+        db.commit()
+    except Exception as e:
+        db.rollback()
+        logger.error(f"Verify email error: {e}")
+        return error_response(message="Failed to verify email", code="INTERNAL_ERROR")
     
     # Send welcome email now that verified
     try:

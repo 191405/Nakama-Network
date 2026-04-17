@@ -1,6 +1,6 @@
 import React, { useState, useEffect } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
-import { Loader2, Mail, Lock, Eye, EyeOff, ArrowRight, CheckCircle, Sparkles, X } from 'lucide-react';
+import { Loader2, Mail, Lock, Eye, EyeOff, ArrowRight, CheckCircle, Shield, X, User } from 'lucide-react';
 import { useAuth } from '../contexts/AuthContext';
 
 const AuthModal = () => {
@@ -12,6 +12,7 @@ const AuthModal = () => {
   const [email, setEmail] = useState('');
   const [password, setPassword] = useState('');
   const [confirmPassword, setConfirmPassword] = useState('');
+  const [displayName, setDisplayName] = useState('');
   const [resetSent, setResetSent] = useState(false);
   const [slowLoadWarning, setSlowLoadWarning] = useState(false);
 
@@ -53,11 +54,11 @@ const AuthModal = () => {
       setError('Password must be at least 8 chars, contain an uppercase letter, a lowercase letter, a number, and a special character (@$!%*?&).');
       return;
     }
-    const displayName = email.split('@')[0];
+    const finalDisplayName = displayName.trim() || email.split('@')[0];
     try {
       setLoading(true); setError(''); setSlowLoadWarning(false);
       const timer = setTimeout(() => setSlowLoadWarning(true), 4000);
-      await register(email, password, displayName);
+      await register(email, password, finalDisplayName);
       clearTimeout(timer);
       setLoading(false);
       closeAuthModal();
@@ -143,31 +144,34 @@ const AuthModal = () => {
             {/* Content Container (elevated above ambient glow) */}
             <div style={{ position: 'relative', zIndex: 10 }}>
               
-              {/* Header */}
+              {/* Header — Premium Nakama Network Branding */}
               <div style={{ textAlign: 'center', marginBottom: '2rem' }}>
                 <div style={{
                   display: 'inline-flex', alignItems: 'center', justifyContent: 'center',
-                  width: '56px', height: '56px', borderRadius: '18px', marginBottom: '1.25rem',
+                  width: '56px', height: '56px', borderRadius: '18px', marginBottom: '1rem',
                   background: 'linear-gradient(135deg, rgba(183,110,121,0.15), rgba(183,110,121,0.05))',
                   border: '1px solid rgba(183,110,121,0.25)',
                   boxShadow: '0 8px 32px rgba(183,110,121,0.1)'
                 }}>
-                  <Sparkles size={24} style={{ color: '#e5b6bc' }} />
+                  <Shield size={24} style={{ color: '#e5b6bc' }} />
                 </div>
+                <h2 style={{
+                  fontSize: '20px', fontWeight: 900, fontFamily: 'var(--font-display, Cinzel, serif)',
+                  letterSpacing: '0.15em', textTransform: 'uppercase', margin: '0 0 4px 0',
+                  background: 'linear-gradient(135deg, #FFFFFF 0%, #e5b6bc 50%, #b76e79 100%)',
+                  WebkitBackgroundClip: 'text', WebkitTextFillColor: 'transparent',
+                }}>
+                  Nakama Network
+                </h2>
+                <p style={{ color: '#555', fontSize: '11px', letterSpacing: '0.2em', textTransform: 'uppercase', fontWeight: 600, margin: 0 }}>
+                  The Hidden Layer of Anime
+                </p>
                 {authModalMessage && (
                   <motion.p initial={{ opacity: 0, y: -5 }} animate={{ opacity: 1, y: 0 }}
-                    style={{ color: '#b76e79', fontSize: '13px', fontWeight: 600, marginBottom: '12px', letterSpacing: '0.02em', textTransform: 'uppercase' }}>
+                    style={{ color: '#b76e79', fontSize: '13px', fontWeight: 600, marginTop: '12px', letterSpacing: '0.02em', textTransform: 'uppercase' }}>
                     {authModalMessage}
                   </motion.p>
                 )}
-                <h2 style={{ 
-                  fontSize: '24px', fontWeight: 800, fontFamily: 'var(--font-display)', 
-                  letterSpacing: '-0.02em', margin: 0,
-                  background: 'linear-gradient(180deg, #FFFFFF 0%, #A0A0A0 100%)',
-                  WebkitBackgroundClip: 'text', WebkitTextFillColor: 'transparent',
-                }}>
-                  Join the Network
-                </h2>
               </div>
 
               {/* Segmented Controller Tab Bar */}
@@ -218,11 +222,12 @@ const AuthModal = () => {
                     </form>
                   )}
 
-                  {/* Signup Form */}
+                  {/* Signup Form — with display name field */}
                   {mode === 'signup' && (
                     <form onSubmit={handleSignup} style={{ display: 'flex', flexDirection: 'column', gap: '14px' }}>
+                      <InputField icon={<User size={16} />} type="text" placeholder="Display name" value={displayName} onChange={(e) => setDisplayName(e.target.value)} />
                       <InputField icon={<Mail size={16} />} type="email" placeholder="Email address" value={email} onChange={(e) => setEmail(e.target.value)} />
-                      <InputField icon={<Lock size={16} />} type={showPassword ? 'text' : 'password'} placeholder="Password" value={password} onChange={(e) => setPassword(e.target.value)}
+                      <InputField icon={<Lock size={16} />} type={showPassword ? 'text' : 'password'} placeholder="Password (min 8 chars, mixed case, number, symbol)" value={password} onChange={(e) => setPassword(e.target.value)}
                         rightIcon={showPassword ? <EyeOff size={16} /> : <Eye size={16} />} onRightClick={() => setShowPassword(v => !v)} />
                       <InputField icon={<Lock size={16} />} type={showPassword ? 'text' : 'password'} placeholder="Confirm password" value={confirmPassword} onChange={(e) => setConfirmPassword(e.target.value)} />
                       <SubmitBtn loading={loading} style={{ marginTop: '4px' }}>Create Account <ArrowRight size={16} /></SubmitBtn>

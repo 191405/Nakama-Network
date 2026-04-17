@@ -91,7 +91,7 @@ class GeminiService:
             except Exception as e:
                 logger.error(f"AI Service: Gemini generation failed: {e}")
         
-        return None
+        return "My mind is wandering the cosmos. The stars are currently aligning—please ask me again shortly."
     
     def _parse_json(self, text: str) -> Optional[Dict]:
         try:

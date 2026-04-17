@@ -17,7 +17,12 @@ const authService = {
                 body: JSON.stringify({ email, password, display_name: displayName })
             });
 
-            const data = await response.json();
+            let data;
+            try {
+                data = await response.json();
+            } catch (e) {
+                throw new Error('Network error. The Network is currently experiencing heavy traffic. Please try again.');
+            }
             if (!response.ok || data.status === 'error') {
                 throw new Error(data.message || data.detail || 'Registration failed');
             }
@@ -42,7 +47,12 @@ const authService = {
                 body: JSON.stringify({ email, password })
             });
 
-            const data = await response.json();
+            let data;
+            try {
+                data = await response.json();
+            } catch (e) {
+                throw new Error('Network error. The Network is currently experiencing heavy traffic. Please try again.');
+            }
             if (!response.ok || data.status === 'error') {
                 throw new Error(data.message || data.detail || 'Login failed');
             }

@@ -19,7 +19,13 @@ const fetchAI = async (endpoint, payload = {}, method = 'POST') => {
     }
 
     const response = await fetch(`${API_BASE_URL}${endpoint}`, options);
-    const data = await response.json();
+    let data;
+    try {
+      data = await response.json();
+    } catch {
+      console.warn(`AI Backend JSON parse failed for ${endpoint}`);
+      throw new Error(`Server unavailable. Returning local cache...`);
+    }
 
     if (!response.ok) {
       console.error(`AI Backend Error (${endpoint}):`, data);
