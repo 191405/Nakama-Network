@@ -13,6 +13,7 @@ const AuthModal = () => {
   const [password, setPassword] = useState('');
   const [confirmPassword, setConfirmPassword] = useState('');
   const [resetSent, setResetSent] = useState(false);
+  const [slowLoadWarning, setSlowLoadWarning] = useState(false);
 
   useEffect(() => {
     if (isAuthModalOpen) {
@@ -22,6 +23,7 @@ const AuthModal = () => {
       setPassword('');
       setConfirmPassword('');
       setResetSent(false);
+      setSlowLoadWarning(false);
     }
   }, [isAuthModalOpen]);
 
@@ -29,13 +31,16 @@ const AuthModal = () => {
     e.preventDefault();
     if (!email || !password) { setError('Please fill in all fields'); return; }
     try {
-      setLoading(true); setError('');
+      setLoading(true); setError(''); setSlowLoadWarning(false);
+      const timer = setTimeout(() => setSlowLoadWarning(true), 4000);
       await login(email, password);
+      clearTimeout(timer);
       setLoading(false);
       closeAuthModal();
     } catch (err) {
       setError(err.message || 'Login failed. Please try again.');
       setLoading(false);
+      setSlowLoadWarning(false);
     }
   };
 
@@ -46,13 +51,16 @@ const AuthModal = () => {
     if (password.length < 8) { setError('Password must be at least 8 characters'); return; }
     const displayName = email.split('@')[0];
     try {
-      setLoading(true); setError('');
+      setLoading(true); setError(''); setSlowLoadWarning(false);
+      const timer = setTimeout(() => setSlowLoadWarning(true), 4000);
       await register(email, password, displayName);
+      clearTimeout(timer);
       setLoading(false);
       closeAuthModal();
     } catch (err) {
       setError(err.message || 'Signup failed. Please try again.');
       setLoading(false);
+      setSlowLoadWarning(false);
     }
   };
 
@@ -163,14 +171,14 @@ const AuthModal = () => {
                 <div style={{
                   display: 'flex', padding: '4px', borderRadius: '16px', marginBottom: '1.5rem',
                   background: 'rgba(0,0,0,0.4)', border: '1px solid rgba(255,255,255,0.04)',
-                  boxShadow: 'inset 0 2px 4px rgba(0,0,0,0.5)'
+                  boxShadow: 'inset 0 2px 4px rgba(0,0,0,0.5)', opacity: loading ? 0.6 : 1, pointerEvents: loading ? 'none' : 'auto'
                 }}>
-                  <button type="button" onClick={() => { setMode('login'); setError(''); }}
-                    style={{ flex: 1, padding: '10px', borderRadius: '12px', fontSize: '13px', fontWeight: 600, cursor: 'pointer', transition: 'all 0.3s cubic-bezier(0.4, 0, 0.2, 1)', ...tabStyle(mode === 'login') }}>
+                  <button type="button" onClick={() => { setMode('login'); setError(''); }} disabled={loading}
+                    style={{ flex: 1, padding: '10px', borderRadius: '12px', fontSize: '13px', fontWeight: 600, cursor: loading ? 'wait' : 'pointer', transition: 'all 0.3s cubic-bezier(0.4, 0, 0.2, 1)', ...tabStyle(mode === 'login') }}>
                     Sign In
                   </button>
-                  <button type="button" onClick={() => { setMode('signup'); setError(''); }}
-                    style={{ flex: 1, padding: '10px', borderRadius: '12px', fontSize: '13px', fontWeight: 600, cursor: 'pointer', transition: 'all 0.3s cubic-bezier(0.4, 0, 0.2, 1)', ...tabStyle(mode === 'signup') }}>
+                  <button type="button" onClick={() => { setMode('signup'); setError(''); }} disabled={loading}
+                    style={{ flex: 1, padding: '10px', borderRadius: '12px', fontSize: '13px', fontWeight: 600, cursor: loading ? 'wait' : 'pointer', transition: 'all 0.3s cubic-bezier(0.4, 0, 0.2, 1)', ...tabStyle(mode === 'signup') }}>
                     Create Account
                   </button>
                 </div>
@@ -248,8 +256,19 @@ const AuthModal = () => {
                 </motion.div>
               </AnimatePresence>
 
-              {/* Error */}
+              {/* Error or Slow Load Warning */}
               <AnimatePresence>
+                {slowLoadWarning && loading && !error && (
+                  <motion.div initial={{ opacity: 0, height: 0, marginTop: 0 }} animate={{ opacity: 1, height: 'auto', marginTop: 16 }} exit={{ opacity: 0, height: 0, marginTop: 0 }} style={{ overflow: 'hidden' }}>
+                    <div style={{
+                      padding: '12px 16px', borderRadius: '12px', fontSize: '13px', textAlign: 'center',
+                      background: 'rgba(251,191,36,0.06)', border: '1px solid rgba(251,191,36,0.15)', color: '#fbbf24',
+                      fontWeight: 500
+                    }}>
+                      Deploying or waking up API... this might take 30-50s initially.
+                    </div>
+                  </motion.div>
+                )}
                 {error && (
                   <motion.div initial={{ opacity: 0, height: 0, marginTop: 0 }} animate={{ opacity: 1, height: 'auto', marginTop: 16 }} exit={{ opacity: 0, height: 0, marginTop: 0 }} style={{ overflow: 'hidden' }}>
                     <div style={{

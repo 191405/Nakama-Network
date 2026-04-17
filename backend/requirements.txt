@@ -33,7 +33,7 @@ asyncpg
 psycopg2-binary
 
 # Auth & Security
-python-jose[cryptography]
+PyJWT
 passlib[bcrypt]
 email-validator
 python-decouple
