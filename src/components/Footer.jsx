@@ -2,12 +2,13 @@ import React from 'react';
 import { Link } from 'react-router-dom';
 import { ArrowRight, Heart } from 'lucide-react';
 import { NakamaLogo } from './NakamaLogo';
+import Reveal from '../motion/Reveal';
 
 const Footer = () => {
     return (
         <footer className="relative z-10 pt-12 pb-8 bg-[#050505] border-t border-white/[0.04]">
             <div className="max-w-[1400px] mx-auto px-4 md:px-8">
-                <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-10 mb-10">
+            <Reveal preset="fadeUp" className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-10 mb-10">
 
                     {/* Brand */}
                     <div className="space-y-4">
@@ -56,7 +57,7 @@ const Footer = () => {
                             </button>
                         </div>
                     </div>
-                </div>
+            </Reveal>
 
                 {/* Bottom */}
                 <div className="h-[1px] bg-white/[0.04] mb-6" />

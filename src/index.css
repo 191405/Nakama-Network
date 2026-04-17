@@ -194,3 +194,62 @@ button:focus-visible, a:focus-visible, input:focus-visible {
 button, a, .cursor-pointer {
   transition: all 0.2s cubic-bezier(0.23, 1, 0.32, 1);
 }
+
+/* ══════════════════════════════════════════════════
+   REDUCED-MOTION GLOBAL POLICY
+   Users who prefer reduced motion get instant state
+   changes with no animation or transition.
+   ══════════════════════════════════════════════════ */
+@media (prefers-reduced-motion: reduce) {
+  *, *::before, *::after {
+    animation-duration: 0.01ms !important;
+    animation-iteration-count: 1 !important;
+    transition-duration: 0.01ms !important;
+    scroll-behavior: auto !important;
+  }
+}
+
+/* ── Depth Utilities (GPU-accelerated) ── */
+.motion-lift {
+  transition: transform 0.22s cubic-bezier(0.22, 1, 0.36, 1),
+              box-shadow 0.22s cubic-bezier(0.22, 1, 0.36, 1);
+  will-change: transform;
+}
+.motion-lift:hover {
+  transform: translateY(-4px) scale(1.015);
+  box-shadow: 0 12px 40px rgba(0, 0, 0, 0.3);
+}
+.motion-lift:active {
+  transform: translateY(-1px) scale(0.99);
+}
+
+.motion-glow {
+  transition: border-color 0.3s, box-shadow 0.3s;
+}
+.motion-glow:hover {
+  border-color: rgba(183, 110, 121, 0.25);
+  box-shadow: 0 0 24px rgba(183, 110, 121, 0.08);
+}
+
+/* ── Hero Gradient Mesh Animation ── */
+@keyframes gradient-mesh {
+  0%   { background-position: 0% 50%; }
+  50%  { background-position: 100% 50%; }
+  100% { background-position: 0% 50%; }
+}
+
+.hero-mesh {
+  background: linear-gradient(
+    -45deg,
+    rgba(183, 110, 121, 0.06),
+    rgba(50, 30, 40, 0.08),
+    rgba(20, 20, 30, 0.1),
+    rgba(183, 110, 121, 0.04)
+  );
+  background-size: 400% 400%;
+  animation: gradient-mesh 12s ease infinite;
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .hero-mesh { animation: none; }
+}

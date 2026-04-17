@@ -27,11 +27,7 @@ import MangaDashboard from './pages/MangaDashboard';
 import MangaUploader from './pages/MangaUploader';
 import MangaReader from './pages/MangaReader';
 
-const pageVariants = {
-  initial: { opacity: 0, y: 15 },
-  animate: { opacity: 1, y: 0 },
-  exit: { opacity: 0, y: -15 }
-};
+import { pageTransition } from './motion/motionPresets';
 
 const PageWrapper = ({ children }) => {
   const location = useLocation();
@@ -39,11 +35,10 @@ const PageWrapper = ({ children }) => {
     <AnimatePresence mode="wait">
       <motion.div
         key={location.pathname}
-        variants={pageVariants}
-        initial="initial"
-        animate="animate"
-        exit="exit"
-        transition={{ duration: 0.4, ease: [0.22, 1, 0.36, 1] }}
+        initial={pageTransition.initial}
+        animate={pageTransition.animate}
+        exit={pageTransition.exit}
+        transition={pageTransition.transition}
       >
         {children}
       </motion.div>

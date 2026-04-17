@@ -7,19 +7,11 @@ import { jikanAPI } from '../utils/animeDataAPIs';
 import { getAnimeImage, PLACEHOLDERS, handleImageError } from '../utils/imageUtils';
 import Skeleton, { AnimeCardSkeleton } from '../components/Skeleton';
 import OracleTileModal from '../components/OracleTileModal';
+import Reveal from '../motion/Reveal';
+import { staggerContainer as makeStagger, staggerItem, heroText, heroBg } from '../motion/motionPresets';
 
-const staggerContainer = {
-    hidden: { opacity: 0 },
-    show: {
-        opacity: 1,
-        transition: { staggerChildren: 0.05 }
-    }
-};
-
-const itemVariant = {
-    hidden: { opacity: 0, y: 20 },
-    show: { opacity: 1, y: 0, transition: { type: "spring", stiffness: 300, damping: 24 } }
-};
+const staggerContainer = makeStagger('fast');
+const itemVariant = staggerItem;
 
 /* ── Hero background images — Premium High-Resolution Landscape Banners ── */
 const HERO_IMAGES = [
@@ -308,10 +300,10 @@ const Homepage = () => {
                 <AnimatePresence mode="wait">
                     <motion.div
                         key={currentHeroIdx}
-                        initial={{ opacity: 0, scale: 1.05 }}
-                        animate={{ opacity: 1, scale: 1 }}
-                        exit={{ opacity: 0 }}
-                        transition={{ duration: 1.2, ease: [0.22, 1, 0.36, 1] }}
+                        initial={heroBg.initial}
+                        animate={heroBg.animate}
+                        exit={heroBg.exit}
+                        transition={heroBg.transition}
                         className="absolute inset-0"
                     >
                         <img
@@ -322,7 +314,6 @@ const Homepage = () => {
                             decoding="async"
                             referrerPolicy="no-referrer"
                             onError={(e) => {
-                                // Try AniList CDN fallback on error
                                 const fallback = FALLBACK_HERO_IMAGES[currentHeroIdx % FALLBACK_HERO_IMAGES.length];
                                 if (e.target.src !== fallback) {
                                     e.target.onerror = null;
@@ -334,6 +325,9 @@ const Homepage = () => {
                         <div className="absolute inset-0 bg-gradient-to-r from-[#050505]/90 to-transparent" />
                     </motion.div>
                 </AnimatePresence>
+
+                {/* Animated gradient mesh overlay */}
+                <div className="absolute inset-0 hero-mesh pointer-events-none z-[1]" />
 
                 {/* Slide indicators */}
                 <div className="absolute bottom-6 right-6 md:right-10 z-20 flex gap-1.5">
@@ -350,9 +344,8 @@ const Homepage = () => {
 
                 <div className="relative z-10 w-full max-w-[1400px] mx-auto px-4 md:px-8 pb-16 pt-32">
                     <motion.div
-                        initial={{ opacity: 0, y: 20 }}
-                        animate={{ opacity: 1, y: 0 }}
-                        transition={{ duration: 0.7, ease: [0.22, 1, 0.36, 1] }}
+                        initial={heroText.hidden}
+                        animate={heroText.visible}
                         className="max-w-2xl"
                     >
                         <h1 className="text-4xl sm:text-5xl lg:text-7xl font-extrabold text-white leading-[1.05] tracking-tight mb-5">
@@ -391,7 +384,7 @@ const Homepage = () => {
             </section>
 
             {/* === SPRING ANIME SECTION === */}
-            <section className="max-w-[1400px] mx-auto px-4 md:px-8 py-16">
+            <Reveal preset="fadeUp" className="max-w-[1400px] mx-auto px-4 md:px-8 py-16" as="section">
                 <div className="flex items-center justify-between mb-6">
                     <div className="flex items-center gap-3">
                         <div className="p-2 rounded-lg" style={{ background: 'linear-gradient(135deg, rgba(200,160,120,0.1), rgba(200,160,120,0.03))' }}>
@@ -415,7 +408,7 @@ const Homepage = () => {
                     </div>
                 ) : springAnime.length > 0 ? (
                         <motion.div 
-                            variants={staggerContainer} initial="hidden" animate="show"
+                            variants={staggerContainer} initial="hidden" animate="visible"
                             className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-6 gap-3 sm:gap-4">
                             {springAnime.slice(0, 12).map((anime, idx) => (
                                 <TrendingCard key={anime.mal_id} anime={anime} rank={idx + 1} onAskOracle={setOracleAnime} />
@@ -426,7 +419,7 @@ const Homepage = () => {
                         <p className="text-white/40 text-sm">No transmissions found in this sector.</p>
                     </div>
                 )}
-            </section>
+            </Reveal>
 
             {/* === TRENDING NOW (separate row) === */}
             {trendingAnime.length > 0 && (
@@ -443,7 +436,7 @@ const Homepage = () => {
                         </div>
                     </div>
                     <motion.div 
-                        variants={staggerContainer} initial="hidden" whileInView="show" viewport={{ once: true, margin: "-50px" }}
+                        variants={staggerContainer} initial="hidden" whileInView="visible" viewport={{ once: true, margin: "-50px" }}
                         className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-6 gap-3 sm:gap-4">
                         {trendingAnime.slice(0, 6).map((anime, idx) => (
                             <TrendingCard key={anime.mal_id} anime={anime} rank={`#${idx + 1}`} onAskOracle={setOracleAnime} />
@@ -477,7 +470,7 @@ const Homepage = () => {
                     </div>
                 ) : newsPreview.length > 0 ? (
                     <motion.div 
-                        variants={staggerContainer} initial="hidden" whileInView="show" viewport={{ once: true }}
+                        variants={staggerContainer} initial="hidden" whileInView="visible" viewport={{ once: true }}
                         className="grid grid-cols-1 sm:grid-cols-2 gap-3">
                         {newsPreview.map((article, idx) => (
                             <NewsPreviewCard key={idx} article={article} />
@@ -491,7 +484,7 @@ const Homepage = () => {
             </section>
 
             {/* === FEATURES === */}
-            <section className="max-w-[1400px] mx-auto px-4 md:px-8 pb-20">
+            <Reveal preset="fadeUp" className="max-w-[1400px] mx-auto px-4 md:px-8 pb-20" as="section">
                 <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-5 gap-4">
                     <FeatureCard to="/community" icon={TrendingUp} title="Community" desc="Wikis, discussions, and guides curated by fans." delay={0.1} />
                     <FeatureCard to="/clan" icon={Shield} title="Clans" desc="Build alliances and compete on the leaderboards." delay={0.15} />
@@ -499,7 +492,7 @@ const Homepage = () => {
                     <FeatureCard to="/news" icon={Newspaper} title="Industry Intel" desc="Studio announcements and release calendars." delay={0.25} />
                     <FeatureCard to="/story-writer" icon={Feather} title="Story Writer" desc="Write and publish web novels with continuity tracking." delay={0.3} />
                 </div>
-            </section>
+            </Reveal>
 
             {/* Oracle Modal */}
             <OracleTileModal
