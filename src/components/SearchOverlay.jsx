@@ -150,6 +150,7 @@ const SearchOverlay = ({ isOpen, onClose }) => {
                                             src={getAnimeImage(anime.images, 'small')}
                                             alt=""
                                             className="w-10 h-14 rounded-lg object-cover flex-shrink-0 bg-[#111]"
+                                            referrerPolicy="no-referrer"
                                             onError={(e) => handleImageError(e, PLACEHOLDERS.anime)}
                                         />
                                         <div className="flex-1 min-w-0">
@@ -202,7 +203,7 @@ const SearchOverlay = ({ isOpen, onClose }) => {
                                         onClick={() => handleRecentClick(item)}
                                         className="w-full flex items-center gap-3 p-2.5 rounded-xl hover:bg-white/[0.04] transition-colors text-left"
                                     >
-                                        {item.image && <img src={item.image} alt="" className="w-8 h-10 rounded-md object-cover bg-[#111]" />}
+                                        {item.image && <img src={item.image} alt="" className="w-8 h-10 rounded-md object-cover bg-[#111]" referrerPolicy="no-referrer" />}
                                         <span className="text-[#888] text-sm truncate">{item.title}</span>
                                     </button>
                                 ))}

@@ -45,6 +45,7 @@ const AnimeCard = ({ anime, onAskOracle }) => {
                             alt={anime?.title}
                             className="w-full h-full object-cover transition-transform duration-500 group-hover:scale-105"
                             loading="lazy"
+                            referrerPolicy="no-referrer"
                             onError={(e) => handleImageError(e, PLACEHOLDERS.anime)}
                         />
                     ) : (
@@ -140,6 +141,7 @@ const AnimeListItem = ({ anime }) => {
             <div className="w-14 h-20 rounded-lg overflow-hidden flex-shrink-0 bg-[#111]">
                 {imageUrl ? (
                     <img src={imageUrl} alt="" className="w-full h-full object-cover" loading="lazy"
+                        referrerPolicy="no-referrer"
                         onError={(e) => handleImageError(e, PLACEHOLDERS.anime)} />
                 ) : (
                     <div className="w-full h-full flex items-center justify-center"><Film size={18} className="text-[#333]" /></div>

@@ -185,6 +185,7 @@ const AnimeDetail = () => {
             <div className="relative h-[400px] md:h-[500px] w-full">
                 <div className="absolute inset-0">
                     <img src={bannerImage} alt="Banner" className="w-full h-full object-cover opacity-30"
+                        referrerPolicy="no-referrer"
                         onError={(e) => handleImageError(e, PLACEHOLDERS.animeLandscape)} />
                     <div className="absolute inset-0 bg-gradient-to-t from-[#050505] via-[#050505]/80 to-transparent" />
                     <div className="absolute inset-0 bg-gradient-to-r from-[#050505] via-transparent to-transparent opacity-80" />
@@ -202,6 +203,7 @@ const AnimeDetail = () => {
                 <div className="w-full md:w-[280px] flex-shrink-0 flex flex-col gap-4">
                     <div className="rounded-2xl overflow-hidden shadow-2xl border border-white/[0.08] bg-[#0a0a0a]">
                         <img src={coverImage} alt={anime.title} className="w-full h-auto object-cover"
+                            referrerPolicy="no-referrer"
                             onError={(e) => handleImageError(e, PLACEHOLDERS.anime)} />
                     </div>
                     
@@ -305,6 +307,7 @@ const AnimeDetail = () => {
                                                 src={getCharacterImage(character.images)}
                                                 alt={character.name}
                                                 className="w-full h-full object-cover"
+                                                referrerPolicy="no-referrer"
                                                 onError={(e) => handleImageError(e, PLACEHOLDERS.character)}
                                             />
                                             <div className="absolute inset-0 bg-gradient-to-t from-black/80 to-transparent" />

@@ -5,6 +5,10 @@ from typing import Optional, Dict, Any, List
 
 from groq import AsyncGroq
 from huggingface_hub import AsyncInferenceClient
+try:
+    from google import genai
+except ImportError:
+    genai = None
 
 from app.config import settings
 
@@ -15,12 +19,22 @@ class GeminiService:
     def __init__(self):
         self._groq_client = None
         self._hf_client = None
+        self._gemini_client = None
         
         if settings.groq_api_key:
             self._groq_client = AsyncGroq(api_key=settings.groq_api_key)
+            logger.info("AI Service: Groq initialized (Primary)")
             
         if settings.huggingface_api_key:
             self._hf_client = AsyncInferenceClient(token=settings.huggingface_api_key)
+            logger.info("AI Service: HuggingFace initialized (Secondary)")
+            
+        if settings.gemini_api_key and genai:
+            try:
+                self._gemini_client = genai.Client(api_key=settings.gemini_api_key)
+                logger.info("AI Service: Google Gemini initialized (Final Fallback)")
+            except Exception as e:
+                logger.error(f"Failed to initialize Gemini client: {e}")
     
     async def _generate(
         self, 
@@ -28,7 +42,9 @@ class GeminiService:
         temperature: float = 0.7,
         max_tokens: int = 1024
     ) -> Optional[str]:
-        # 1. Try Groq (Llama-3 8B) First
+        """Option B: Groq -> HuggingFace -> Gemini"""
+        
+        # 1. Try Groq (Llama-3 8B) Primary
         if self._groq_client:
             try:
                 response = await self._groq_client.chat.completions.create(
@@ -38,11 +54,12 @@ class GeminiService:
                     max_tokens=min(max_tokens, 8192)
                 )
                 if response.choices:
+                    logger.info("AI Service: Success using Groq")
                     return response.choices[0].message.content
             except Exception as e:
-                logger.warning(f"Groq generation failed, falling back to HuggingFace. Error: {e}")
+                logger.warning(f"AI Service: Groq failed, trying HuggingFace... Error: {e}")
 
-        # 2. Fallback to HuggingFace Inference API
+        # 2. Try HuggingFace Fallback 1
         if self._hf_client:
             try:
                 response = await self._hf_client.text_generation(
@@ -52,9 +69,27 @@ class GeminiService:
                     temperature=min(temperature, 0.99),
                     return_full_text=False
                 )
+                logger.info("AI Service: Success using HuggingFace")
                 return response
             except Exception as e:
-                logger.error(f"HuggingFace generation failed: {e}")
+                logger.warning(f"AI Service: HuggingFace failed, trying Gemini... Error: {e}")
+        
+        # 3. Try Gemini Fallback 2 (Safety Net)
+        if self._gemini_client:
+            try:
+                # Use synchronous call for now as the new client supports sync natively, 
+                # or wrap in run_in_executor if needed, but for simplicity:
+                import asyncio
+                response = await asyncio.to_thread(
+                    self._gemini_client.models.generate_content,
+                    model="gemini-1.5-flash",
+                    contents=prompt
+                )
+                if response and response.text:
+                    logger.info("AI Service: Success using Gemini (Fallback)")
+                    return response.text
+            except Exception as e:
+                logger.error(f"AI Service: Gemini generation failed: {e}")
         
         return None
     

@@ -59,6 +59,7 @@ const TrendingCard = ({ anime, rank, onAskOracle }) => {
                     alt={anime?.title}
                     className="w-full h-full object-cover transition-transform duration-500 group-hover:scale-105"
                     loading="lazy"
+                    referrerPolicy="no-referrer"
                     onError={(e) => handleImageError(e, PLACEHOLDERS.anime)}
                 />
                 <div className="absolute inset-0 bg-gradient-to-t from-black/90 via-black/30 to-transparent" />
@@ -171,7 +172,7 @@ const NewsPreviewCard = ({ article }) => (
             className="group block p-4 rounded-xl border border-white/[0.05] hover:border-white/[0.1] bg-[#0a0a0a] transition-all">
             <div className="flex gap-3">
                 {article.image && (
-                    <img src={article.image} alt="" className="w-16 h-16 rounded-lg object-cover flex-shrink-0 opacity-80 group-hover:opacity-100 transition-opacity" />
+                    <img src={article.image} alt="" className="w-16 h-16 rounded-lg object-cover flex-shrink-0 opacity-80 group-hover:opacity-100 transition-opacity" referrerPolicy="no-referrer" />
                 )}
             <div className="flex-1 min-w-0">
                 <h4 className="text-[13px] font-semibold text-white line-clamp-2 mb-1 group-hover:text-white/80">{article.title}</h4>
@@ -319,6 +320,7 @@ const Homepage = () => {
                             className="w-full h-full object-cover"
                             fetchPriority="high"
                             decoding="async"
+                            referrerPolicy="no-referrer"
                             onError={(e) => {
                                 // Try AniList CDN fallback on error
                                 const fallback = FALLBACK_HERO_IMAGES[currentHeroIdx % FALLBACK_HERO_IMAGES.length];
