@@ -18,6 +18,10 @@ aioredis
 # Google AI
 google-genai>=1.0.0
 
+# Alternate AI (Groq + Huggingface)
+groq
+huggingface_hub
+
 # Utilities
 python-dotenv
 python-multipart

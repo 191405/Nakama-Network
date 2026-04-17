@@ -3,8 +3,8 @@ import json
 import re
 from typing import Optional, Dict, Any, List
 
-from google import genai
-from google.genai import types
+from groq import AsyncGroq
+from huggingface_hub import AsyncInferenceClient
 
 from app.config import settings
 
@@ -13,45 +13,50 @@ logger = logging.getLogger(__name__)
 class GeminiService:
     
     def __init__(self):
-        self._configured = False
-        self._client = None
-        self._model_id = 'gemini-1.5-flash-latest'
-    
-    def _ensure_configured(self):
-        if not self._configured and settings.gemini_api_key:
-            # The new google-genai SDK uses client instantiation instead of global configure
-            self._client = genai.Client(api_key=settings.gemini_api_key)
-            self._configured = True
+        self._groq_client = None
+        self._hf_client = None
+        
+        if settings.groq_api_key:
+            self._groq_client = AsyncGroq(api_key=settings.groq_api_key)
+            
+        if settings.huggingface_api_key:
+            self._hf_client = AsyncInferenceClient(token=settings.huggingface_api_key)
     
     async def _generate(
         self, 
         prompt: str, 
-        temperature: float = 0.9,
-        max_tokens: int = 512
+        temperature: float = 0.7,
+        max_tokens: int = 1024
     ) -> Optional[str]:
-        try:
-            self._ensure_configured()
-            
-            if not self._client:
-                logger.warning("Gemini model not configured")
-                return None
-            
-            # Using the new google-genai syntax
-            response = self._client.models.generate_content(
-                model=self._model_id,
-                contents=prompt,
-                config=types.GenerateContentConfig(
-                    temperature=temperature,
-                    max_output_tokens=max_tokens,
+        # 1. Try Groq (Llama-3 8B) First
+        if self._groq_client:
+            try:
+                response = await self._groq_client.chat.completions.create(
+                    model="llama3-8b-8192",
+                    messages=[{"role": "user", "content": prompt}],
+                    temperature=min(temperature, 1.0),
+                    max_tokens=min(max_tokens, 8192)
                 )
-            )
-            
-            if response and response.text:
-                return response.text
-            return None
-        except Exception as e:
-            logger.error(f"Gemini generation error: {e}")
-            return None
+                if response.choices:
+                    return response.choices[0].message.content
+            except Exception as e:
+                logger.warning(f"Groq generation failed, falling back to HuggingFace. Error: {e}")
+
+        # 2. Fallback to HuggingFace Inference API
+        if self._hf_client:
+            try:
+                response = await self._hf_client.text_generation(
+                    prompt=prompt,
+                    model="meta-llama/Meta-Llama-3-8B-Instruct",
+                    max_new_tokens=min(max_tokens, 1024),
+                    temperature=min(temperature, 0.99),
+                    return_full_text=False
+                )
+                return response
+            except Exception as e:
+                logger.error(f"HuggingFace generation failed: {e}")
+        
+        return None
     
     def _parse_json(self, text: str) -> Optional[Dict]:
         try:

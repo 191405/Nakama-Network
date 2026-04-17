@@ -41,8 +41,7 @@ async def lifespan(app: FastAPI):
     from sqlalchemy import text
     try:
         with engine.begin() as conn:
-            # Check for is_verified in User table
-            # (PostgreSQL syntax - Render uses Postgres)
+            # Check for missing columns in User table
             columns_to_add = [
                 ("is_verified", "INTEGER DEFAULT 0"),
                 ("verification_token", "VARCHAR"),
@@ -52,10 +51,11 @@ async def lifespan(app: FastAPI):
             for col_name, col_type in columns_to_add:
                 try:
                     # The table name is "users" based on __tablename__ = "users"
-                    conn.execute(text(f'ALTER TABLE "users" ADD COLUMN IF NOT EXISTS {col_name} {col_type}'))
-                    logger.info(f"✅ Verified/Added column {col_name} to users table")
-                except Exception as col_err:
-                    logger.warning(f"Note: Column {col_name} check: {col_err}")
+                    conn.execute(text(f'ALTER TABLE "users" ADD COLUMN {col_name} {col_type}'))
+                    logger.info(f"✅ Added column {col_name} to users table")
+                except Exception:
+                    # Logically, this will fail if the column already exists.
+                    pass
                     
         logger.info("📦 Database schema verified and updated")
     except Exception as e:

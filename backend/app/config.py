@@ -25,6 +25,8 @@ class Settings(BaseSettings):
     jikan_rate_limit: float = 0.35
     
     gemini_api_key: str = ""
+    groq_api_key: str = ""
+    huggingface_api_key: str = ""
     
     redis_url: str = "redis://localhost:6379"
     use_redis: bool = True
