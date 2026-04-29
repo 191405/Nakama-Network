@@ -211,6 +211,8 @@ const AnimeLibrary = () => {
         } finally {
             setLoading(false);
         }
+    }, [debouncedSearchQuery, activeGenre, sortBy, page]);
+
     useEffect(() => {
         const handler = setTimeout(() => {
             setDebouncedSearchQuery(searchInput.trim());
