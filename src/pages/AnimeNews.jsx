@@ -50,14 +50,17 @@ const fetchNewsPage = async (pageIndex, usedIds) => {
         }
     }
 
-    const THREE_DAYS_MS = 3 * 24 * 60 * 60 * 1000;
+    const THIRTY_DAYS_MS = 30 * 24 * 60 * 60 * 1000;
     const now = Date.now();
 
-    // Deduplicate by mal_id and filter by exactly 3 days
+    // Deduplicate by mal_id and filter to recent articles
     let unique = allNews.filter((item, idx, self) =>
-        idx === self.findIndex(t => t.mal_id === item.mal_id) && 
-        (now - new Date(item.date).getTime() <= THREE_DAYS_MS)
+        idx === self.findIndex(t => t.mal_id === item.mal_id)
     );
+    
+    // Try filtering to recent articles; if none survive, keep all
+    const recent = unique.filter(item => (now - new Date(item.date).getTime() <= THIRTY_DAYS_MS));
+    unique = recent.length > 0 ? recent : unique;
     unique.sort((a, b) => new Date(b.date) - new Date(a.date));
 
     return {

@@ -430,7 +430,15 @@ export const incrementAnimeDownloads = async (animeId) => {
 const NEWS_CACHE_TTL = 5 * 60 * 60 * 1000; 
 
 export const getOrFetchNews = async () => {
-  if (!db) return { news: [], lastUpdated: null, fromCache: false };
+  if (!db) {
+    // No Firestore — fetch directly from Jikan and return
+    try {
+      const freshNews = await fetchFreshAnimeNews();
+      return { news: freshNews.length > 0 ? freshNews : getFallbackNews(), lastUpdated: new Date(), fromCache: false };
+    } catch {
+      return { news: getFallbackNews(), lastUpdated: null, fromCache: false };
+    }
+  }
 
   try {
     
@@ -458,13 +466,18 @@ export const getOrFetchNews = async () => {
     console.log('Fetching fresh anime news...');
     const freshNews = await fetchFreshAnimeNews();
 
-    await setDoc(cacheRef, {
-      news: freshNews,
-      lastUpdated: serverTimestamp()
-    });
+    // Try caching, but don't fail if write is denied
+    try {
+      await setDoc(cacheRef, {
+        news: freshNews,
+        lastUpdated: serverTimestamp()
+      });
+    } catch (cacheWriteErr) {
+      console.warn('Could not update news cache (permission issue):', cacheWriteErr.message);
+    }
 
     return {
-      news: freshNews,
+      news: freshNews.length > 0 ? freshNews : getFallbackNews(),
       lastUpdated: new Date(),
       fromCache: false
     };
@@ -626,12 +639,16 @@ export const subscribeToChatMessages = (room, callback, limitNum = 50) => {
     return () => { };
   }
   const chatRef = collection(db, 'chatMessages');
-  const q = query(chatRef, orderBy('timestamp', 'desc'), limit(limitNum));
+  const q = query(
+    chatRef, 
+    where('room', '==', room), 
+    orderBy('timestamp', 'desc'), 
+    limit(limitNum)
+  );
 
   return onSnapshot(q, (snapshot) => {
     const messages = snapshot.docs
       .map(doc => ({ id: doc.id, ...doc.data() }))
-      .filter(msg => msg.room === room)
       .reverse();
     callback(messages);
   });
@@ -1011,5 +1028,8 @@ export const subscribeToCharacterClaims = (callback, limitNum = 50) => {
     return onSnapshot(q, (snapshot) => {
         const claims = snapshot.docs.map(d => ({ id: d.id, ...d.data() }));
         callback(claims);
+    }, (error) => {
+        console.error('Character claims subscription error:', error);
+        callback([]);
     });
 };

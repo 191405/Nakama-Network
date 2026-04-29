@@ -172,6 +172,7 @@ const AnimeLibrary = () => {
     const [loading, setLoading] = useState(true);
     const [searchQuery, setSearchQuery] = useState('');
     const [searchInput, setSearchInput] = useState('');
+    const [debouncedSearchQuery, setDebouncedSearchQuery] = useState('');
     const [viewMode, setViewMode] = useState('grid');
     const [activeGenre, setActiveGenre] = useState(null);
     const [sortBy, setSortBy] = useState('score');
@@ -186,8 +187,8 @@ const AnimeLibrary = () => {
             const currentPage = reset ? 1 : page;
             let url = `https://api.jikan.moe/v4/anime?page=${currentPage}&limit=24&order_by=${sortBy}&sort=desc`;
             
-            if (searchQuery) {
-                url = `https://api.jikan.moe/v4/anime?q=${encodeURIComponent(searchQuery)}&page=${currentPage}&limit=24&order_by=${sortBy}&sort=desc`;
+            if (debouncedSearchQuery) {
+                url = `https://api.jikan.moe/v4/anime?q=${encodeURIComponent(debouncedSearchQuery)}&page=${currentPage}&limit=24&order_by=${sortBy}&sort=desc`;
             }
             if (activeGenre) {
                 url += `&genres=${activeGenre}`;
@@ -210,15 +211,20 @@ const AnimeLibrary = () => {
         } finally {
             setLoading(false);
         }
-    }, [searchQuery, activeGenre, sortBy, page]);
+    useEffect(() => {
+        const handler = setTimeout(() => {
+            setDebouncedSearchQuery(searchInput.trim());
+        }, 500);
+        return () => clearTimeout(handler);
+    }, [searchInput]);
 
     useEffect(() => {
         fetchAnime(true);
-    }, [searchQuery, activeGenre, sortBy]);
+    }, [debouncedSearchQuery, activeGenre, sortBy]);
 
     const handleSearch = (e) => {
         e.preventDefault();
-        setSearchQuery(searchInput.trim());
+        setDebouncedSearchQuery(searchInput.trim());
     };
 
     const handleLoadMore = () => {
@@ -231,8 +237,8 @@ const AnimeLibrary = () => {
 
     const clearFilters = () => {
         setActiveGenre(null);
-        setSearchQuery('');
         setSearchInput('');
+        setDebouncedSearchQuery('');
         setSortBy('score');
     };
 
@@ -350,10 +356,10 @@ const AnimeLibrary = () => {
                                                 <X size={10} className="cursor-pointer" onClick={() => setActiveGenre(null)} />
                                             </span>
                                         )}
-                                        {searchQuery && (
+                                        {debouncedSearchQuery && (
                                             <span className="flex items-center gap-1 px-2 py-0.5 rounded-md text-[11px] bg-white/[0.06] text-[#888]">
-                                                "{searchQuery}"
-                                                <X size={10} className="cursor-pointer" onClick={() => { setSearchQuery(''); setSearchInput(''); }} />
+                                                "{debouncedSearchQuery}"
+                                                <X size={10} className="cursor-pointer" onClick={() => { setSearchInput(''); setDebouncedSearchQuery(''); }} />
                                             </span>
                                         )}
                                         <button onClick={clearFilters} className="ml-auto text-[11px] text-[#555] hover:text-white">
@@ -377,7 +383,7 @@ const AnimeLibrary = () => {
                         <Film size={48} className="text-[#222] mb-4" />
                         <h3 className="text-xl font-semibold text-white mb-2">No results found</h3>
                         <p className="text-[#555] text-sm mb-6">
-                            {searchQuery ? `Nothing matches "${searchQuery}"` : 'Try adjusting your filters.'}
+                            {debouncedSearchQuery ? `Nothing matches "${debouncedSearchQuery}"` : 'Try adjusting your filters.'}
                         </p>
                         <button onClick={clearFilters} className="px-4 py-2 rounded-lg text-sm bg-white/[0.06] text-white hover:bg-white/[0.1] transition-colors">
                             Clear Filters
@@ -419,7 +425,7 @@ const AnimeLibrary = () => {
                 {!loading && animeList.length > 0 && (
                     <div className="mt-6 text-center text-[11px] text-[#333]">
                         Showing {animeList.length} titles{activeGenre ? ` in ${GENRES.find(g => g.id === activeGenre)?.name}` : ''}
-                        {searchQuery ? ` matching "${searchQuery}"` : ''}
+                        {debouncedSearchQuery ? ` matching "${debouncedSearchQuery}"` : ''}
                     </div>
                 )}
             </div>

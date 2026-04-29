@@ -3,7 +3,10 @@ import { motion, AnimatePresence } from 'framer-motion';
 import { Search, X, Loader2, User, Check, Upload, Sparkles } from 'lucide-react';
 import userService from '../utils/userService';
 
+import { useAuth } from '../contexts/AuthContext';
+
 const AnimeAvatarSelector = ({ currentAvatar, onAvatarUpdate, onClose }) => {
+    const { user } = useAuth();
     const [searchQuery, setSearchQuery] = useState('');
     const [results, setResults] = useState([]);
     const [loading, setLoading] = useState(false);
@@ -30,7 +33,7 @@ const AnimeAvatarSelector = ({ currentAvatar, onAvatarUpdate, onClose }) => {
     const handleSelectCharacter = async (char) => {
         setSelectedId(char.id);
         try {
-            await userService.setAnimeAvatar(char.image);
+            await userService.setAnimeAvatar(user.uid, char.image);
             onAvatarUpdate(char.image);
             onClose();
         } catch (error) {
@@ -46,7 +49,7 @@ const AnimeAvatarSelector = ({ currentAvatar, onAvatarUpdate, onClose }) => {
 
         setUploading(true);
         try {
-            const res = await userService.uploadAvatar(file);
+            const res = await userService.uploadAvatar(user.uid, file);
             onAvatarUpdate(res.data.avatar_url);
             onClose();
         } catch (error) {

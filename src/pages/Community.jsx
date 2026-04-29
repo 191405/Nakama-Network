@@ -429,7 +429,13 @@ const Community = () => {
                                     </div>
                                 )}
 
-                                {characters.length > 0 && (
+                                {loading && (
+                                    <div className="flex justify-center py-12">
+                                        <Loader2 size={28} className="animate-spin text-[#b76e79]" />
+                                    </div>
+                                )}
+
+                                {!loading && characters.length > 0 && (
                                     <motion.div variants={staggerContainer} initial="hidden" animate="show" className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-5 gap-3">
                                         {characters.map(char => (
                                             <SearchCharacterCard
@@ -441,6 +447,12 @@ const Community = () => {
                                             />
                                         ))}
                                     </motion.div>
+                                )}
+
+                                {!loading && debouncedQuery.trim() && characters.length === 0 && !claimError && (
+                                    <div className="text-center py-12">
+                                        <p className="text-[#555] text-sm">No characters found for "{debouncedQuery}"</p>
+                                    </div>
                                 )}
                             </div>
                         )}

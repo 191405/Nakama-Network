@@ -53,8 +53,8 @@ service cloud.firestore {
     // ============ USER RULES ============
     
     match /users/{userId} {
-      // Anyone authenticated can read user profiles
-      allow read: if isAuthenticated();
+      // Public reads — allow guests to see Community member identities
+      allow read: if true;
       
       // Users can only write their own profile
       allow create: if isOwner(userId) && validDisplayName();
@@ -76,8 +76,47 @@ service cloud.firestore {
         allow read: if isOwner(userId);
         allow write: if isAuthenticated(); // System can create notifications
       }
+
+      match /voteHistory/{voteId} {
+        allow read: if isOwner(userId);
+        allow create: if isAuthenticated();
+      }
     }
     
+    // ============ CHARACTER CLAIMS ============
+    
+    match /characterClaims/{claimId} {
+      allow read: if true;
+      allow create: if isAuthenticated();
+      allow update: if isAuthenticated() && resource.data.claimedBy == request.auth.uid;
+      allow delete: if isAdmin();
+    }
+
+    // ============ COMMUNITY POSTS ============
+    
+    match /community_posts/{postId} {
+      allow read: if true;
+      allow create: if isAuthenticated() && validString('title', 1, 100) && validString('content', 1, 5000);
+      allow update: if isAuthenticated();
+      allow delete: if isOwner(resource.data.userId) || isModerator();
+    }
+
+    // ============ CHAT MESSAGES ============
+    
+    match /chatMessages/{messageId} {
+      allow read: if true;
+      allow create: if isAuthenticated() && validString('message', 1, 2000);
+      allow update: if isAuthenticated();
+      allow delete: if isModerator();
+    }
+
+    // ============ ANNOUNCEMENTS ============
+    
+    match /announcements/{announcementId} {
+      allow read: if true;
+      allow write: if isAdmin();
+    }
+
     // ============ BATTLE RULES ============
     
     match /battles/{battleId} {
@@ -113,6 +152,13 @@ service cloud.firestore {
       allow update, delete: if false;
     }
 
+    // ============ SYSTEM / HEALTH CHECK ============
+    
+    match /system/{docId} {
+      allow read: if true;
+      allow write: if isAdmin();
+    }
+
     // ============ SYSTEM STATS ============
     
     match /stats/{statId} {
@@ -138,11 +184,20 @@ service cloud.firestore {
       }
     }
 
+    // ============ ANIMES (user uploads) ============
+
+    match /animes/{animeId} {
+      allow read: if true;
+      allow create: if isAuthenticated();
+      allow update: if isAuthenticated();
+      allow delete: if isOwner(resource.data.uploaderId) || isAdmin();
+    }
+
     // ============ CACHE ============
     
     match /cache/{cacheId} {
       allow read: if true;
-      allow write: if isAuthenticated();
+      allow write: if true; // News cache needs to be writable without auth
     }
 
     // ============ COMMENTS ============
@@ -179,6 +234,15 @@ service cloud.firestore {
         allow create: if isAuthenticated();
         allow delete: if isModerator();
       }
+    }
+
+    // ============ MARKETPLACE ============
+
+    match /marketplace/{listingId} {
+      allow read: if true;
+      allow create: if isAuthenticated();
+      allow update: if isOwner(resource.data.sellerId) || isAdmin();
+      allow delete: if isOwner(resource.data.sellerId) || isAdmin();
     }
     
     // ============ REPORTS ============

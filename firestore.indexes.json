@@ -1,4 +1,29 @@
 {
-    "indexes": [],
-    "fieldOverrides": []
+  "indexes": [
+    {
+      "collectionGroup": "battles",
+      "queryScope": "COLLECTION",
+      "fields": [
+        { "fieldPath": "status", "order": "ASCENDING" },
+        { "fieldPath": "createdAt", "order": "DESCENDING" }
+      ]
+    },
+    {
+      "collectionGroup": "chatMessages",
+      "queryScope": "COLLECTION",
+      "fields": [
+        { "fieldPath": "room", "order": "ASCENDING" },
+        { "fieldPath": "timestamp", "order": "DESCENDING" }
+      ]
+    },
+    {
+      "collectionGroup": "characterClaims",
+      "queryScope": "COLLECTION",
+      "fields": [
+        { "fieldPath": "userId", "order": "ASCENDING" },
+        { "fieldPath": "claimedAt", "order": "DESCENDING" }
+      ]
+    }
+  ],
+  "fieldOverrides": []
 }

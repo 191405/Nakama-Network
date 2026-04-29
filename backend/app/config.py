@@ -29,7 +29,7 @@ class Settings(BaseSettings):
     huggingface_api_key: str = ""
     
     redis_url: str = "redis://localhost:6379"
-    use_redis: bool = True
+    use_redis: bool = False
     
     cors_origins: str = "http://localhost:8081,http://localhost:19006,http://localhost:5173"
     cors_allow_all: bool = True

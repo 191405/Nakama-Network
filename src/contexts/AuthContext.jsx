@@ -1,5 +1,16 @@
 import React, { createContext, useContext, useState, useEffect } from 'react';
-import authService from '../utils/authService';
+import { 
+  auth, 
+  signInWithEmail, 
+  signUpWithEmail, 
+  resetUserPassword, 
+  logOut, 
+  getUserProfile, 
+  createUserProfile,
+  subscribeToUserProfile,
+  signInAnon
+} from '../utils/firebase';
+import { onAuthStateChanged, updateProfile } from 'firebase/auth';
 import { getLocalDevUser, isLocalDevMode, clearLocalDevAuth } from '../utils/localDevAuth';
 
 const AuthContext = createContext();
@@ -21,146 +32,232 @@ export const AuthProvider = ({ children }) => {
   const [isAuthModalOpen, setIsAuthModalOpen] = useState(false);
   const [authModalMessage, setAuthModalMessage] = useState('');
 
+  // Track profile subscription cleanup
+  const unsubscribeProfileRef = React.useRef(null);
+
   // Initialize auth state
   useEffect(() => {
-    const initAuth = async () => {
-      setLoading(true);
-      
-      // 1. Try Local Dev Mode first
-      if (isLocalDevMode()) {
-        const devUser = getLocalDevUser();
-        if (devUser) {
-          setCurrentUser(devUser);
-          setIsAuthenticated(true);
+    // 1. Local Dev Mode Bypass
+    if (isLocalDevMode()) {
+      const devUser = getLocalDevUser();
+      if (devUser) {
+        setCurrentUser(devUser);
+        setIsAuthenticated(true);
+        setUserProfile({
+          id: devUser.uid || 'dev-user',
+          user_id: devUser.uid || 'dev-user',
+          displayName: devUser.displayName || 'Dev Master',
+          email: devUser.email,
+          chakra: 1000,
+          rank: 'Elite Developer',
+          canUseFeatures: true
+        });
+        setLoading(false);
+        return;
+      }
+    }
+
+    // 2. Native Firebase Authentication Sync
+    if (!auth) {
+      setLoading(false);
+      return;
+    }
+
+    const unsubscribeAuth = onAuthStateChanged(auth, async (firebaseUser) => {
+      if (unsubscribeProfileRef.current) {
+        unsubscribeProfileRef.current();
+        unsubscribeProfileRef.current = null;
+      }
+
+      if (firebaseUser) {
+        // Logged in securely via Firebase!
+        setIsGuest(firebaseUser.isAnonymous);
+        localStorage.removeItem('nakama_guest_mode');
+        
+        setCurrentUser(firebaseUser);
+        setIsAuthenticated(true);
+
+        if (firebaseUser.isAnonymous) {
           setUserProfile({
-            id: devUser.uid || 'dev-user',
-            user_id: devUser.uid || 'dev-user',
-            displayName: devUser.displayName || 'Dev Master',
-            email: devUser.email,
-            chakra: 1000,
-            rank: 'Elite Developer',
-            canUseFeatures: true
+            id: firebaseUser.uid,
+            user_id: firebaseUser.uid,
+            displayName: 'Guest Explorer',
+            email: null,
+            chakra: 0,
+            rank: 'Guest',
+            isGuest: true,
+            canUseFeatures: false,
           });
           setLoading(false);
           return;
         }
-      }
 
-      // 2. Try Backend Auth
-      const token = authService.getToken();
-      if (token) {
         try {
-          const res = await authService.getMe();
-          // Adjust based on standard api_response
-          const user = res?.data || res;
+          // Attempt to fetch robust profile dict from Firestore database
+          let profileDoc = await getUserProfile(firebaseUser.uid);
           
-          if (user && user.user_id) {
-            setCurrentUser(user);
-            setIsAuthenticated(true);
-            setUserProfile({
-              ...user,
-              id: user.user_id,
-              displayName: user.display_name,
-              canUseFeatures: true
-            });
-            setLoading(false);
-            return;
-          } else {
-             authService.logout();
+          if (!profileDoc) {
+             // If profile somehow didn't generate during signup, force creation now
+             profileDoc = await createUserProfile(firebaseUser.uid, {
+               email: firebaseUser.email,
+               displayName: firebaseUser.displayName || firebaseUser.email.split('@')[0],
+               user_id: firebaseUser.uid
+             });
           }
-        } catch (err) {
-          console.error('Backend auth init failed:', err);
-          authService.logout();
+
+          const completeProfile = {
+            ...profileDoc,
+            id: firebaseUser.uid,
+            user_id: firebaseUser.uid,
+            displayName: profileDoc.displayName || firebaseUser.displayName,
+            email: firebaseUser.email,
+            canUseFeatures: true
+          };
+
+          setUserProfile(completeProfile);
+
+          // Sub to dynamic changes (chakra points, rank updates, etc) silently
+          unsubscribeProfileRef.current = subscribeToUserProfile(firebaseUser.uid, (updatedProfile) => {
+             if (updatedProfile) {
+                setUserProfile(prev => ({
+                    ...prev,
+                    ...updatedProfile,
+                    id: firebaseUser.uid,
+                    user_id: firebaseUser.uid,
+                }));
+             }
+          });
+
+        } catch (error) {
+          console.error("Firestore error loading custom claims:", error);
+          // Fallback basic user context if firestore rules explicitly deny us for some reason
+          setUserProfile({
+             id: firebaseUser.uid,
+             user_id: firebaseUser.uid,
+             displayName: firebaseUser.displayName,
+             email: firebaseUser.email,
+             canUseFeatures: true
+          });
         }
+      } else {
+        // Logged out
+        setCurrentUser(null);
+        setUserProfile(null);
+        setIsAuthenticated(false);
+        setIsGuest(false);
       }
-
       setLoading(false);
-    };
+    });
 
-    initAuth();
+    return () => {
+      unsubscribeAuth();
+      if (unsubscribeProfileRef.current) unsubscribeProfileRef.current();
+    };
   }, []);
 
   const login = async (email, password) => {
-    const data = await authService.login(email, password);
-    const user = data.data?.user || data.user;
-    
-    if (user) {
-        setCurrentUser(user);
-        setIsAuthenticated(true);
-        setUserProfile({
-        ...user,
-        id: user.user_id,
-        displayName: user.display_name,
-        canUseFeatures: true
-        });
+    try {
+      const userCredential = await signInWithEmail(email, password);
+      // Let onAuthStateChanged handle setting context uniformly
+      return userCredential;
+    } catch (error) {
+      console.error('Firebase Login Error:', error);
+      // Map arbitrary Firebase codes to human-readable strings for the gorgeous UI modal
+      let msg = 'Failed to sign in. Please verify your credentials.';
+      if (error.code === 'auth/user-not-found' || error.code === 'auth/wrong-password' || error.code === 'auth/invalid-credential') {
+          msg = 'Invalid email or password.';
+      } else if (error.code === 'auth/too-many-requests') {
+          msg = 'Too many attempts. Account temporarily locked for safety.';
+      }
+      throw new Error(msg);
     }
-    return data;
   };
 
   const register = async (email, password, displayName) => {
-    const data = await authService.register(email, password, displayName);
-    const user = data.data?.user || data.user;
-    
-    if (user) {
-        setCurrentUser(user);
-        setIsAuthenticated(true);
-        setUserProfile({
-        ...user,
-        id: user.user_id,
-        displayName: user.display_name,
-        canUseFeatures: true
-        });
+    try {
+      const userCredential = await signUpWithEmail(email, password);
+      
+      // We immediately update the core Authentication layer Name
+      await updateProfile(userCredential.user, { displayName });
+
+      // Build out the initial Firestore profile skeleton representing this user
+      await createUserProfile(userCredential.user.uid, {
+        email: email,
+        displayName: displayName,
+        user_id: userCredential.user.uid, // explicitly supply this bridging field
+        chakra: 0,
+        rank: 'Mere User'
+      });
+
+      return userCredential;
+    } catch (error) {
+      console.error('Firebase Signup Error:', error);
+      let msg = 'Registration failed. Please try again.';
+      if (error.code === 'auth/email-already-in-use') {
+        msg = 'This email is already registered here.';
+      } else if (error.code === 'auth/invalid-email') {
+        msg = 'Please enter a formally valid email address.';
+      }
+      throw new Error(msg);
     }
-    return data;
   };
 
   const forgotPassword = async (email) => {
-    return await authService.forgotPassword(email);
+    try {
+      await resetUserPassword(email);
+      return true;
+    } catch (error) {
+      console.error('Password Reset Error:', error);
+      let msg = 'Failed to dispatch resetting beacon.';
+      if (error.code === 'auth/user-not-found') msg = 'Cannot track an account to this coordinate.';
+      throw new Error(msg);
+    }
   };
 
   const logout = async () => {
-    authService.logout();
+    await logOut();
     clearLocalDevAuth();
+    localStorage.removeItem('nakama_guest_mode');
     
+    // Hard reset all contextual bindings
     setCurrentUser(null);
     setUserProfile(null);
     setIsGuest(false);
     setIsAuthenticated(false);
-    localStorage.removeItem('nakama_guest_mode');
+    
+    if (unsubscribeProfileRef.current) {
+        unsubscribeProfileRef.current();
+        unsubscribeProfileRef.current = null;
+    }
   };
 
-  const loginAsGuest = () => {
-    localStorage.setItem('nakama_guest_mode', 'true');
-    setIsGuest(true);
-    setIsAuthenticated(false);
-    setCurrentUser({ uid: 'guest', displayName: 'Guest', isGuest: true });
-    setUserProfile({
-      id: 'guest',
-      displayName: 'Guest Explorer',
-      email: null,
-      chakra: 0,
-      rank: 'Guest',
-      isGuest: true,
-      canUseFeatures: false,
-    });
+  const loginAsGuest = async () => {
+    try {
+      await signInAnon();
+    } catch (error) {
+      console.error('Guest Login Error:', error);
+    }
   };
 
   const refreshUserProfile = async () => {
-    if (isAuthenticated && !isGuest) {
+    if (isAuthenticated && !isGuest && currentUser?.uid) {
       try {
-        const res = await authService.getMe();
-        const user = res?.data || res;
-        
-        if (user && user.user_id) {
-            setUserProfile(prev => ({ ...prev, ...user, displayName: user.display_name }));
+        const profileDoc = await getUserProfile(currentUser.uid);
+        if (profileDoc) {
+            setUserProfile(prev => ({ 
+                ...prev, 
+                ...profileDoc,
+                id: currentUser.uid,
+                user_id: currentUser.uid 
+            }));
         }
       } catch (err) {
-          console.warn("Failed to refresh user profile", err);
+        console.warn("Failed to manually refresh network profile context", err);
       }
     }
   };
 
-  const requireAuth = (actionCallback, message = 'Log in to continue') => {
+  const requireAuth = (actionCallback, message = 'You must establish an identity to proceed') => {
     if (isAuthenticated) {
       if (actionCallback) actionCallback();
       return true;
@@ -184,7 +281,7 @@ export const AuthProvider = ({ children }) => {
   const value = {
     currentUser,
     userProfile,
-    user: currentUser, 
+    user: userProfile || currentUser, 
     loading,
     isGuest,
     isAuthenticated,
