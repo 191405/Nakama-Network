@@ -4,7 +4,7 @@ import { Link, useLocation } from 'react-router-dom';
 import {
   Film, Users, Shield, Newspaper, BookOpen,
   Menu, X, LogOut, Compass, ShoppingBag,
-  Scroll, ChevronRight, Search, Feather, Bell, MessageSquare
+  Scroll, ChevronRight, Search, Feather, Bell, MessageSquare, Crown
 } from 'lucide-react';
 import { useAuth } from '../contexts/AuthContext';
 import { auth } from '../utils/firebase';
@@ -134,6 +134,21 @@ const Navbar = () => {
                 <Search size={14} />
                 <kbd className="hidden lg:inline ml-1 px-1.5 py-0.5 rounded bg-white/[0.06] text-[10px] text-[#555]">⌘K</kbd>
               </button>
+
+              {/* Admin link — only visible to admins */}
+              {userProfile?.isAdmin && (
+                <Link
+                  to="/admin"
+                  className={`hidden sm:flex items-center gap-1.5 px-3 py-1.5 rounded-lg text-[13px] font-medium transition-colors ${
+                    isActive('/admin')
+                      ? 'text-yellow-400 bg-yellow-500/10 border border-yellow-500/20'
+                      : 'text-[#666] hover:text-yellow-400 bg-white/[0.03] border border-white/[0.06] hover:border-yellow-500/20'
+                  }`}
+                >
+                  <Crown size={14} />
+                  <span className="hidden lg:inline">Admin</span>
+                </Link>
+              )}
 
               {userProfile && (
                 <div className="relative">
@@ -284,6 +299,25 @@ const Navbar = () => {
                     </div>
                   </div>
                 ))}
+
+                {/* Admin link in mobile menu */}
+                {userProfile?.isAdmin && (
+                  <div className="mt-6">
+                    <h3 className="text-[10px] font-semibold text-[#444] uppercase tracking-[0.15em] mb-2 px-1">Admin</h3>
+                    <Link
+                      to="/admin"
+                      onClick={() => setMobileMenuOpen(false)}
+                      className={`flex items-center gap-3 px-3 py-3 rounded-xl transition-colors ${
+                        isActive('/admin')
+                          ? 'bg-yellow-500/10 text-yellow-400'
+                          : 'text-[#999] hover:text-yellow-400 hover:bg-white/[0.03]'
+                      }`}
+                    >
+                      <Crown size={18} className="opacity-50" />
+                      <span className="text-sm font-medium">Admin Panel</span>
+                    </Link>
+                  </div>
+                )}
 
                 <div className="mt-8 pt-5 border-t border-white/[0.06]">
                   {userProfile ? (

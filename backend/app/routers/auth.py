@@ -10,7 +10,7 @@ import uuid
 from sqlalchemy.orm import Session
 from app.database import get_db
 from app.models.sql import User, UserStats, UserSettings
-from app.services.email_service import email_service
+from app.services.email_service import email_service, send_announcement_email
 from app.services.security import jwt_service, password_service
 from app.middleware import require_auth
 from app.api_gateway import api_response, error_response
@@ -255,7 +255,7 @@ async def send_welcome(request: WelcomeRequest):
 @router.post("/announcement")
 async def send_announcement(request: AnnouncementRequest):
     try:
-        success = email_service.send_announcement_email(
+        success = send_announcement_email(
             request.email, 
             request.display_name, 
             request.subject, 

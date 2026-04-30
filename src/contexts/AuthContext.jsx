@@ -105,13 +105,18 @@ export const AuthProvider = ({ children }) => {
              });
           }
 
+          // Admin accounts — hardcoded for platform owner
+          const ADMIN_EMAILS = ['kingdalefire@gmail.com'];
+          const isAdmin = profileDoc?.isAdmin === true || ADMIN_EMAILS.includes(firebaseUser.email?.toLowerCase());
+
           const completeProfile = {
             ...profileDoc,
             id: firebaseUser.uid,
             user_id: firebaseUser.uid,
             displayName: profileDoc.displayName || firebaseUser.displayName,
             email: firebaseUser.email,
-            canUseFeatures: true
+            canUseFeatures: true,
+            isAdmin
           };
 
           setUserProfile(completeProfile);

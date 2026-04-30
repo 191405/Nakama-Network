@@ -160,6 +160,22 @@ const authService = {
         }
     },
 
+    /**
+     * Send announcement email via backend
+     */
+    sendAnnouncement: async (email, displayName, subject, message) => {
+        const response = await fetch(`${API_BASE_URL}/auth/announcement`, {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({ email, display_name: displayName, subject, message })
+        });
+        const data = await response.json();
+        if (!response.ok || data.status === 'error') {
+            throw new Error(data.message || 'Failed to send announcement');
+        }
+        return data;
+    },
+
     getToken: () => localStorage.getItem('nk_token'),
     getUser: () => {
         const user = localStorage.getItem('nk_user');
