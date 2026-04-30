@@ -49,9 +49,9 @@ const AuthModal = () => {
     e.preventDefault();
     if (!email || !password || !confirmPassword) { setError('Please fill in all fields'); return; }
     if (password !== confirmPassword) { setError('Passwords do not match'); return; }
-    const strongPasswordRegex = /^(?=.*[a-z])(?=.*[A-Z])(?=.*\d)(?=.*[@$!%*?&])[A-Za-z\d@$!%*?&]{8,}$/;
+    const strongPasswordRegex = /^(?=.*[a-z])(?=.*[A-Z])(?=.*\d)(?=.*[^A-Za-z\d]).{8,}$/;
     if (!strongPasswordRegex.test(password)) {
-      setError('Password must be at least 8 chars, contain an uppercase letter, a lowercase letter, a number, and a special character (@$!%*?&).');
+      setError('Password must be at least 8 chars, contain an uppercase letter, a lowercase letter, a number, and a special character.');
       return;
     }
     const finalDisplayName = displayName.trim() || email.split('@')[0];
