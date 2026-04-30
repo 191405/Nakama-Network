@@ -10,7 +10,7 @@ import {
   subscribeToUserProfile,
   signInAnon
 } from '../utils/firebase';
-import { onAuthStateChanged, updateProfile } from 'firebase/auth';
+import { onAuthStateChanged, updateProfile, sendEmailVerification } from 'firebase/auth';
 import { getLocalDevUser, isLocalDevMode, clearLocalDevAuth } from '../utils/localDevAuth';
 
 const AuthContext = createContext();
@@ -188,6 +188,24 @@ export const AuthProvider = ({ children }) => {
         chakra: 0,
         rank: 'Mere User'
       });
+
+      // Send Firebase email verification
+      try {
+        await sendEmailVerification(userCredential.user);
+        console.log('Verification email sent to', email);
+      } catch (verifyErr) {
+        console.warn('Could not send verification email:', verifyErr);
+      }
+
+      // Trigger backend welcome email (fire-and-forget)
+      try {
+        const API_BASE_URL = import.meta.env.VITE_API_URL || 'https://nakama-network-api.onrender.com';
+        fetch(`${API_BASE_URL}/auth/welcome`, {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({ email, display_name: displayName })
+        }).catch(() => {}); // fire-and-forget, don't block registration
+      } catch (_) { /* silently ignore */ }
 
       return userCredential;
     } catch (error) {
