@@ -382,3 +382,17 @@ def send_rank_promotion_email(user_email: str, display_name: str, new_rank: str)
 def send_welcome_email(email: str, display_name: str) -> bool:
     """Standalone wrapper so routers can import directly."""
     return email_service.send_welcome_email(email, display_name)
+
+def send_announcement_email(user_email: str, display_name: str, subject: str, message_html: str) -> bool:
+    """Send a custom network announcement to a user."""
+    content = f"""
+    <h2 style="color: #b76e79; margin-top: 0; font-size: 24px;">
+        Hello, {display_name}! ⚔️
+    </h2>
+    <div style="font-size: 16px; line-height: 1.7; color: #e2e8f0; margin-bottom: 25px;">
+        {message_html}
+    </div>
+    """
+    full_html = get_email_base_template(content, preheader="Network Announcement")
+    return email_service.send_email(user_email, subject, full_html)
+

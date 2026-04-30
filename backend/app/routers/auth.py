@@ -22,6 +22,12 @@ class WelcomeRequest(BaseModel):
     email: EmailStr
     display_name: str
 
+class AnnouncementRequest(BaseModel):
+    email: EmailStr
+    display_name: str
+    subject: str
+    message: str
+
 class LoginRequest(BaseModel):
     email: EmailStr
     password: str
@@ -244,4 +250,21 @@ async def send_welcome(request: WelcomeRequest):
         return api_response(message="Welcome email sent")
     except Exception as e:
         logger.error(f"Error in welcome email: {e}")
+        return error_response(message="Failed to send email", code="INTERNAL_ERROR")
+
+@router.post("/announcement")
+async def send_announcement(request: AnnouncementRequest):
+    try:
+        success = email_service.send_announcement_email(
+            request.email, 
+            request.display_name, 
+            request.subject, 
+            request.message
+        )
+        if not success:
+            logger.warning(f"Failed to send announcement email to {request.email}")
+            return api_response(message="Email queued (mock)", status="queued")
+        return api_response(message="Announcement email sent")
+    except Exception as e:
+        logger.error(f"Error in announcement email: {e}")
         return error_response(message="Failed to send email", code="INTERNAL_ERROR")
